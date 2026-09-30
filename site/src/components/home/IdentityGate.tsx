@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 /**
  * 身分閘門。移植自 design/首頁.dc.html 的 00 區。
@@ -134,33 +134,47 @@ export default function IdentityGate() {
     };
   }, [gone]);
 
-  // 捲動揭露：第一層隨著閘門自己的 scrollTop 從 .08 變清楚、從下方升上來
+  /**
+   * 捲動揭露：第一層隨著閘門自己的 scrollTop 從 .08 變清楚、從下方升上來。
+   *
+   * 直接寫 DOM 而不是走 state，是為了每一幀不要重新渲染整個閘門（那個大字
+   * 很重）。但這樣有個陷阱：身分輪播每 3.8 秒會 setState 一次，React 重新
+   * 渲染時會把這一層的 style 重設回 JSX 寫的初始值（opacity .08、位移 90px），
+   * 捲動累積的進度就被抹掉，畫面會突然變回半透明，看起來像壞掉。
+   *
+   * 原型是靠 setState 之後再 setTimeout(sync, 60) 補回來。這裡改用
+   * useLayoutEffect 不帶依賴陣列，每次渲染後同步重套一次，不會閃。
+   */
+  const syncReveal = useCallback(() => {
+    const g = scroller.current;
+    const t = reveal.current;
+    if (!g || !t) return;
+    const p = Math.min(1, Math.max(0, g.scrollTop / (window.innerHeight * 0.92)));
+    t.style.opacity = String(Math.round((0.08 + 0.92 * p) * 100) / 100);
+    t.style.transform = `translateY(${Math.round((1 - p) * 90)}px)`;
+  }, []);
+
+  // 每次渲染後都重套，蓋掉 React 重設回去的初始值
+  useLayoutEffect(syncReveal);
+
   useEffect(() => {
     if (gone) return;
-    const sync = () => {
-      const g = scroller.current;
-      const t = reveal.current;
-      if (!g || !t) return;
-      const p = Math.min(1, Math.max(0, g.scrollTop / (window.innerHeight * 0.92)));
-      t.style.opacity = String(Math.round((0.08 + 0.92 * p) * 100) / 100);
-      t.style.transform = `translateY(${Math.round((1 - p) * 90)}px)`;
-    };
     let raf = 0;
     const onScroll = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        sync();
+        syncReveal();
       });
     };
     document.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    const t = setTimeout(sync, 400);
+    const t = setTimeout(syncReveal, 400);
     return () => {
       document.removeEventListener('scroll', onScroll, { capture: true });
       clearTimeout(t);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [gone]);
+  }, [gone, syncReveal]);
 
   const close = () => {
     if (leaving) return;

@@ -1,0 +1,53 @@
+---
+// 夥伴 logo 單排翻牌牆。首頁 1-09 和案例頁共用。
+//
+// 8 格並排，每格是一根垂直的 logo 柱，靠 CSS 動畫一階一階往上推（見 site.css
+// 的 tg-logocol）。每柱取 7 個 logo，末尾再接回第 1 個，所以繞回去不會跳。
+// 8 格各差 5.25 秒（42s ÷ 8），看起來就是各自隨機在翻。
+//
+// 標記 d:1 的 9 個 logo 不進牆（原型的 filter(x => !x.d)），
+// 但「N 家企業」那個數字算全部 60 個。
+import { partners } from '../data/partners';
+
+const SLOTS = 8;
+const PER_SLOT = 7;
+const ROW_HEIGHT = 64;
+
+const wall = partners.filter((x) => !x.d);
+
+const slots = Array.from({ length: SLOTS }, (_, i) => {
+  const items = wall.length
+    ? Array.from({ length: PER_SLOT }, (_, k) => wall[(i * PER_SLOT + k) % wall.length])
+    : [];
+  // 接回第一個，繞回去看不出接縫
+  if (items.length) items.push(items[0]);
+  return { items, delay: -(i * (42 / SLOTS)) };
+});
+---
+
+{wall.length > 0 && (
+  <div style={`display:flex;gap:12px;min-height:${ROW_HEIGHT}px`}>
+    {slots.map((slot) => (
+      <div
+        style={`flex:1;min-width:0;height:${ROW_HEIGHT}px;overflow:hidden;border:1px solid var(--border-subtle);background:#FFFFFF`}
+      >
+        <div data-logocol="1" style={`animation-delay:${slot.delay}s`}>
+          {slot.items.map((lg) => (
+            <span
+              title={lg.a}
+              style={`height:${ROW_HEIGHT}px;display:flex;align-items:center;justify-content:center;padding:10px 16px`}
+            >
+              <img
+                loading="lazy"
+                decoding="sync"
+                src={`/${lg.s}`}
+                alt={lg.a}
+                style="max-height:36px;max-width:100%;object-fit:contain"
+              />
+            </span>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+)}

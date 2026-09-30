@@ -1,0 +1,84 @@
+/* 原型 8 頁的 inline <style> 每一頁都貼了同一份，這裡抽成一支共用。
+   數值一字不改，改動要先跟 baseline/ 做像素比對。
+   來源：design/*.dc.html 的 <helmet> 裡那段 <style>。 */
+
+:root {
+  /* 原型覆寫掉設計系統的 --font-sans / --font-display，中文改走自架的思源黑體。
+     上線前會換成 Google Fonts 的 Noto Sans TC（同一套字的另一個發行名），
+     現在先照原型，像素比對才量得準。見 README「字型」。 */
+  --font-sans: 'Inter', 'Source Han Sans TC', sans-serif;
+  --font-display: 'Manrope', 'Source Han Sans TC', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #FAFAF8;
+  font-family: 'Inter', 'Source Han Sans TC', sans-serif;
+  color: #0E0E0D;
+}
+
+a { color: #0E0E0D; }
+a:hover { color: #C08423; }
+
+/* ── 頂欄「產品 ▾」下拉 ───────────────────────────────── */
+.tg-dd { position: relative; display: inline-flex; align-items: center; }
+.tg-dd > div {
+  position: absolute; left: 0; top: 100%;
+  padding-top: 12px;      /* 讓滑鼠從連結移到選單不會中斷 hover */
+  display: none; z-index: 130;
+}
+.tg-dd:hover > div { display: block; }
+.tg-dd .tg-dd-in {
+  background: #FFFFFF;
+  border: 1px solid var(--border-default);
+  box-shadow: 0 12px 28px rgba(14, 14, 13, .16);
+  display: grid; min-width: 170px;
+}
+.tg-dd .tg-dd-in a {
+  display: block; padding: 10px 14px;
+  font-size: 13px; font-weight: 500;
+  color: #0E0E0D; text-decoration: none;
+}
+.tg-dd .tg-dd-in a:hover { background: var(--slate-100); color: #C08423; }
+
+/* ── 導覽連結：hover 時底部 2px 虎金線由左掃到右 ─────────
+   原型用 support.js 的 style-hover 屬性做，正式站改成真的 CSS :hover。 */
+.tg-nav {
+  color: #0E0E0D; text-decoration: none;
+  font-size: 14px; font-weight: 500; padding-bottom: 3px;
+  background: linear-gradient(var(--tiger-500), var(--tiger-500)) no-repeat left bottom / 0% 2px;
+  transition: background-size .2s cubic-bezier(.22, .61, .36, 1);
+}
+.tg-nav:hover { background-size: 100% 2px; color: #0E0E0D; }
+
+/* 目前所在的那一頁：虎金字加底線，沒有掃線動畫 */
+.tg-nav--on {
+  color: var(--tiger-600); text-decoration: none;
+  font-size: 14px; font-weight: 600;
+  padding-bottom: 1px; border-bottom: 2px solid var(--tiger-500);
+}
+.tg-nav--on:hover { color: var(--tiger-600); }
+
+/* ── 夥伴 logo 翻牌牆 ─────────────────────────────────
+   一格 64px 高，一欄 7 個 logo 再接回第 1 個（共 8 格 × 64px = 448px），
+   所以每一階停在 -64px 的倍數，最後一階回到 -448px 接上開頭不會跳。
+   42s 一圈、8 格各差 5.25s，看起來就是隨機翻。 */
+@keyframes tg-logocol {
+  0%, 13.52%      { transform: translateY(0); }
+  14.29%, 27.81%  { transform: translateY(-64px); }
+  28.57%, 42.09%  { transform: translateY(-128px); }
+  42.86%, 56.38%  { transform: translateY(-192px); }
+  57.14%, 70.66%  { transform: translateY(-256px); }
+  71.43%, 84.95%  { transform: translateY(-320px); }
+  85.71%, 99.24%  { transform: translateY(-384px); }
+  100%            { transform: translateY(-448px); }
+}
+[data-logocol] { animation: tg-logocol 42s cubic-bezier(.22, .61, .36, 1) infinite; }
+[data-logocol]:hover { animation-play-state: paused; }
+
+/* 全站規則：prefers-reduced-motion 下所有動畫直接跳終態 */
+@media (prefers-reduced-motion: reduce) {
+  [data-logocol] { animation: none !important; }
+}

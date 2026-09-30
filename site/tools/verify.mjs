@@ -1,0 +1,211 @@
+// 「跟 Claude Design 一模一樣」的尺。
+//
+// 同時把原型（../design）和重建站（./dist）跑起來，逐頁在同一尺寸截圖，
+// 做像素比對，印出差異比例並輸出三聯圖（原型 / 重建 / 差異）到 tools/out/。
+//
+// 兩個重點：
+//
+// 1) 兩邊都用 reducedMotion: 'reduce' 截。夥伴 logo 牆是 42 秒一圈的無限動畫，
+//    不凍結的話每次截到的 logo 都不一樣，比對永遠有差。設計系統本來就寫了
+//    @media (prefers-reduced-motion:reduce) 讓動畫跳終態，所以這是照它自己的
+//    規則走，不是作弊。全站規則第 6 條也要求 reduce 時所有動畫直接跳終態。
+//
+// 2) 截圖前先慢慢捲到底再回頂端。很多區塊是捲動才進場（tg-in、數字滾動、
+//    節點逐個亮起），不捲過去會截到還沒出現的狀態。
+//
+// 用法：
+//   node tools/verify.mjs                 全部頁面
+//   node tools/verify.mjs cases courses   只比這幾頁
+//   TG_WIDTH=390 node tools/verify.mjs    改視窗寬度（手機版那一輪會用）
+
+import { createServer } from 'node:http';
+import { createReadStream, existsSync, statSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { chromium } from 'playwright';
+import { PNG } from 'pngjs';
+import pixelmatch from 'pixelmatch';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const SITE = path.resolve(HERE, '..');
+const DESIGN = path.resolve(SITE, '..', 'design');
+const DIST = path.join(SITE, 'dist');
+const OUT = path.join(HERE, 'out');
+
+const WIDTH = Number(process.env.TG_WIDTH || 1440);
+const HEIGHT = Number(process.env.TG_HEIGHT || 900);
+// 每頁容許的差異比例上限。超過就算沒過。
+const THRESHOLD = Number(process.env.TG_THRESHOLD || 0.5);
+
+/** 原型檔名 ↔ 重建站路由。名字是輸出檔名與命令列參數。 */
+const PAGES = [
+  { name: 'home', proto: '首頁.dc.html', route: '/' },
+  { name: 'products', proto: '產品.dc.html', route: '/products' },
+  { name: 'tiger-gpu-pro', proto: 'Tiger GPU Pro.dc.html', route: '/products/tiger-gpu-pro' },
+  { name: 'courses', proto: '課程.dc.html', route: '/courses' },
+  { name: 'consultants', proto: '顧問與方法論.dc.html', route: '/consultants' },
+  { name: 'cases', proto: '案例.dc.html', route: '/cases' },
+  { name: 'blog', proto: '部落格.dc.html', route: '/blog' },
+  { name: 'resources', proto: '免費資源.dc.html', route: '/resources' },
+];
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.jsx': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
+  '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.otf': 'font/otf', '.md': 'text/plain; charset=utf-8',
+};
+
+/** 夠用的靜態伺服器：支援中文檔名、目錄自動補 index.html。 */
+function serve(root) {
+  return new Promise((resolve) => {
+    const server = createServer((req, res) => {
+      let rel;
+      try {
+        rel = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+      } catch {
+        res.writeHead(400).end();
+        return;
+      }
+      let file = path.join(root, rel);
+      if (existsSync(file) && statSync(file).isDirectory()) file = path.join(file, 'index.html');
+      if (!existsSync(file)) {
+        res.writeHead(404, { 'content-type': 'text/plain' }).end('404 ' + rel);
+        return;
+      }
+      res.writeHead(200, { 'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream' });
+      createReadStream(file).pipe(res);
+    });
+    server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port }));
+  });
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** 一段一段往下捲讓進場動畫跑完，再回頂端。 */
+async function sweep(page) {
+  const h = await page.evaluate(() => document.documentElement.scrollHeight);
+  const vh = await page.evaluate(() => window.innerHeight);
+  for (let y = 0; y < h; y += Math.floor(vh * 0.6)) {
+    await page.evaluate((v) => window.scrollTo(0, v), y);
+    await sleep(160);
+  }
+  await page.evaluate((v) => window.scrollTo(0, v), h);
+  await sleep(400);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await sleep(600);
+}
+
+async function shoot(ctx, url, file, { dismissGate = false } = {}) {
+  const page = await ctx.newPage();
+  const problems = [];
+  page.on('pageerror', (e) => problems.push(`js 錯誤：${e.message.split('\n')[0]}`));
+  page.on('requestfailed', (r) => problems.push(`抓不到：${r.url().slice(0, 120)}`));
+  await page.goto(url, { waitUntil: 'load', timeout: 90000 });
+  await page.waitForFunction(() => document.body.innerText.trim().length > 50, { timeout: 30000 }).catch(() => sleep(3000));
+  if (dismissGate) {
+    // 首頁的身分閘門蓋在最上層，要先關掉才看得到底下的頁面
+    await page.getByText('直接進官網').first().click({ timeout: 15000 }).catch(() => {});
+    await sleep(1500);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await sleep(3000);
+  }
+  await sweep(page);
+  await page.screenshot({ path: file, fullPage: true });
+  await page.close();
+  return problems;
+}
+
+async function compare(aFile, bFile, diffFile) {
+  const a = PNG.sync.read(await readFile(aFile));
+  const b = PNG.sync.read(await readFile(bFile));
+  const w = Math.min(a.width, b.width);
+  const h = Math.min(a.height, b.height);
+  const diff = new PNG({ width: w, height: h });
+  // 兩邊尺寸不同的話先裁到共同區域再比，另外把尺寸差報出來。
+  const crop = (img) => {
+    if (img.width === w && img.height === h) return img.data;
+    const out = new PNG({ width: w, height: h });
+    PNG.bitblt(img, out, 0, 0, w, h, 0, 0);
+    return out.data;
+  };
+  const changed = pixelmatch(crop(a), crop(b), diff.data, w, h, { threshold: 0.1, includeAA: true });
+  await writeFile(diffFile, PNG.sync.write(diff));
+  return {
+    pct: (changed / (w * h)) * 100,
+    changed,
+    sizeA: `${a.width}×${a.height}`,
+    sizeB: `${b.width}×${b.height}`,
+    sizeMatch: a.width === b.width && a.height === b.height,
+  };
+}
+
+// ── 跑 ────────────────────────────────────────────────
+const want = process.argv.slice(2);
+const targets = want.length ? PAGES.filter((p) => want.includes(p.name)) : PAGES;
+if (!targets.length) {
+  console.error(`沒有這些頁：${want.join(', ')}\n可用：${PAGES.map((p) => p.name).join(', ')}`);
+  process.exit(1);
+}
+if (!existsSync(DIST)) {
+  console.error('找不到 dist/，先跑 npm run build');
+  process.exit(1);
+}
+
+await mkdir(OUT, { recursive: true });
+const proto = await serve(DESIGN);
+const built = await serve(DIST);
+const browser = await chromium.launch({ channel: 'chrome' });
+const ctx = await browser.newContext({
+  viewport: { width: WIDTH, height: HEIGHT },
+  deviceScaleFactor: 1,
+  locale: 'zh-TW',
+  timezoneId: 'Asia/Taipei',
+  reducedMotion: 'reduce', // 見檔頭第 1 點
+});
+
+const rows = [];
+for (const p of targets) {
+  const aFile = path.join(OUT, `${p.name}.proto.png`);
+  const bFile = path.join(OUT, `${p.name}.built.png`);
+  const dFile = path.join(OUT, `${p.name}.diff.png`);
+  const gate = p.name === 'home';
+
+  const protoProblems = await shoot(ctx, `http://127.0.0.1:${proto.port}/${encodeURIComponent(p.proto)}`, aFile, { dismissGate: gate });
+
+  let builtProblems = [];
+  let r = null;
+  try {
+    builtProblems = await shoot(ctx, `http://127.0.0.1:${built.port}${p.route}`, bFile, { dismissGate: gate });
+    r = await compare(aFile, bFile, dFile);
+  } catch (e) {
+    rows.push({ name: p.name, err: e.message.split('\n')[0] });
+    continue;
+  }
+  rows.push({ name: p.name, ...r, protoProblems, builtProblems });
+}
+
+await browser.close();
+proto.server.close();
+built.server.close();
+
+console.log(`\n視窗 ${WIDTH}×${HEIGHT}，動畫凍結，容許差異 ${THRESHOLD}%\n`);
+console.log('頁面            差異      尺寸（原型 → 重建）');
+console.log('─'.repeat(64));
+let worst = 0;
+for (const r of rows) {
+  if (r.err) {
+    console.log(`${r.name.padEnd(15)} 做不出來  ${r.err}`);
+    worst = 100;
+    continue;
+  }
+  const mark = r.pct <= THRESHOLD ? '✓' : '✗';
+  const size = r.sizeMatch ? r.sizeA : `${r.sizeA} → ${r.sizeB}  高度差 ${Math.abs(parseInt(r.sizeA.split('×')[1]) - parseInt(r.sizeB.split('×')[1]))}px`;
+  console.log(`${mark} ${r.name.padEnd(13)} ${r.pct.toFixed(2).padStart(6)}%   ${size}`);
+  worst = Math.max(worst, r.pct);
+  for (const s of new Set([...(r.builtProblems || [])])) console.log(`    重建站：${s}`);
+}
+console.log(`\n三聯圖在 tools/out/（*.proto.png / *.built.png / *.diff.png）`);
+process.exit(worst <= THRESHOLD ? 0 : 1);

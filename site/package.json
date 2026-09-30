@@ -9,8 +9,7 @@
     "build": "astro build",
     "preview": "wrangler dev",
     "deploy": "astro build && wrangler deploy",
-    "shots": "node tools/shots.mjs",
-    "diff": "node tools/diff.mjs"
+    "verify": "node tools/verify.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4",
@@ -22,8 +21,8 @@
   "devDependencies": {
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "playwright": "^1",
     "pixelmatch": "^6",
+    "playwright": "^1",
     "pngjs": "^7",
     "wrangler": "^4"
   }

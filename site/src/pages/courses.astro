@@ -1,0 +1,133 @@
+---
+// 課程。移植自 design/課程.dc.html，版面與文案一字不改。參考 sat.cool 的課程頁結構。
+//
+// 兩個跟其他頁不同的地方：
+//   1. 頂欄用 onBanner 變體（底色 #F2F2F1、多一條 2px 深色上邊框），
+//      因為滿版深色 Banner 緊貼在下方。見 TopBar.tsx 的說明。
+//   2. 「新開班次」那三張圖卡的封面在原型裡是空的拖圖框。正式站會是後台的
+//      圖片欄位，所以這裡渲染成同尺寸的空框（維持版面高度一致），
+//      像素比對時用遮罩蓋掉那三塊，不去複製拖拉工具的外觀。
+//
+// 課程資料全是示意（原型自己也標了「日期與期數為示意」），
+// 接上 Courses collection 後由後台決定。
+import Page from '../layouts/Page.astro';
+import TopBar from '../components/TopBar.tsx';
+import BannerCarousel from '../components/BannerCarousel.tsx';
+import FooterSlim from '../components/FooterSlim.astro';
+
+const banners = [
+  { src: '/uploads/製造業BANNER_2.png', alt: '主打課程主視覺' },
+  { src: '/uploads/製造業BANNER_1.png', alt: '課程主視覺' },
+];
+
+// 最新課程的三張圖卡
+const latest = [
+  { date: '10/18 開課', level: 'L2・16 小時', title: 'n8n 自動化實戰', note: '第 12 期・n8n Taiwan Ambassador 授課・政府補助適用' },
+  { date: '11/02 開課', level: 'L3・12 小時', title: 'Advanced RAG 知識庫實作', note: '第 5 期・把文件變成問得到答案的知識庫' },
+  { date: '11/15 開課', level: 'L4・24 小時', title: '地端 LLM 導入與治理', note: '第 3 期・Ollama＋LiteLLM 實機演練' },
+];
+
+// 下方 L1–L5 課程卡（設計系統的 Card）
+const cards = [
+  { eyebrow: 'L2・16 小時', title: 'n8n 自動化實戰', body: 'n8n Taiwan Ambassador 授課・學員 1,240+・政府補助適用（示意）。' },
+  { eyebrow: 'L3・12 小時', title: 'Advanced RAG 知識庫實作', body: '把文件變成問得到答案的知識庫・學員 680+（示意）。' },
+  { eyebrow: 'L4・24 小時', title: '地端 LLM 導入與治理', body: 'Ollama＋LiteLLM 實機演練・學員 320+（示意）。' },
+];
+
+const levels = ['全部', 'L1', 'L2', 'L3', 'L4', 'L5'];
+const PLACEHOLDERS = 3;
+---
+
+<Page
+  title="課程｜TigerAI 虎智科技"
+  description="L1–L5 課程：先測你在 L 幾，再對號入座。從會用，到自己跑得動。"
+>
+  <Fragment slot="head">
+    <style>
+      /* 原型用 support.js 的 style-hover，這裡換成真 CSS */
+      .tg-coursecard {
+        transition: transform .12s cubic-bezier(.22, .61, .36, 1), box-shadow .12s cubic-bezier(.22, .61, .36, 1);
+      }
+      .tg-coursecard:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg) }
+      @media (prefers-reduced-motion: reduce) {
+        .tg-coursecard { transition: none }
+      }
+    </style>
+  </Fragment>
+
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    <TopBar current="courses" variant="onBanner" client:load />
+
+    <!-- 滿版 Banner 貼齊瀏覽器兩緣，上方留 76px 給頂欄 -->
+    <section style="padding:76px 0 0">
+      <BannerCarousel banners={banners} client:load />
+    </section>
+
+    <section style="padding:64px 0 16px">
+      <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+        <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">最新課程</span>
+          <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(24px,3vw,36px);font-weight:800;letter-spacing:-.02em;margin:0">新開班次。</h2>
+          <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">日期與期數為示意</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+          {latest.map((c, i) => (
+            <div class="tg-coursecard" style="background:#fff;border:1px solid var(--border-subtle);display:flex;flex-direction:column">
+              <!-- 封面：接後台後是 Courses.封面 欄位 -->
+              <div
+                data-cms-image="course-cover"
+                data-slot={`course-cover-0${i + 1}`}
+                style="aspect-ratio:16/9;border-bottom:1px solid var(--border-subtle);position:relative;overflow:hidden"
+              ></div>
+              <div style="padding:16px;display:grid;gap:8px">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tiger-700)">{c.date}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-secondary);border:1px solid var(--border-brand);background:var(--tiger-50);padding:2px 8px;white-space:nowrap">{c.level}</span>
+                </div>
+                <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.01em">{c.title}</b>
+                <span style="font-size:13px;line-height:1.6;color:var(--fg-secondary)">{c.note}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section style="padding:48px 0 32px">
+      <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">課程 L1–L5</span>
+        <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">從會用，到自己跑得動。</h1>
+        <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0 0 24px">先測你在 L 幾，再對號入座。課程名稱、時數與價格為版型示意。</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          {levels.map((lv, i) => (
+            <span
+              style={i === 0
+                ? "font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;background:var(--ink-900);color:#fff"
+                : "font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)"}
+            >{lv}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section style="padding:32px 0 96px;flex:1">
+      <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
+          {cards.map((c) => (
+            <div class="t-card">
+              <p class="t-card__eyebrow">{c.eyebrow}</p>
+              <h3 class="t-card__title">{c.title}</h3>
+              <p class="t-card__body">{c.body}</p>
+            </div>
+          ))}
+          {Array.from({ length: PLACEHOLDERS }).map(() => (
+            <span style="border:1px dashed var(--border-default);min-height:160px"></span>
+          ))}
+        </div>
+        <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">課程卡＝Payload「Courses」collection：名稱、L 級、時數、大綱、價格、補助、報名連結、封面</p>
+      </div>
+    </section>
+
+    <FooterSlim />
+  </div>
+</Page>

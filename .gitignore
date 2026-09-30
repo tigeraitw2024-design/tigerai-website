@@ -8,3 +8,10 @@ Thumbs.db
 
 # 講師原始照片的壓縮包，裡面的 PNG 已經解出來了
 講師顧問資料.zip
+
+# 內部文件不進公開 repo（repo 目前是 Public，組織政策擋住改 Private）。
+# 正本在 TigerAI/官網內部文件/：
+#   TigerAI官網交付總綱_v2.0.md  生態系收斂決策、路線圖、待辦與待定事項
+#   交付說明.md                  Claude Design 的交付規格
+design/uploads/TigerAI官網交付總綱_v2.0.md
+design/交付說明.md

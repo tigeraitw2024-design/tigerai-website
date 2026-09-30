@@ -20,9 +20,16 @@ import { NAV, CTA, type NavKey } from '../nav';
 export default function TopBar({
   current,
   start = 0,
+  variant = 'default',
 }: {
   current?: NavKey;
   start?: number;
+  /**
+   * 課程頁的頂欄跟其他頁不一樣：底色偏灰一階（#F2F2F1 而非 #FAFAF8），
+   * 而且多一條 2px 的深色上邊框。因為那頁的滿版深色 Banner 緊貼在頂欄下方，
+   * 需要更強的分隔，不然兩塊會黏成一片。數值照 design/課程.dc.html。
+   */
+  variant?: 'default' | 'onBanner';
 }) {
   const [p, setP] = useState(0);
   const raf = useRef(0);
@@ -47,6 +54,20 @@ export default function TopBar({
   // 線性插值，跟原型一樣取到小數第二位，避免每一幀都產生新字串。
   const l = (a: number, b: number) => Math.round((a + (b - a) * p) * 100) / 100;
 
+  const onBanner = variant === 'onBanner';
+  const bar = onBanner
+    ? {
+        background: `rgba(242,242,241,${l(1, 0.94)})`,
+        border: `1px solid rgba(14,14,13,${l(0, 0.14)})`,
+        borderTop: `2px solid rgba(14,14,13,${l(0.82, 0.14)})`,
+        borderBottom: `1px solid rgba(14,14,13,${l(0.12, 0.14)})`,
+      }
+    : {
+        background: `rgba(250,250,248,${l(1, 0.94)})`,
+        border: `1px solid rgba(14,14,13,${l(0, 0.14)})`,
+        borderBottom: `1px solid rgba(14,14,13,${l(0.08, 0.14)})`,
+      };
+
   return (
     <header
       style={{
@@ -70,9 +91,7 @@ export default function TopBar({
           height: `${l(76, 56)}px`,
           marginTop: `${l(0, 12)}px`,
           width: `min(${l(4000, 960)}px, calc(100% - ${l(0, 32)}px))`,
-          background: `rgba(250,250,248,${l(1, 0.94)})`,
-          border: `1px solid rgba(14,14,13,${l(0, 0.14)})`,
-          borderBottom: `1px solid rgba(14,14,13,${l(0.08, 0.14)})`,
+          ...bar,
           boxShadow: `0 ${l(0, 12)}px ${l(0, 28)}px rgba(14,14,13,${l(0, 0.14)})`,
         }}
       >

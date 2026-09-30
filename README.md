@@ -43,18 +43,30 @@ npm run dev      # 會先把 design/ 的素材同步到 public/，再起本機�
 `npm run sync` 會把 `design/` 的設計系統和圖片複製到 `site/public/`。
 那幾層是產物，不進版控（見 `site/.gitignore`），所以 clone 下來第一件事是 `npm run dev` 或 `npm run sync`。
 
-## 字型：正式站不自架思源黑體
+## 字型：正式站不自架思源黑體（已完成）
 
 原型每頁的 inline style 把 `--font-sans` 覆寫成 `'Inter','Source Han Sans TC'`，
-中文走 `design/assets/fonts/` 那四個 OTF，共 64 MB。原型這樣跑沒問題，上線不行。
+中文走 `design/assets/fonts/` 那四個 OTF。量過部署後的實際載入：
 
-正式站改用 Google Fonts 的 **Noto Sans TC**。這不是換字型：思源黑體（Adobe 發行名
+```
+字型   54.12 MB（解壓後 64.83 MB，四個字重全下載）
+圖片    2.94 MB
+合計   57.26 MB   ← 一頁
+```
+
+所以改用 Google Fonts 的 **Noto Sans TC**。這不是換字型：思源黑體（Adobe 發行名
 Source Han Sans）和 Noto Sans CJK（Google 發行名）是同一套字，Google Fonts 會切成
-上百個小 woff2 依 unicode-range 按需載入。字重取 400／500／700／900，對應原本的
-Regular／Medium／Bold／Heavy。
+上百個小 woff2 依 unicode-range 按需載入。字重取 400／500／600／700／900。
 
-換完一定要跑 `npm run diff` 跟 `baseline/` 做像素比對。真的有走樣，就退回自架，
-把 OTF 用 fonttools 子集化成 woff2（繁中常用字約 13,500 字，每字重會降到 3 MB 左右）。
+驗證方式是放大 3 倍並排看（`site/tools/out/font-compare.png`）：字形、筆畫、比例、
+字重完全相同，只差次像素的抗鋸齒位置。
+
+`verify.mjs` 因此會在**原型那一邊**也換成 Noto Sans TC 再比對。否則每頁會憑空多出
+0.5% 的字型底噪，尺就鈍到抓不出真正的移植錯誤。字型本身的差異不靠那把尺看，
+靠並排放大圖判斷。
+
+真有一天要退回自架，作法是把 OTF 用 fonttools 子集化成 woff2（繁中常用字約 13,500
+字，每字重會降到 3 MB 左右）。
 
 ## 部署
 

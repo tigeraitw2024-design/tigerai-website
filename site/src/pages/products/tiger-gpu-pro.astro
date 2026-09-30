@@ -83,7 +83,7 @@ const usage = [
 
 const MONO = "font-family:'JetBrains Mono',monospace";
 const EYEBROW = `${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`;
-const H2 = "font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15";
+const H2 = "font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15";
 const WRAP = 'max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)';
 const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:4px 10px`;
 ---
@@ -149,7 +149,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
           <div style="position:relative;display:grid;grid-template-columns:170px 1fr 170px;gap:16px;align-items:stretch">
             <div style="border:1px solid var(--border-subtle);background:#fff;padding:16px;display:grid;gap:6px;align-content:center;justify-items:center;text-align:center">
               <span style={`width:40px;height:40px;border:1px solid var(--border-brand);color:var(--tiger-700);background:var(--tiger-50);display:inline-flex;align-items:center;justify-content:center;${MONO};font-size:13px`}>AI</span>
-              <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">你的本機 AI</b>
+              <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:14px;font-weight:700">你的本機 AI</b>
               <span style={`${MONO};font-size:10px;color:var(--fg-tertiary)`}>開發端</span>
             </div>
 
@@ -162,7 +162,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
 
             <div style="border:1px solid var(--border-subtle);background:#fff;padding:16px;display:grid;gap:6px;align-content:center;justify-items:center;text-align:center">
               <img src="/assets/logo/color-square-mark.svg" alt="" style="width:40px;height:40px" />
-              <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">TG 伺服器 AI</b>
+              <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:14px;font-weight:700">TG 伺服器 AI</b>
               <span style={`${MONO};font-size:10px;color:var(--fg-tertiary)`}>OpenCode Agent</span>
             </div>
           </div>
@@ -189,7 +189,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
           {modules.map((m) => (
             <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px;display:grid;gap:10px;align-content:start">
               <span style={`${MONO};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)`}>{m.n}</span>
-              <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:20px;font-weight:700;margin:0">{m.title}</h3>
+              <h3 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:20px;font-weight:700;margin:0">{m.title}</h3>
               <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">{m.body}</p>
               <span style={`justify-self:start;${CHIP}`}>{m.tag}</span>
             </div>
@@ -207,7 +207,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
 
         <div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.6fr);gap:24px;align-items:start">
           <div style="border:1px solid var(--border-subtle);background:#FAFAF8;padding:20px;display:grid;gap:12px">
-            <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">實名領 Key</b>
+            <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:14px;font-weight:700">實名領 Key</b>
             <div style={`display:grid;gap:8px;${MONO};font-size:12px`}>
               <span style="border:1px solid var(--border-default);background:#fff;padding:8px 10px;color:var(--fg-secondary)">員工編號　TG-0417</span>
               <span style="border:1px solid var(--border-default);background:#fff;padding:8px 10px;color:var(--fg-secondary)">帳號密碼　••••••••</span>
@@ -218,7 +218,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
 
           <div style="border:1px solid var(--border-subtle);background:#FAFAF8;padding:20px;display:grid;gap:12px">
             <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:baseline">
-              <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">本月用量</b>
+              <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:14px;font-weight:700">本月用量</b>
               <span style={`${MONO};font-size:12px;color:var(--fg-secondary)`}>調用 1.2M 次・流量 84 GB・活躍 Key 47</span>
             </div>
             <div style="display:grid;gap:6px;font-size:12px">
@@ -243,7 +243,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
     <section style="background:var(--tiger-500);color:#0E0E0D;padding:64px 0">
       <div style={`${WRAP};display:flex;align-items:center;gap:24px;flex-wrap:wrap`}>
         <div style="flex:1;min-width:280px">
-          <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(26px,3.5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:0 0 8px">帶你的架構圖來，30 分鐘。</h2>
+          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(26px,3.5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:0 0 8px">帶你的架構圖來，30 分鐘。</h2>
           <p style="font-size:15px;line-height:1.7;color:#1A1918;margin:0">我們會告訴你：這個東西放哪、要多少算力、Key 怎麼發。</p>
         </div>
         <a href="/#contact" style="text-decoration:none"><button class="t-btn t-btn--secondary t-btn--lg">預約 30 分鐘諮詢 →</button></a>

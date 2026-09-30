@@ -113,6 +113,50 @@ function serve(root) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * 只對原型那一邊做：把自架的思源黑體換成 Google Fonts 的 Noto Sans TC。
+ *
+ * 為什麼要動原型：正式站已經決定不自架思源黑體（量過一頁要下載 54 MB）。
+ * 兩者是同一套字的兩個發行名，放大 3 倍並排看字形完全相同，只差次像素的
+ * 抗鋸齒位置，但那足以讓每頁憑空多出 0.5% 的差異，把尺弄鈍到抓不出真正的
+ * 移植錯誤。
+ *
+ * 所以在這裡把已知且已經單獨驗證過的變因消掉，讓比對專心量一件事：
+ * 我的版面有沒有移植錯。字型本身的差異不靠這把尺看，靠 font-compare.png
+ * 那張放大並排圖判斷。
+ */
+async function useSameFontAsSite(page) {
+  await page.evaluate(() => {
+    // 拿掉自架思源黑體的 @font-face
+    document.querySelectorAll('link[href*="source-han-sans-tc"]').forEach((l) => l.remove());
+    // 載 Google Fonts 的 Noto Sans TC，字重跟正式站一致
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap';
+    document.head.appendChild(l);
+    // 原型把字型寫死在 inline style 裡，選擇器蓋不掉，只能逐一改寫
+    const swap = (s) => s.replaceAll('Source Han Sans TC', 'Noto Sans TC');
+    document.querySelectorAll('[style*="Source Han Sans TC"]').forEach((el) => {
+      el.setAttribute('style', swap(el.getAttribute('style')));
+    });
+    for (const sheet of document.styleSheets) {
+      let rules;
+      try { rules = sheet.cssRules; } catch { continue; } // 跨來源的樣式表讀不到，跳過
+      for (const r of rules) {
+        if (r.style && r.style.fontFamily && r.style.fontFamily.includes('Source Han Sans TC')) {
+          r.style.fontFamily = swap(r.style.fontFamily);
+        }
+        if (r.style && r.style.getPropertyValue('--font-sans').includes('Source Han Sans TC')) {
+          r.style.setProperty('--font-sans', swap(r.style.getPropertyValue('--font-sans')));
+          r.style.setProperty('--font-display', swap(r.style.getPropertyValue('--font-display')));
+        }
+      }
+    }
+  });
+  await page.evaluate(() => document.fonts.ready);
+  await sleep(1200);
+}
+
 /** 一段一段往下捲讓進場動畫跑完，再回頂端。 */
 async function sweep(page) {
   const h = await page.evaluate(() => document.documentElement.scrollHeight);
@@ -127,13 +171,14 @@ async function sweep(page) {
   await sleep(600);
 }
 
-async function shoot(ctx, url, file, { dismissGate = false, mask = null } = {}) {
+async function shoot(ctx, url, file, { dismissGate = false, mask = null, normalizeFont = false } = {}) {
   const page = await ctx.newPage();
   const problems = [];
   page.on('pageerror', (e) => problems.push(`js 錯誤：${e.message.split('\n')[0]}`));
   page.on('requestfailed', (r) => problems.push(`抓不到：${r.url().slice(0, 120)}`));
   await page.goto(url, { waitUntil: 'load', timeout: 90000 });
   await page.waitForFunction(() => document.body.innerText.trim().length > 50, { timeout: 30000 }).catch(() => sleep(3000));
+  if (normalizeFont) await useSameFontAsSite(page);
   if (dismissGate) {
     // 首頁的身分閘門蓋在最上層，要先關掉才看得到底下的頁面
     await page.getByText('直接進官網').first().click({ timeout: 15000 }).catch(() => {});
@@ -200,6 +245,16 @@ const ctx = await browser.newContext({
   reducedMotion: 'reduce', // 見檔頭第 1 點
 });
 
+// reducedMotion 只凍得住 CSS 動畫。用 setInterval 跑的輪播（課程頁 Banner、
+// Tiger GPU Pro 的 Hero 換詞、顧問輪播、首頁身分閘門）不吃那個，兩邊載入
+// 差個零點幾秒就停在不同的項目上，比對出來像是移植錯了，其實只是相位不同。
+//
+// 所以在兩邊都把 setInterval 變成空的，全部停在初始狀態。setTimeout 留著，
+// 原型有些一次性的初始化靠它（例如夥伴 logo 的預先載入）。
+await ctx.addInitScript(() => {
+  window.setInterval = () => 0;
+});
+
 const rows = [];
 for (const p of targets) {
   const aFile = path.join(OUT, `${p.name}.proto.png`);
@@ -207,7 +262,7 @@ for (const p of targets) {
   const dFile = path.join(OUT, `${p.name}.diff.png`);
   const gate = p.name === 'home';
 
-  const protoProblems = await shoot(ctx, `http://127.0.0.1:${proto.port}/${encodeURIComponent(p.proto)}`, aFile, { dismissGate: gate, mask: p.maskProto });
+  const protoProblems = await shoot(ctx, `http://127.0.0.1:${proto.port}/${encodeURIComponent(p.proto)}`, aFile, { dismissGate: gate, mask: p.maskProto, normalizeFont: true });
 
   let builtProblems = [];
   let r = null;

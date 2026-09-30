@@ -9,13 +9,10 @@ interface Props {
   /** 深色底的頁面（例如首頁 Hero）要換 body 底色，預設暖白 #FAFAF8 */
   bodyBackground?: string;
   /**
-   * 字型設定照原型分兩種，不要自己統一，差別會被像素比對抓到：
-   *
-   * standard（7 頁）：覆寫 :root 的 --font-sans／--font-display 指向思源黑體，
-   *   所以設計系統的按鈕、卡片上的中文也是思源黑體。
-   * tgpro（Tiger GPU Pro）：只改 body、沒動 :root，所以 .t-btn／.t-card 那些
-   *   用 var(--font-sans) 的地方走 token 預設值，中文是 Noto Sans TC。
-   *   body 的堆疊還多一個 'Noto Sans TC' 後備。
+   * 字型設定照原型分兩種。原型那 7 頁覆寫了 :root 的 --font-sans／--font-display，
+   * Tiger GPU Pro 那頁只改 body 沒動 :root。換成 Noto Sans TC 之後兩者的
+   * 字型檔其實一樣了，但 :root 有沒有被覆寫還是會影響到設計系統元件的堆疊順序，
+   * 所以保留這個區分。
    */
   fonts?: 'standard' | 'tgpro';
 }
@@ -24,9 +21,9 @@ const { title, description, bodyBackground, fonts = 'standard' } = Astro.props;
 const DS = '/ds';
 
 const FONT_CSS = {
-  standard: `:root{--font-sans:'Inter','Source Han Sans TC',sans-serif;--font-display:'Manrope','Source Han Sans TC',sans-serif}` +
-    `body{font-family:'Inter','Source Han Sans TC',sans-serif}`,
-  tgpro: `body{font-family:'Inter','Source Han Sans TC','Noto Sans TC',sans-serif}`,
+  standard: `:root{--font-sans:'Inter','Noto Sans TC',sans-serif;--font-display:'Manrope','Noto Sans TC',sans-serif}` +
+    `body{font-family:'Inter','Noto Sans TC',sans-serif}`,
+  tgpro: `body{font-family:'Inter','Noto Sans TC',sans-serif}`,
 }[fonts];
 ---
 
@@ -43,9 +40,18 @@ const FONT_CSS = {
   <meta property="og:type" content="website" />
   <link rel="icon" href="/assets/logo/color-square-mark.svg" type="image/svg+xml" />
 
-  <!-- 設計系統。順序同原型：字型 → 自架中文 → 色彩 → 字級 → 基礎 → 元件 → 總表 -->
+  <!-- 中文字型走 Google Fonts 的 Noto Sans TC。
+       原型是自架思源黑體的 4 個 OTF，量過線上版是一頁下載 54 MB，不能上線。
+       思源黑體（Adobe 發行名 Source Han Sans）和 Noto Sans CJK（Google 發行名）
+       是同一套字，Google Fonts 會切成上百個小 woff2 依 unicode-range 按需載入。
+       字重 400/500/700/900 對應原本的 Regular/Medium/Bold/Heavy，
+       600 是設計系統本來就在用的。換完有跑像素比對，見 README「字型」。 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" />
+
+  <!-- 設計系統。順序同原型：字型 → 色彩 → 字級 → 基礎 → 元件 → 總表 -->
   <link rel="stylesheet" href={`${DS}/tokens/fonts.css`} />
-  <link rel="stylesheet" href="/assets/fonts/source-han-sans-tc.css" />
   <link rel="stylesheet" href={`${DS}/tokens/colors.css`} />
   <link rel="stylesheet" href={`${DS}/tokens/typography.css`} />
   <link rel="stylesheet" href={`${DS}/styles/base.css`} />

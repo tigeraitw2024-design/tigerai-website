@@ -52,7 +52,7 @@ export default function GpuHeroRotator({ stories }: { stories: Story[] }) {
       <div style={{ minWidth: 0, flex: '0 1 auto' }}>
         <h1
           style={{
-            fontFamily: "'Manrope','Source Han Sans TC',sans-serif",
+            fontFamily: "'Manrope','Noto Sans TC',sans-serif",
             fontSize: 'clamp(30px,4.6vw,72px)',
             fontWeight: 800,
             letterSpacing: '-.02em',

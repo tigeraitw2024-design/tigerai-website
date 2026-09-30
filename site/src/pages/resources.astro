@@ -64,7 +64,7 @@ const videos = [
     <section style="padding:140px 0 48px">
       <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
         <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">免費資源</span>
-        <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">先自己學，想快再找我們。</h1>
+        <h1 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">先自己學，想快再找我們。</h1>
       </div>
     </section>
 
@@ -74,7 +74,7 @@ const videos = [
           {cards.map((c) => (
             <div style="background:#fff;border:1px solid var(--border-subtle);padding:32px">
               <span class="t-badge">{c.badge}</span>
-              <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:24px;font-weight:700;margin:16px 0 8px">{c.title}</h3>
+              <h3 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:24px;font-weight:700;margin:16px 0 8px">{c.title}</h3>
               <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:var(--fg-secondary)">{c.body}</p>
               <a class="t-btn t-btn--outline" href={c.href} target="_blank" rel="noopener" style="text-decoration:none">{c.cta}</a>
             </div>
@@ -82,7 +82,7 @@ const videos = [
         </div>
 
         <div>
-          <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 24px">免費影片牆</h2>
+          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 24px">免費影片牆</h2>
           <VideoWall videos={videos} client:load />
           <p style="margin:16px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">影片與縮圖為示意・影片牆＝Payload「Videos」collection：貼 YouTube 連結即自動抓縮圖、點了原地開播</p>
         </div>

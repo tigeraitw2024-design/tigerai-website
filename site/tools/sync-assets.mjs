@@ -3,9 +3,14 @@
 // public/ 裡這幾層是產物，不進版控（見 .gitignore），每次 build 前重新同步。
 //
 // 刻意不搬的東西：
-//   design/assets/fonts/*.otf  思源黑體 4 字重共 64 MB。設計系統的字型堆疊寫的是
-//                              'Inter','Noto Sans TC'，中文走 Google Fonts CDN，
-//                              這四個 OTF 沒有任何 CSS 引用，純粹是交付時多放的。
+//   design/assets/fonts/*.otf  思源黑體 4 字重共 64 MB。原型每頁的 inline style 把
+//                              --font-sans 覆寫成 'Inter','Source Han Sans TC'，所以
+//                              原型確實在用它。但 64 MB 不能上線，正式站改用 Google
+//                              Fonts 的 Noto Sans TC（跟思源黑體是同一套字型的兩個
+//                              發行名，Adobe 叫 Source Han Sans、Google 叫 Noto Sans
+//                              CJK），字重取 400/500/700/900 對應 Regular/Medium/
+//                              Bold/Heavy。換完要跟 baseline/ 做像素比對確認沒走樣，
+//                              真有差再退回自架「思源黑體子集化後的 woff2」。
 //   design/uploads/*.json|md   n8n 原始流程與規格文件，屬於資料不是靜態資源。
 import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';

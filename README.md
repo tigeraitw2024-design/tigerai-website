@@ -43,6 +43,19 @@ npm run dev      # 會先把 design/ 的素材同步到 public/，再起本機�
 `npm run sync` 會把 `design/` 的設計系統和圖片複製到 `site/public/`。
 那幾層是產物，不進版控（見 `site/.gitignore`），所以 clone 下來第一件事是 `npm run dev` 或 `npm run sync`。
 
+## 字型：正式站不自架思源黑體
+
+原型每頁的 inline style 把 `--font-sans` 覆寫成 `'Inter','Source Han Sans TC'`，
+中文走 `design/assets/fonts/` 那四個 OTF，共 64 MB。原型這樣跑沒問題，上線不行。
+
+正式站改用 Google Fonts 的 **Noto Sans TC**。這不是換字型：思源黑體（Adobe 發行名
+Source Han Sans）和 Noto Sans CJK（Google 發行名）是同一套字，Google Fonts 會切成
+上百個小 woff2 依 unicode-range 按需載入。字重取 400／500／700／900，對應原本的
+Regular／Medium／Bold／Heavy。
+
+換完一定要跑 `npm run diff` 跟 `baseline/` 做像素比對。真的有走樣，就退回自架，
+把 OTF 用 fonttools 子集化成 woff2（繁中常用字約 13,500 字，每字重會降到 3 MB 左右）。
+
 ## 部署
 
 推到 `main` → Cloudflare 自動重新部署。兩個專案共用這個 repo：

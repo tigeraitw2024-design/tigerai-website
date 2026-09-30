@@ -58,12 +58,21 @@ Regular／Medium／Bold／Heavy。
 
 ## 部署
 
-推到 `main` → Cloudflare 自動重新部署。兩個專案共用這個 repo：
+Cloudflare **Workers**（不是 Pages），專案 `tigerai-website`，連這個 repo。
+推到 `main` 就自動重新建置部署。
 
-| Cloudflare 專案 | Build command | Build output |
-|---|---|---|
-| 原型預覽 | 留空 | `design` |
-| 正式站 | `cd site && npm install && npm run build` | `site/dist` |
+| 設定 | 值 |
+|---|---|
+| Root directory | `site` |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Branch control | `main` |
+
+Root directory 一定要填 `site`，不然 wrangler 在 repo 根目錄找不到 `wrangler.jsonc`
+也找不到 `dist/`，建置會顯示成功但其實什麼都沒發。
+
+用 Workers 而不是 Pages 的好處：靜態檔案一樣不吃運算額度，而且之後要加後台 API、
+D1 資料庫、R2 圖片儲存，直接在 `site/wrangler.jsonc` 打開註解就行，不用搬家。
 
 ## 全站文案守則
 

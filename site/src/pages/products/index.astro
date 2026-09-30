@@ -39,7 +39,7 @@ const STEP_BOX = 'position:absolute;top:52%;transform:translateY(-50%);width:cla
     <TopBar current="products" client:load />
 
     <!-- P0 拆解 Demo：300vh 捲動區，內層 sticky -->
-    <section style="position:relative;height:300vh;background:#FAFAF8">
+    <section data-m="demo3d" style="position:relative;height:300vh;background:#FAFAF8">
       <div style="position:sticky;top:0;height:100vh;overflow:hidden">
         <div style="max-width:1440px;margin:0 auto;padding:112px clamp(16px,5vw,64px) 0;position:relative;height:100%">
           <div style="position:relative;z-index:3;pointer-events:none">
@@ -61,14 +61,14 @@ const STEP_BOX = 'position:absolute;top:52%;transform:translateY(-50%);width:cla
             </div>
           </div>
 
-          <div style={`${STEP_BOX};left:clamp(16px,5vw,64px)`}>
+          <div data-m="demo3d-step" style={`${STEP_BOX};left:clamp(16px,5vw,64px)`}>
             <span style={`${MONO};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`}>Step 01・打開機殼</span>
             <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2">算力都在這一箱</b>
             <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">GPU、模型、知識庫、Workflow 全裝在同一個機殼裡。跑在你的機房，回應不經任何雲端 API。</p>
             <span style={`${MONO};font-size:11px;color:var(--fg-tertiary)`}>站 1–6 全站服務・13 部門 AI 同事</span>
           </div>
 
-          <div style={`${STEP_BOX};right:clamp(16px,5vw,64px)`}>
+          <div data-m="demo3d-step" style={`${STEP_BOX};right:clamp(16px,5vw,64px)`}>
             <span style={`${MONO};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`}>Step 02・拆到底</span>
             <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2">零件會換，資料不搬家</b>
             <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">開源模型隨裝隨換，GPU 卡位可擴充。換零件不換資料，授權不用重簽。</p>

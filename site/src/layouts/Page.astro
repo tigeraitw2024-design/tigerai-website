@@ -2,6 +2,9 @@
 // 全站的 HTML 外殼。樣式表的載入順序照 design/*.dc.html 的 <helmet> 一字不差，
 // 因為 CSS 的串接順序會影響最後長相，順序換了就可能走樣。
 import '../styles/site.css';
+// 手機與平板的調整。全部包在 max-width 裡，寬螢幕一條都不生效，
+// 所以桌機跟原型的像素比對不受影響。
+import '../styles/mobile.css';
 
 interface Props {
   title: string;

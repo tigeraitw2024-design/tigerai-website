@@ -117,10 +117,12 @@ export default function BookingCard() {
       )}
 
       <div
+        data-m="booking"
         style={{
           background: '#fff',
           padding: 32,
           marginLeft: 20,
+          // data-m="booking" 在手機上拿掉 marginLeft、放開固定高度
           display: 'grid',
           gap: 16,
           textAlign: 'left',
@@ -191,7 +193,7 @@ export default function BookingCard() {
 
         {step === 1 && (
           <div style={{ display: 'grid', gap: 10, height: 384, gridTemplateRows: 'minmax(0,1fr) auto auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 96px', gap: 14, alignItems: 'start' }}>
+            <div data-m="cal" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 96px', gap: 14, alignItems: 'start' }}>
               <div style={{ display: 'grid', gap: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="tg-bknav" onClick={() => setMon(Math.max(0, mon - 1))} style={{ cursor: 'pointer', border: '1px solid var(--border-default)', width: 26, height: 26, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', userSelect: 'none' }}>‹</span>
@@ -229,7 +231,7 @@ export default function BookingCard() {
                   ))}
                 </div>
               </div>
-              <div style={{ maxHeight: 300, overflowY: 'auto', display: 'grid', gap: 6, alignContent: 'start', paddingRight: 2 }}>
+              <div data-m="slots" style={{ maxHeight: 300, overflowY: 'auto', display: 'grid', gap: 6, alignContent: 'start', paddingRight: 2 }}>
                 {SLOTS.map((tm) => {
                   const on = time === tm;
                   return (

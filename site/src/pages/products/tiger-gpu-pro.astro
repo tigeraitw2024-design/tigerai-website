@@ -146,7 +146,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
           <!-- 右上淡虎金光暈 -->
           <div style="position:absolute;top:-40%;right:-6%;width:420px;height:420px;background:radial-gradient(closest-side,rgba(236,164,43,.12),transparent 70%);pointer-events:none"></div>
 
-          <div style="position:relative;display:grid;grid-template-columns:170px 1fr 170px;gap:16px;align-items:stretch">
+          <div data-m="atoa" style="position:relative;display:grid;grid-template-columns:170px 1fr 170px;gap:16px;align-items:stretch">
             <div style="border:1px solid var(--border-subtle);background:#fff;padding:16px;display:grid;gap:6px;align-content:center;justify-items:center;text-align:center">
               <span style={`width:40px;height:40px;border:1px solid var(--border-brand);color:var(--tiger-700);background:var(--tiger-50);display:inline-flex;align-items:center;justify-content:center;${MONO};font-size:13px`}>AI</span>
               <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:14px;font-weight:700">你的本機 AI</b>
@@ -205,7 +205,7 @@ const CHIP = `${MONO};font-size:11px;color:var(--tiger-700);border:1px solid var
         <h2 style={`${H2};margin:12px 0 8px`}>Key 發給誰、用多少，查得到。</h2>
         <p style="font-size:15px;line-height:1.7;color:var(--fg-secondary);margin:0 0 32px;max-width:56ch">員工輸入工號＋帳密才領得到 API Key。每一把 Key 都有名字，每一次調用都有紀錄。</p>
 
-        <div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.6fr);gap:24px;align-items:start">
+        <div data-m="stack" style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.6fr);gap:24px;align-items:start">
           <div style="border:1px solid var(--border-subtle);background:#FAFAF8;padding:20px;display:grid;gap:12px">
             <b style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:14px;font-weight:700">實名領 Key</b>
             <div style={`display:grid;gap:8px;${MONO};font-size:12px`}>

@@ -1,0 +1,141 @@
+/* 手機與平板版。
+ *
+ * 原型完全沒有尺寸斷點（8 頁只有 prefers-reduced-motion，一個 max-width 都沒有），
+ * 所以這份是重新設計的，不是照抄。桌機的像素比對必須維持 0.00%，
+ * 因此所有規則都包在 max-width 裡，寬螢幕一條都不會生效。
+ *
+ * 內容區大多是從原型照搬的 inline style，CSS 權重比不過，
+ * 所以這裡需要 !important。這是刻意的取捨：保持桌機和原型逐字一致，
+ * 比讓 CSS 好看重要。
+ *
+ * 斷點：
+ *   900px 以下  導覽換漢堡（由 TopBar.tsx 的 useNarrow 判斷，不在這裡）
+ *   720px 以下  雙欄改單欄、固定內距縮小、格數減少
+ *   480px 以下  再縮一階
+ */
+
+/* 窄螢幕要藏起來的東西（Tiger GPU Pro 那頁的靜態導覽與 CTA） */
+@media (max-width: 900px) {
+  .tg-wide-only { display: none !important; }
+}
+
+@media (max-width: 720px) {
+  /* ── 固定左右內距 ────────────────────────────────
+     原型有幾處寫死 padding:0 64px（信任帶、04b 入口帶、05b 企業首選），
+     在 390px 的畫面上等於左右各吃掉 1/3，內容只剩 262px。 */
+  [data-m="pad"] { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* ── 雙欄改單欄 ──────────────────────────────────
+     05b 企業首選（清單 ＋ 案卷）、06 測評（文字 ＋ L 階梯）、
+     10 預約（文案 ＋ 預約卡）、TG-04 管控報表 */
+  [data-m="stack"] { grid-template-columns: 1fr !important; gap: 24px !important; }
+
+  /* 右欄案卷在手機上不 sticky，不然會一直黏在畫面上擋住內容 */
+  [data-m="unstick"] { position: static !important; top: auto !important; }
+
+  /* ── 夥伴 logo 翻牌牆 ────────────────────────────
+     8 格塞進 390px 每格只剩 45px，logo 根本看不到。改成 4 格。
+     多出來的格子直接不顯示，不用改 JS。 */
+  [data-m="wall"] > :nth-child(n + 5) { display: none !important; }
+
+  /* ── 預約卡 ──────────────────────────────────────
+     原型靠 margin-left:20px 讓卡片壓在虎金色塊上，手機上單欄就不需要了。
+     高度也不再鎖死，讓內容自己撐開。 */
+  [data-m="booking"] {
+    margin-left: 0 !important;
+    height: auto !important;
+    min-height: 460px;
+    padding: 24px !important;
+  }
+  /* 月曆和時段欄並排會擠爆，改成上下排 */
+  [data-m="cal"] { grid-template-columns: 1fr !important; }
+  [data-m="slots"] {
+    max-height: none !important;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)) !important;
+    display: grid !important;
+  }
+
+  /* ── 10 收尾 CTA ─────────────────────────────────
+     左虎金右白的 50/50 直切，在單欄時會變成上半虎金下半白，
+     但分界線剛好切在文字中間很醜。手機改成整塊虎金。 */
+  [data-m="cta"] { background: var(--tiger-500) !important; }
+
+  /* ── 顧問頁的陪跑照片堆 ──────────────────────────
+     左欄 sticky 標題 ＋ 右欄照片堆在窄螢幕會互相擠壓，改成單欄，
+     照片放在文字後面。 */
+  [data-m="coach"] { grid-template-columns: 1fr !important; }
+  [data-m="coach-heads"] { padding-bottom: 0 !important; }
+  [data-m="coach-heads"] [data-stagehead] { position: static !important; }
+  [data-m="coach-heads"] [data-stagetext] { min-height: 0 !important; clip-path: none !important; }
+
+  /* ── Tiger GPU Pro 的 A to A 三欄 ────────────────
+     170px ＋ 訊息通道 ＋ 170px 在手機上放不下 */
+  [data-m="atoa"] { grid-template-columns: 1fr !important; }
+
+  /* ── 產品頁 3D 區 ────────────────────────────────
+     300vh 的捲動區在手機上只是一大片空白，縮成一屏。 */
+  [data-m="demo3d"] { height: 100vh !important; }
+  [data-m="demo3d-step"] { position: static !important; transform: none !important; width: auto !important; }
+
+  /* ── Hero 筆電 ───────────────────────────────────
+     手機上不做掀蓋傾斜，直接正面顯示，螢幕高度也壓低，
+     不然一台筆電就佔掉三屏。 */
+  [data-m="laptop"] { transform: none !important; }
+  [data-m="laptop-frame"] { padding: 6px !important; }
+  [data-m="screen"] { height: 70vh !important; min-height: 420px; }
+}
+
+@media (max-width: 480px) {
+  /* 夥伴牆再減到 3 格 */
+  [data-m="wall"] > :nth-child(n + 4) { display: none !important; }
+  /* 巨型淡字在小screen 會溢出 */
+  [data-m="ghost"] { font-size: 22vw !important; }
+}
+
+/* 觸控裝置：沒有滑鼠就沒有 hover，那些只能 hover 觸發的東西要有替代方式 */
+@media (hover: none) {
+  /* 顧問頭像帶的去背人像原本要 hover 才出現，觸控裝置改成點了才出現，
+     由 ConsultantStrip 的 onClick 處理，這裡只把提示文字換掉 */
+  [data-m="hover-hint"]::after { content: '（點頭像看介紹）'; }
+  [data-m="hover-hint"] > span { display: none; }
+}
+
+/* ────────────────────────────────────────────────────────────────
+   手機上的可讀與可點下限
+   ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  /* ── 字級下限 ────────────────────────────────────────
+     原型是照桌機畫的，很多標籤、註腳、單位用 9–11px。那個尺寸在桌機上
+     離眼睛 60 公分還讀得到，拿在手上就不行了。統一拉到 12px。
+
+     這些字級全部寫在 inline style 裡，選不到 class，只能用屬性選擇器比對
+     style 字串。Astro 輸出的是 `font-size:11px`（冒號後沒空格），
+     React 輸出的是 `font-size: 11px`（有空格），兩種都要寫。
+
+     筆電螢幕裡的主控台不套：那是「產品畫面的照片」，不是本文，
+     字放大反而會撐破它自己的版面。要讀的人點全螢幕。 */
+  [style*="font-size:11px"]:not([data-m="screen"] *),
+  [style*="font-size: 11px"]:not([data-m="screen"] *),
+  [style*="font-size:10px"]:not([data-m="screen"] *),
+  [style*="font-size: 10px"]:not([data-m="screen"] *),
+  [style*="font-size:9px"]:not([data-m="screen"] *),
+  [style*="font-size: 9px"]:not([data-m="screen"] *) {
+    font-size: 12px !important;
+  }
+
+  /* ── 觸控目標下限 ────────────────────────────────────
+     Apple 與 Google 都建議 44×44。按鈕本身多半夠大，不夠的是那些
+     「看起來像文字」的連結按鈕和小圖示鈕。這裡只加高度不加寬度，
+     寬度一動版面就會跟著跑。 */
+  .t-btn,
+  button:not([data-m="screen"] *),
+  a[href] > button {
+    min-height: 44px;
+  }
+
+  /* 純文字連結不強制 44px（會變成一整片空白），改用上下 padding
+     把可點範圍撐開，視覺上看起來一樣 */
+  a[href]:not(.t-btn):not([data-m="screen"] *):not(:has(img)):not(:has(button)) {
+    padding-block: 6px;
+  }
+}

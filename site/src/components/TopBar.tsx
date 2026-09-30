@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { NAV, CTA, type NavKey } from '../nav';
+import { useNarrow } from '../hooks/useNarrow';
 
 /**
  * 頂欄。初始滿版高 76px，捲動時連續縮成懸浮膠囊。
@@ -40,6 +41,27 @@ export default function TopBar({
 }) {
   const [p, setP] = useState(0);
   const raf = useRef(0);
+  // 六個導覽項加上 CTA，低於 900px 一定擠不下，換成漢堡選單
+  const narrow = useNarrow(900);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // 開選單時鎖住背景捲動，不然手機上會邊捲選單邊捲頁面
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  // 轉回桌機寬度時把選單收起來，免得留在畫面上
+  useEffect(() => {
+    if (!narrow) setMenuOpen(false);
+  }, [narrow]);
 
   useEffect(() => {
     // 每次捲動都重新找元素：原型也是這樣（isConnected 檢查），因為 island
@@ -118,8 +140,9 @@ export default function TopBar({
             width: '100%',
             maxWidth: 1440,
             // 原型這裡先寫 clamp(16px,5vw,64px) 再被 innerStyle 覆寫成固定值，
-            // 所以 clamp 實際上沒作用。照原型走，手機版那一輪再處理。
-            padding: `0 ${l(64, 24)}px`,
+            // 所以 clamp 實際上沒作用。桌機照原型走；窄螢幕 64px 的左右留白
+            // 會把 logo 和漢堡鈕擠到沒空間，所以改成 16px。
+            padding: narrow ? '0 16px' : `0 ${l(64, 24)}px`,
           }}
         >
           <a href="/" style={{ display: 'flex' }}>
@@ -130,7 +153,7 @@ export default function TopBar({
             />
           </a>
 
-          <nav style={{ display: 'flex', gap: 24, marginLeft: 24 }}>
+          <nav style={{ display: narrow ? 'none' : 'flex', gap: 24, marginLeft: 24 }}>
             {NAV.map((item) => {
               const on = item.key === current;
               const link = (
@@ -160,18 +183,100 @@ export default function TopBar({
           </nav>
 
           <div style={{ marginLeft: 'auto' }}>
-            {/* 原型是設計系統的 Button（size sm）。那個元件只是掛 class，
-                所以這裡用同樣的 class 做成 <a>，這樣按了真的會跳到預約區。 */}
-            <a
-              className="t-btn t-btn--primary t-btn--sm"
-              href={CTA.href}
-              style={{ textDecoration: 'none' }}
-            >
-              {CTA.label}
-            </a>
+            {narrow ? (
+              /* 漢堡鈕。44×44 是 Apple 和 Google 都建議的最小觸控範圍，
+                 小於這個尺寸手指點不準。 */
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label={menuOpen ? '關閉選單' : '開啟選單'}
+                aria-expanded={menuOpen}
+                style={{
+                  width: 44, height: 44, padding: 0,
+                  border: '1px solid var(--border-default)', background: '#fff',
+                  display: 'inline-flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: 5,
+                  cursor: 'pointer', borderRadius: 0,
+                }}
+              >
+                {/* 三條線，開啟時轉成 ✕ */}
+                <span style={{ display: 'block', width: 18, height: 2, background: '#0E0E0D', transition: 'transform .2s cubic-bezier(.22,.61,.36,1)', transform: menuOpen ? 'translateY(7px) rotate(45deg)' : 'none' }} />
+                <span style={{ display: 'block', width: 18, height: 2, background: '#0E0E0D', transition: 'opacity .2s', opacity: menuOpen ? 0 : 1 }} />
+                <span style={{ display: 'block', width: 18, height: 2, background: '#0E0E0D', transition: 'transform .2s cubic-bezier(.22,.61,.36,1)', transform: menuOpen ? 'translateY(-7px) rotate(-45deg)' : 'none' }} />
+              </button>
+            ) : (
+              /* 原型是設計系統的 Button（size sm）。那個元件只是掛 class，
+                 所以這裡用同樣的 class 做成 <a>，這樣按了真的會跳到預約區。 */
+              <a
+                className="t-btn t-btn--primary t-btn--sm"
+                href={CTA.href}
+                style={{ textDecoration: 'none' }}
+              >
+                {CTA.label}
+              </a>
+            )}
           </div>
         </div>
       </div>
+
+      {/* 手機選單面板。從頂欄底下展開，蓋滿剩下的畫面。
+          「產品」的兩個子項直接攤平列出，手機上不做 hover 下拉。 */}
+      {narrow && menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          style={{
+            pointerEvents: 'auto',
+            position: 'fixed',
+            top: `${l(76, 56)}px`,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: '#FAFAF8',
+            borderTop: '1px solid var(--border-subtle)',
+            overflowY: 'auto',
+            animation: 'tg-in .2s cubic-bezier(.22,.61,.36,1) both',
+          }}
+        >
+          <nav style={{ display: 'grid', padding: '8px 16px 24px' }}>
+            {NAV.map((item) => (
+              <div key={item.key}>
+                <a
+                  href={item.href}
+                  style={{
+                    display: 'flex', alignItems: 'center', minHeight: 52,
+                    fontSize: 17, fontWeight: item.key === current ? 700 : 500,
+                    color: item.key === current ? 'var(--tiger-700)' : '#0E0E0D',
+                    textDecoration: 'none',
+                    borderBottom: '1px solid var(--border-subtle)',
+                  }}
+                >
+                  {item.label}
+                </a>
+                {item.children?.map((c) => (
+                  <a
+                    key={c.href}
+                    href={c.href}
+                    style={{
+                      display: 'flex', alignItems: 'center', minHeight: 46,
+                      paddingLeft: 16, fontSize: 15, color: 'var(--fg-secondary)',
+                      textDecoration: 'none', borderBottom: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    ・{c.label}
+                  </a>
+                ))}
+              </div>
+            ))}
+            <a
+              className="t-btn t-btn--primary t-btn--block"
+              href={CTA.href}
+              style={{ marginTop: 20, textDecoration: 'none', height: 48 }}
+            >
+              {CTA.label}
+            </a>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

@@ -143,7 +143,7 @@ const resultCards = [
 
     <!-- 02 信任帶。頂欄的縮放起點是這一區的底部，所以要留 data-trust-band。 -->
     <section data-trust-band style="background:#fff;border-bottom:1px solid var(--border-subtle)">
-      <div style="max-width:1440px;margin:0 auto;padding:24px 64px;display:flex;flex-wrap:wrap;align-items:center;gap:16px 64px">
+      <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:24px 64px;display:flex;flex-wrap:wrap;align-items:center;gap:16px 64px">
         <span style="display:flex;align-items:baseline;gap:8px">
           <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count="166">166</span>+</b>
           <span style="font-size:13px;color:var(--fg-secondary)">企業導入</span>
@@ -218,7 +218,7 @@ const resultCards = [
     <!-- 04b Tiger GPU Pro 入口帶 -->
     <section id="tg-pro" style="background:#0E0E0D;color:#fff;padding:56px 0;position:relative;overflow:hidden">
       <div style="position:absolute;top:-60%;right:-4%;width:380px;height:380px;background:radial-gradient(closest-side,rgba(236,164,43,.24),transparent 70%);pointer-events:none"></div>
-      <div style="max-width:1440px;margin:0 auto;padding:0 64px;position:relative;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:0 64px;position:relative;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px">
           <span style={EYEBROW_DARK}>Tiger GPU Pro・新上線</span>
           <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:10px 0 8px">做出來了，放哪裡？</h2>
@@ -261,14 +261,14 @@ const resultCards = [
 
     <!-- 05b 企業首選 -->
     <section id="departments" style="padding:96px 0;background:#fff;border-top:1px solid var(--border-subtle)">
-      <div style="max-width:1440px;margin:0 auto;padding:0 64px">
+      <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:0 64px">
         <EnterpriseChoice client:load />
       </div>
     </section>
 
     <!-- 06 測評入口 -->
     <section id="assessment" style={`${SECTION};background:#fff;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)`}>
-      <div style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center`}>
+      <div data-m="stack" style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center`}>
         <div>
           <span style={EYEBROW}>L1–L5 成熟度</span>
           <h2 style={`${H2};margin:12px 0 16px`}>5 分鐘，測你在 L 幾。</h2>
@@ -350,7 +350,7 @@ const resultCards = [
     </section>
 
     <!-- 10 收尾 CTA：左虎金右白，中線剛好切在一半 -->
-    <section id="contact" style="background:linear-gradient(90deg,var(--tiger-500) 50%,#FFFFFF 50%);color:#0E0E0D;padding:0">
+    <section id="contact" data-m="cta" style="background:linear-gradient(90deg,var(--tiger-500) 50%,#FFFFFF 50%);color:#0E0E0D;padding:0">
       <div style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));column-gap:0;row-gap:32px;align-items:center`}>
         <div style="padding-right:clamp(24px,5vw,64px)">
           <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(34px,5vw,60px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px">預約 30 分鐘諮詢。</h2>

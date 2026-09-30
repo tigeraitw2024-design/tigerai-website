@@ -192,6 +192,7 @@ export default function HeroLaptop() {
         }}
       >
         <div
+          data-m="laptop"
           style={{
             transformOrigin: '50% 20%',
             ...(fs
@@ -204,6 +205,7 @@ export default function HeroLaptop() {
         >
           {/* 筆電外框：銀色漸層機身 */}
           <div
+            data-m="laptop-frame"
             style={{
               border: '1px solid #C7C5C1',
               background: 'linear-gradient(180deg,#F4F3F1,#D9D7D3)',
@@ -214,6 +216,7 @@ export default function HeroLaptop() {
           >
             {/* 螢幕 */}
             <div
+              data-m="screen"
               style={{
                 position: 'relative',
                 background: '#FFFFFF',

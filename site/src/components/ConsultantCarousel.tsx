@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useCoarsePointer } from '../hooks/useCoarsePointer';
 import { consultants } from '../data/consultants';
 
 /**
@@ -58,6 +59,8 @@ const num = (n: number) => n.toLocaleString('en-US');
 const fullName = (c: { zh: string; en: string }) => c.zh + (c.en ? (c.zh ? ' ' : '') + c.en : '');
 
 export default function ConsultantCarousel() {
+  // 同 ConsultantStrip：沒有滑鼠就點一下選人，選到的再點一次才進課程頁。
+  const coarse = useCoarsePointer();
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   // 換人時交替兩組內容相同的 keyframes，讓詳情每次都重新觸發進場動畫
@@ -99,6 +102,12 @@ export default function ConsultantCarousel() {
                 key={k}
                 href="/courses"
                 onMouseEnter={() => {
+                  setChanges((n) => n + 1);
+                  setI(idx);
+                }}
+                onClick={(e) => {
+                  if (!coarse || idx === i) return;
+                  e.preventDefault();
                   setChanges((n) => n + 1);
                   setI(idx);
                 }}

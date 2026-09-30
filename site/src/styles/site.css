@@ -24,6 +24,10 @@ a { color: #0E0E0D; }
    用 :not(.t-btn) 把按鈕排除掉。 */
 a:not(.t-btn):hover { color: #C08423; }
 
+/* 手機選單展開用。首頁的 home.css 也有一份同名的（給各區塊進場用），
+   內容一樣，重複定義不影響。放這裡是因為頂欄每一頁都有。 */
+@keyframes tg-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+
 /* ── 頂欄「產品 ▾」下拉 ───────────────────────────────── */
 .tg-dd { position: relative; display: inline-flex; align-items: center; }
 .tg-dd > div {

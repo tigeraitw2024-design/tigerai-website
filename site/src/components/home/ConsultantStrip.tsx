@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useCoarsePointer } from '../../hooks/useCoarsePointer';
 import { consultants as DATA } from '../../data/consultants';
 
 /**
@@ -22,6 +23,10 @@ const EASE = 'cubic-bezier(.22,.61,.36,1)';
 const cutoutName = (src: string, suffix = '') => src.split('/').pop()!.replace('.png', `${suffix}.png`);
 
 export default function ConsultantStrip() {
+  // 沒有滑鼠的人碰不到 hover。這裡改成點一下先選人（看介紹），
+  // 已經選到的人再點一次才進課程頁——不然手指一碰就被帶走，
+  // 這一整段互動在手機上等於不存在。
+  const coarse = useCoarsePointer();
   const [i, setI] = useState(0);
   const [open, setOpen] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -83,6 +88,15 @@ export default function ConsultantStrip() {
                 key={k}
                 href="/courses"
                 onMouseEnter={() => {
+                  setN((v) => v + 1);
+                  setI(idx);
+                  setOpen(true);
+                }}
+                onClick={(e) => {
+                  if (!coarse) return;
+                  const already = open && idx === i;
+                  if (already) return; // 第二下：照原本的連結走
+                  e.preventDefault();
                   setN((v) => v + 1);
                   setI(idx);
                   setOpen(true);

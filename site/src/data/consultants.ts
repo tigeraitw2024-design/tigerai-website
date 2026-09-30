@@ -69,7 +69,7 @@ export const consultants: Consultant[] = [
   },
   {
     "img": "assets/consultants/c07p.png",
-    "zh": "賴志？",
+    "zh": "賴志銘",
     "en": "Jimmy",
     "title": "模型維運顧問",
     "course": "Ollama 模型管理實戰",
@@ -96,7 +96,7 @@ export const consultants: Consultant[] = [
   },
   {
     "img": "assets/consultants/c10p.png",
-    "zh": "顏世？",
+    "zh": "顏世倫",
     "en": "",
     "title": "學術顧問・臺科大教授",
     "course": "C1–C5 方法論講座",

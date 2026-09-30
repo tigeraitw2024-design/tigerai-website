@@ -116,7 +116,7 @@ export default function EnterpriseChoice() {
           : '六條都是 n8n 實跑的原檔：點一列看痛點與成效，右邊案卷就是那條流程，虛線是資料在跑。'}
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.5fr) minmax(0,1fr)', gap: 48, alignItems: 'start' }}>
+      <div data-m="stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.5fr) minmax(0,1fr)', gap: 48, alignItems: 'start' }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: deptOpen ? 'none' : 'block' }}>
             <List rows={flowRows} sel={flowSel} onPick={setFlowSel} />
@@ -143,7 +143,7 @@ export default function EnterpriseChoice() {
         </div>
 
         {/* 右欄案卷 */}
-        <div style={{ minWidth: 0, position: 'sticky', top: 120 }}>
+        <div data-m="unstick" style={{ minWidth: 0, position: 'sticky', top: 120 }}>
           <CaseFilePane
             mode={deptOpen ? 'dept' : 'flow'}
             flow={FLOWS[flowSel]}

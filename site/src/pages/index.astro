@@ -1,0 +1,62 @@
+---
+// 暫時的首頁：真正的首頁（開場動畫、身分閘門、筆電主控台）是最後才做的一塊，
+// 在那之前打開網站根目錄會是 404，很難看。這頁顯示進度，做好就整支覆蓋掉。
+//
+// 這不是設計稿的一部分，所以故意做得像工地看板，不要讓人誤以為是正式頁面。
+import Page from '../layouts/Page.astro';
+
+const done = [
+  { name: '案例', href: '/cases', diff: '0.00%' },
+  { name: '部落格', href: '/blog', diff: '0.00%' },
+  { name: '免費資源', href: '/resources', diff: '0.00%' },
+  { name: 'Tiger GPU Pro', href: '/products/tiger-gpu-pro', diff: '0.01%' },
+  { name: '課程', href: '/courses', diff: '0.26%', note: '原型自己的次像素誤差，刻意不複製' },
+];
+
+const todo = [
+  { name: '產品', note: 'three.js 捲動 3D 拆解' },
+  { name: '顧問與方法論', note: '顧問輪播、陪跑四階段照片堆' },
+  { name: '首頁', note: '開場動畫、身分閘門、筆電主控台 8 站、預約' },
+];
+
+const MONO = "font-family:'JetBrains Mono',monospace";
+---
+
+<Page title="重建進度｜TigerAI 官網" description="官網重建中。這頁是暫時的進度看板。">
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+    <style>
+      .row { display: flex; align-items: baseline; gap: 16px; padding: 14px 4px; border-bottom: 1px solid var(--border-subtle) }
+      .row a { font-size: 17px; font-weight: 600; text-decoration: none }
+      .row a:hover { color: var(--tiger-700) }
+    </style>
+  </Fragment>
+
+  <div style="max-width:720px;margin:0 auto;padding:clamp(48px,9vw,96px) clamp(16px,5vw,64px)">
+    <span style={`${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`}>Rebuild In Progress</span>
+    <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 12px">官網重建中。</h1>
+    <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);margin:0 0 8px;max-width:56ch">照 Claude Design 的原型逐頁重建。每頁做完都跟原型做全頁像素比對，數字就是差異比例。</p>
+    <p style="font-size:14px;line-height:1.7;color:var(--fg-tertiary);margin:0 0 48px;max-width:56ch">真正的首頁做好之後，這頁就會被覆蓋掉。</p>
+
+    <h2 style={`${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary);margin:0 0 8px`}>已完成 {done.length} / 8</h2>
+    <div style="border-top:1px solid var(--border-subtle);margin-bottom:40px">
+      {done.map((p) => (
+        <div class="row">
+          <a href={p.href}>{p.name}</a>
+          <span style={`${MONO};font-size:12px;color:var(--tiger-700)`}>{p.diff}</span>
+          {p.note && <span style="font-size:13px;color:var(--fg-tertiary);margin-left:auto;text-align:right">{p.note}</span>}
+        </div>
+      ))}
+    </div>
+
+    <h2 style={`${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary);margin:0 0 8px`}>還沒做</h2>
+    <div style="border-top:1px solid var(--border-subtle)">
+      {todo.map((p) => (
+        <div class="row">
+          <span style="font-size:17px;font-weight:600;color:var(--fg-tertiary)">{p.name}</span>
+          <span style="font-size:13px;color:var(--fg-tertiary);margin-left:auto;text-align:right">{p.note}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</Page>

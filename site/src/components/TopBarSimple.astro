@@ -1,0 +1,42 @@
+---
+// Tiger GPU Pro 專用的頂欄。
+//
+// 原型在這一頁用了完全不同的頂欄，跟其他 7 頁不一樣：
+//   position: sticky（不是 fixed）  高 58px（不是 76px）
+//   背景 rgba(250,250,248,.72)      沒有捲動縮成膠囊的行為
+//   導覽連結沒有 hover 掃線、也沒有標示目前所在頁
+//
+// 交付說明寫「頂欄每頁相同」，但原型這頁不是。以原型為準，所以獨立成一支，
+// 而且不需要 JavaScript。
+//
+// 這個不一致要跟 Robin 確認：是刻意的（這頁是產品子層，刻意收斂），
+// 還是原型做到這頁時忘了同步。確認前先照原型。
+import { NAV, CTA } from '../nav';
+---
+
+<header style="position:sticky;top:0;z-index:100;background:rgba(250,250,248,.72);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--border-subtle)">
+  <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);height:58px;display:flex;align-items:center;gap:24px">
+    <a href="/" style="display:flex">
+      <img src="/assets/logo/color-horizontal-black-text.svg" alt="TigerAI 虎智科技" style="height:26px;display:block" />
+    </a>
+    <nav style="display:flex;gap:24px;margin-left:24px">
+      {NAV.map((item) =>
+        item.children ? (
+          <span class="tg-dd">
+            <a href={item.href} style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">{item.label} ▾</a>
+            <div>
+              <div class="tg-dd-in">
+                {item.children.map((c) => <a href={c.href}>{c.label}</a>)}
+              </div>
+            </div>
+          </span>
+        ) : (
+          <a href={item.href} style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">{item.label}</a>
+        )
+      )}
+    </nav>
+    <div style="margin-left:auto">
+      <a href={CTA.href} style="text-decoration:none"><button class="t-btn t-btn--primary t-btn--sm">{CTA.label}</button></a>
+    </div>
+  </div>
+</header>

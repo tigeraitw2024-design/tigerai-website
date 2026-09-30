@@ -8,10 +8,26 @@ interface Props {
   description?: string;
   /** 深色底的頁面（例如首頁 Hero）要換 body 底色，預設暖白 #FAFAF8 */
   bodyBackground?: string;
+  /**
+   * 字型設定照原型分兩種，不要自己統一，差別會被像素比對抓到：
+   *
+   * standard（7 頁）：覆寫 :root 的 --font-sans／--font-display 指向思源黑體，
+   *   所以設計系統的按鈕、卡片上的中文也是思源黑體。
+   * tgpro（Tiger GPU Pro）：只改 body、沒動 :root，所以 .t-btn／.t-card 那些
+   *   用 var(--font-sans) 的地方走 token 預設值，中文是 Noto Sans TC。
+   *   body 的堆疊還多一個 'Noto Sans TC' 後備。
+   */
+  fonts?: 'standard' | 'tgpro';
 }
 
-const { title, description, bodyBackground } = Astro.props;
+const { title, description, bodyBackground, fonts = 'standard' } = Astro.props;
 const DS = '/ds';
+
+const FONT_CSS = {
+  standard: `:root{--font-sans:'Inter','Source Han Sans TC',sans-serif;--font-display:'Manrope','Source Han Sans TC',sans-serif}` +
+    `body{font-family:'Inter','Source Han Sans TC',sans-serif}`,
+  tgpro: `body{font-family:'Inter','Source Han Sans TC','Noto Sans TC',sans-serif}`,
+}[fonts];
 ---
 
 <!DOCTYPE html>
@@ -38,6 +54,7 @@ const DS = '/ds';
   <link rel="stylesheet" href={`${DS}/styles/cards.css`} />
   <link rel="stylesheet" href={`${DS}/styles.css`} />
 
+  <style set:html={FONT_CSS} />
   {bodyBackground && <style set:html={`body{background:${bodyBackground}}`} />}
 
   <!-- 只有某一頁要的 keyframes 或樣式放這裡，不要塞進共用的 site.css。

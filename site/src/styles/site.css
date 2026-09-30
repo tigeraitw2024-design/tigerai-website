@@ -2,20 +2,16 @@
    數值一字不改，改動要先跟 baseline/ 做像素比對。
    來源：design/*.dc.html 的 <helmet> 裡那段 <style>。 */
 
-:root {
-  /* 原型覆寫掉設計系統的 --font-sans / --font-display，中文改走自架的思源黑體。
-     上線前會換成 Google Fonts 的 Noto Sans TC（同一套字的另一個發行名），
-     現在先照原型，像素比對才量得準。見 README「字型」。 */
-  --font-sans: 'Inter', 'Source Han Sans TC', sans-serif;
-  --font-display: 'Manrope', 'Source Han Sans TC', sans-serif;
-}
+/* 字型不在這裡設。原型各頁不一致：7 頁覆寫 :root 的 --font-sans／--font-display
+   指向思源黑體，Tiger GPU Pro 那頁只改 body、沒動 :root，所以設計系統按鈕和
+   卡片上的中文走的是 token 預設的 Noto Sans TC。差別很細但會被像素比對抓到，
+   所以交給 Page.astro 的 fonts 參數按頁決定。 */
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
   background: #FAFAF8;
-  font-family: 'Inter', 'Source Han Sans TC', sans-serif;
   color: #0E0E0D;
 }
 

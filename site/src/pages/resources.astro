@@ -1,0 +1,94 @@
+---
+// 免費資源。移植自 design/免費資源.dc.html，版面與文案一字不改。
+//
+// 兩張卡的按鈕在原型裡沒有 href（設計原型不接外連），正式站補上真連結：
+// n8n 中文課程庫和 OpenGenie GitHub。全站規則第 7 條：n8n 課程庫永遠獨立、
+// 非商業，官網只放連結，不導去任何付費頁。
+//
+// 影片是示意資料（6 支都是同一個 YouTube id），接上 Videos collection 後
+// 由後台貼連結決定。
+import Page from '../layouts/Page.astro';
+import TopBar from '../components/TopBar.tsx';
+import VideoWall from '../components/VideoWall.tsx';
+import FooterSlim from '../components/FooterSlim.astro';
+
+const cards = [
+  {
+    badge: '獨立・非商業',
+    title: 'n8n 中文課程庫',
+    body: '永遠獨立、永遠免費的 n8n 中文教材，官網只放連結，不會把你導去任何付費頁。',
+    cta: '前往課程庫 →',
+    href: 'https://n8n.tw/',
+  },
+  {
+    badge: '開發者',
+    title: 'OpenGenie（GitHub）',
+    body: '主控台背後的開源專案，文件與原始碼在 GitHub Pages，直接深連結。',
+    cta: '前往 GitHub →',
+    href: 'https://github.com/',
+  },
+];
+
+// 示意資料，接後台後換成 Videos collection
+const videos = [
+  { id: 'qh3NGpYRG3I', title: 'n8n 自動化入門・示意影片' },
+  { id: 'qh3NGpYRG3I', title: '把文件變成知識庫（RAG）・示意影片' },
+  { id: 'qh3NGpYRG3I', title: '地端模型安裝實錄・示意影片' },
+  { id: 'qh3NGpYRG3I', title: '部門額度與熔斷設定・示意影片' },
+  { id: 'qh3NGpYRG3I', title: '合約審閱 Workflow 實戰・示意影片' },
+  { id: 'qh3NGpYRG3I', title: 'GPU 管理中心導覽・示意影片' },
+];
+---
+
+<Page
+  title="免費資源｜TigerAI 虎智科技"
+  description="n8n 中文課程庫、OpenGenie 開源專案與免費影片牆。先自己學，想快再找我們。"
+>
+  <Fragment slot="head">
+    <style>
+      /* 原型這頁 inline style 獨有的部分 */
+      @keyframes tg-fade { from { opacity: 0 } to { opacity: 1 } }
+      @keyframes tg-zoom { from { opacity: 0; transform: scale(.82) } to { opacity: 1; transform: none } }
+      @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: .001ms !important; animation-delay: 0ms !important }
+      }
+      /* 原型用 support.js 的 style-hover，這裡換成真 CSS */
+      .tg-vthumb:hover { border-color: var(--ink-600); box-shadow: var(--shadow-md) }
+      .tg-vclose:hover { background: rgba(255, 255, 255, .12) }
+    </style>
+  </Fragment>
+
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    <TopBar current="resources" client:load />
+
+    <section style="padding:140px 0 48px">
+      <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">免費資源</span>
+        <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">先自己學，想快再找我們。</h1>
+      </div>
+    </section>
+
+    <section style="padding:0 0 96px;flex:1">
+      <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:grid;gap:48px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px">
+          {cards.map((c) => (
+            <div style="background:#fff;border:1px solid var(--border-subtle);padding:32px">
+              <span class="t-badge">{c.badge}</span>
+              <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:24px;font-weight:700;margin:16px 0 8px">{c.title}</h3>
+              <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:var(--fg-secondary)">{c.body}</p>
+              <a class="t-btn t-btn--outline" href={c.href} target="_blank" rel="noopener" style="text-decoration:none">{c.cta}</a>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 24px">免費影片牆</h2>
+          <VideoWall videos={videos} client:load />
+          <p style="margin:16px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">影片與縮圖為示意・影片牆＝Payload「Videos」collection：貼 YouTube 連結即自動抓縮圖、點了原地開播</p>
+        </div>
+      </div>
+    </section>
+
+    <FooterSlim />
+  </div>
+</Page>

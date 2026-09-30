@@ -39,6 +39,11 @@ const DS = '/ds';
   <link rel="stylesheet" href={`${DS}/styles.css`} />
 
   {bodyBackground && <style set:html={`body{background:${bodyBackground}}`} />}
+
+  <!-- 只有某一頁要的 keyframes 或樣式放這裡，不要塞進共用的 site.css。
+       原型每頁的 inline <style> 除了共用那段之外還有各自的東西，
+       例如免費資源的 tg-fade／tg-zoom，那些就從這個 slot 進來。 -->
+  <slot name="head" />
 </head>
 <body>
   <slot />

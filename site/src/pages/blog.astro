@@ -1,0 +1,52 @@
+---
+// 部落格。移植自 design/部落格.dc.html，版面與文案一字不改。
+//
+// 原型的分類籤是靜態的 <span>，還不能點（交付說明寫「分類切換」是要做的功能，
+// 但原型只定了長相）。這裡照原型保持靜態，等接上後台有真文章了再讓它能篩。
+// 文章卡也還是虛線佔位框，接上 Posts collection 之後才會有內容。
+import Page from '../layouts/Page.astro';
+import TopBar from '../components/TopBar.tsx';
+import FooterSlim from '../components/FooterSlim.astro';
+
+const chips = [
+  { label: '全部', on: true },
+  { label: '部落格', on: false },
+  { label: '期刊', on: false },
+];
+const PLACEHOLDER_CARDS = 6;
+---
+
+<Page title="部落格｜TigerAI 虎智科技" description="虎智科技的文章與期刊。">
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    <TopBar current="blog" client:load />
+
+    <section style="padding:140px 0 32px">
+      <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">部落格</span>
+        <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">文章與期刊。</h1>
+        <div style="display:flex;gap:8px">
+          {chips.map((c) => (
+            <span
+              style={c.on
+                ? "font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;background:var(--ink-900);color:#fff"
+                : "font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)"}
+            >{c.label}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section style="padding:32px 0 96px;flex:1">
+      <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
+          {Array.from({ length: PLACEHOLDER_CARDS }).map(() => (
+            <div style="border:1px dashed var(--border-default);aspect-ratio:4/3"></div>
+          ))}
+        </div>
+        <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">文章卡＝Payload「Posts」collection：標題、內文、分類、封面（不附圖自動生成品牌模板）</p>
+      </div>
+    </section>
+
+    <FooterSlim />
+  </div>
+</Page>

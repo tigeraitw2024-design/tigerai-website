@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import Console from '../console/ConsoleApp.jsx';
 
 /**
  * Hero：馬賽克掃場標題 ＋ 筆電掀蓋 ＋ 開機畫面 ＋ 主控台。
  * 移植自 design/首頁.dc.html 的 01 區。
- *
- * ⚠ 主控台（console/ConsoleAppV2.jsx，8 站互動，原始碼 88 KB）還沒移植，
- *   螢幕裡目前是佔位。整台筆電的尺寸、邊框、轉軸、開機動畫、捲動傾斜
- *   都照原型做了，所以其餘部分的位置完全正確。
- *   補的時候把 [data-todo-console] 換成真的主控台，再把 verify.mjs 的遮罩拿掉。
  */
 
 const BOOT_ATTR = 'tgBoot';
@@ -122,6 +118,20 @@ export default function HeroLaptop() {
   const usedFs = useRef(false);
   const raf = useRef(0);
 
+  /**
+   * 主控台要等掛載到瀏覽器之後才渲染。
+   *
+   * 它在元件本體第一行就呼叫 window.matchMedia，而 Astro 會在建置時先把
+   * island 在 Node 裡渲染一次（為了讓 HTML 有內容、Google 讀得到），
+   * 那時候沒有 window，會直接爆掉。
+   *
+   * 與其去改那支 1397 行的原始檔（改了下次跟原型對就對不上），不如讓它
+   * 只在瀏覽器端出現。反正螢幕前兩秒半都被開機畫面蓋著，看不出差別，
+   * 而且 Hero 的標題文字照樣有預先產生，SEO 不受影響。
+   */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // 捲動傾斜：t = clamp(scrollY / 200)，上蓋從 rotateX(28deg) 回正、同時放大
   useEffect(() => {
     const onScroll = () => {
@@ -215,14 +225,11 @@ export default function HeroLaptop() {
                 ...(fs ? { flex: 1 } : {}),
               }}
             >
-              {/* 主控台的位置。補的時候換掉這個 div 就好。 */}
-              <div
-                data-todo-console
-                style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, color: 'var(--fg-tertiary)', border: '1px dashed var(--border-default)', padding: '14px 20px' }}>
-                  主控台 8 站（待移植）
-                </span>
+              {/* 主控台 8 站。原型是 <x-import style="height:100%;display:block">，
+                  那個 style 掛在掛載容器上，所以這裡包一層而不是傳給元件。
+                  onExpand 讓主控台自己切全螢幕，Esc 的處理在上面。 */}
+              <div style={{ height: '100%', display: 'block' }}>
+                {mounted && <Console onExpand={toggleFs} expanded={fs} startStation={0} />}
               </div>
 
               {/* 開機畫面：墨黑底、白虎頭、虎金進度線，2.1 秒後淡出 */}

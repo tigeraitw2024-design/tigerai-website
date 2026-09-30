@@ -16,7 +16,13 @@ body {
 }
 
 a { color: #0E0E0D; }
-a:hover { color: #C08423; }
+
+/* 這條 hover 變虎金是給「文字連結」用的，不能套到按鈕上。
+   原型的按鈕是 <button>，所以不受影響；正式站為了讓按鈕真的能跳轉，
+   有些改成了帶 .t-btn class 的 <a>，那時候這條會把字染成 #C08423，
+   跟 .t-btn:hover 的背景色幾乎一樣，滑鼠移上去文字就消失了。
+   用 :not(.t-btn) 把按鈕排除掉。 */
+a:not(.t-btn):hover { color: #C08423; }
 
 /* ── 頂欄「產品 ▾」下拉 ───────────────────────────────── */
 .tg-dd { position: relative; display: inline-flex; align-items: center; }

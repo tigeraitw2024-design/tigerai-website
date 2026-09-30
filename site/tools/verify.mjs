@@ -60,11 +60,9 @@ const PAGES = [
     name: 'home',
     proto: '首頁.dc.html',
     route: '/',
-    // 兩塊還沒移植，遮起來讓其餘部分照樣嚴格比對。補完要把遮罩拿掉重新量。
-    //   筆電螢幕裡的主控台 8 站（原始碼 88 KB，最後做）
-    //   企業首選右欄的案卷（n8n 畫布 ＋ 範例影片）
-    maskProto: '.og, #tg-flow-scroll, #tg-flow-video, #dept-media-host',
-    maskBuilt: '[data-todo-console], [data-todo-casefile] > div:nth-child(2)',
+    // 主控台已經移植，遮罩拿掉了。剩下企業首選右欄的案卷還沒做。
+    maskProto: '#tg-flow-scroll, #tg-flow-video, #dept-media-host',
+    maskBuilt: '[data-todo-casefile] > div:nth-child(2)',
     expect: 3,
     why:
       '差異全部在 05b 企業首選的右欄案卷，那一塊還沒移植（資料夾式頁籤、' +
@@ -234,6 +232,35 @@ async function undoPrototypeBugs(page) {
   await new Promise((r) => setTimeout(r, 400));
 }
 
+/**
+ * 兩邊都要做：只凍住「無限循環」的 CSS 動畫。
+ *
+ * 一度改成一律 animation:none，那是錯的：開場 logo 動畫、身分閘門淡出、
+ * 筆電掀蓋、開機畫面淡出全都是一次性動畫，本來會自己跑完、停在正確的終態，
+ * 一律關掉反而讓它們永遠停在起始狀態，整個第一屏被覆蓋層蓋住，
+ * 比出來的 0.000% 其實是在比兩張開場畫面，完全沒驗到底下的東西。
+ *
+ * 正確的作法是：等一次性動畫跑完（呼叫前先等夠久），然後只把
+ * animation-iteration-count 是 infinite 的那些關掉，因為它們永遠不會停，
+ * 兩邊的落點一定不同（顧問輪播 44 秒一圈、夥伴牆 42 秒、虎金光暈 14 秒來回、
+ * A to A 訊息 12 秒一輪、n8n 連線虛線持續流動）。
+ */
+async function freezeLoopingAnimations(page) {
+  const frozen = await page.evaluate(() => {
+    let n = 0;
+    for (const el of document.querySelectorAll('*')) {
+      const cs = getComputedStyle(el);
+      if (cs.animationName !== 'none' && cs.animationIterationCount.split(',').some((v) => v.trim() === 'infinite')) {
+        el.style.animation = 'none';
+        n++;
+      }
+    }
+    return n;
+  });
+  await new Promise((r) => setTimeout(r, 300));
+  return frozen;
+}
+
 async function shoot(ctx, url, file, { dismissGate = false, mask = null, normalizeFont = false } = {}) {
   const page = await ctx.newPage();
   const problems = [];
@@ -243,14 +270,19 @@ async function shoot(ctx, url, file, { dismissGate = false, mask = null, normali
   await page.waitForFunction(() => document.body.innerText.trim().length > 50, { timeout: 30000 }).catch(() => sleep(3000));
   if (normalizeFont) await useSameFontAsSite(page);
   if (dismissGate) {
-    // 首頁的身分閘門蓋在最上層，要先關掉才看得到底下的頁面
+    // 首頁：關掉身分閘門，然後等這一串一次性動畫全部跑完才截圖
+    //   閘門淡出 .6s → 筆電掀蓋 1.2s → 開機畫面 .4s 延遲 + 2.1s 淡出
+    //   → 馬賽克掃場 .56s 延遲 + 1s（reduced-motion 下直接跳終態）
+    // 加上主控台掛載的時間，抓 8 秒很寬鬆。
     await page.getByText('直接進官網').first().click({ timeout: 15000 }).catch(() => {});
-    await sleep(1500);
+    await sleep(2000);
     await page.evaluate(() => window.scrollTo(0, 0));
-    await sleep(3000);
+    await sleep(8000);
   }
   // 原型清 position 那一行是掛載後 300ms 跑的，所以要在捲動前、等它跑完才補回來
   if (normalizeFont) await undoPrototypeBugs(page);
+  // 一次性動畫此時已經跑完，只凍住永遠不會停的那些
+  await freezeLoopingAnimations(page);
   await sweep(page);
   await page.screenshot({
     path: file,
@@ -310,24 +342,12 @@ const ctx = await browser.newContext({
   reducedMotion: 'reduce', // 見檔頭第 1 點
 });
 
-// 要讓兩邊停在同一個狀態，得凍住兩種東西，缺一不可：
-//
-// 1) CSS 動畫。reducedMotion 只是讓頁面自己的 @media 規則生效，而各頁寫的是
-//    *{animation-duration:.001ms} ，無限循環的動畫還是在跑，只是跑很快，
-//    兩邊落點不同（顧問輪播 60 秒繞一圈，整條都會對不上）。
-//    直接 animation:none 讓所有元素停在「沒有動畫時的樣子」，兩邊必然一致。
-//    有 fill-mode:both 的進場動畫少了動畫也會停在正常狀態，不影響。
-//
-// 2) setInterval 跑的輪播（課程頁 Banner、Tiger GPU Pro 換詞、首頁身分閘門）。
-//    那是 JS 不是 CSS，凍不到。變成空的讓它們停在初始項目。
-//    setTimeout 留著，原型有一次性初始化靠它（例如夥伴 logo 預先載入）。
+// setInterval 跑的輪播（課程頁 Banner、Tiger GPU Pro 換詞、首頁身分閘門）
+// 不是 CSS 動畫，凍不到，兩邊載入差零點幾秒就停在不同項目。變成空的讓它們
+// 停在初始項目。setTimeout 留著，原型有一次性初始化靠它（夥伴 logo 預先載入），
+// 而且 reducedMotion 下馬賽克掃場會直接跳終態、不需要 setInterval。
 await ctx.addInitScript(() => {
   window.setInterval = () => 0;
-  document.addEventListener('DOMContentLoaded', () => {
-    const s = document.createElement('style');
-    s.textContent = '*,*::before,*::after{animation:none!important}';
-    document.head.appendChild(s);
-  });
 });
 
 const rows = [];

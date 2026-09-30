@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "lucide-static": "^1.49.0",
     "pixelmatch": "^6",
     "playwright-core": "^1",
     "pngjs": "^7",

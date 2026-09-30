@@ -1,0 +1,126 @@
+---
+// 首頁的捲動進場引擎。移植自 design/首頁.dc.html 的 _initFx()，公式照抄。
+//
+// 它不是針對特定區塊，而是掃整頁套四種效果，所以放一支就好：
+//
+//   1. 所有 grid 容器的子項：進畫面時逐個淡入，每個差 80ms（最多算到第 9 個）。
+//      選擇器刻意寫得寬（div[style*="grid-template-columns"]），跳過頂欄和
+//      主控台（.og）。
+//   2. [data-count]：數字從 0 滾到目標值，900ms，三次方 ease-out。
+//      有 data-comma 的加千分位。
+//   3. [data-chain]：Workflow 節點鏈，先全部壓到 .3 透明度，進畫面後每 140ms
+//      亮一個。
+//   4. [data-lbars]：L1–L5 階梯，長條從 scaleX(0) 長出來，每條差 120ms。
+//
+// 全部只跑一次（IntersectionObserver 觸發後就 unobserve）。
+// reduced-motion 下整個引擎不啟動，所有東西直接是終態。
+---
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    const ease = 'cubic-bezier(.22,.61,.36,1)';
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const el = e.target as HTMLElement & { __go?: (() => void) | null };
+          if (e.isIntersecting && el.__go) {
+            el.__go();
+            el.__go = null;
+            io.unobserve(el);
+          }
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    const reg = (el: HTMLElement, setup: () => void, go: () => void) => {
+      setup();
+      (el as HTMLElement & { __go?: (() => void) | null }).__go = go;
+      io.observe(el);
+    };
+
+    // 1. grid 子項逐個淡入
+    document.querySelectorAll<HTMLElement>('div[style*="grid-template-columns"]').forEach((g) => {
+      if (g.closest('.og') || g.closest('header')) return;
+      [...g.children].forEach((child, i) => {
+        const c = child as HTMLElement;
+        const delay = Math.min(i, 8) * 80;
+        reg(
+          c,
+          () => {
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(6px)';
+            c.style.transition = `opacity .3s ${ease} ${delay}ms, transform .3s ${ease} ${delay}ms`;
+          },
+          () => {
+            c.style.opacity = '1';
+            c.style.transform = 'none';
+          }
+        );
+      });
+    });
+
+    // 2. 數字滾動
+    document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+      reg(
+        el,
+        () => {
+          el.textContent = '0';
+        },
+        () => {
+          const target = Number(el.dataset.count);
+          const t0 = performance.now();
+          const d = 900;
+          const step = (n: number) => {
+            const k = Math.min(1, (n - t0) / d);
+            const v = Math.round(target * (1 - Math.pow(1 - k, 3)));
+            el.textContent = el.dataset.comma ? v.toLocaleString('en-US') : String(v);
+            if (k < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      );
+    });
+
+    // 3. Workflow 節點鏈依序亮起
+    const chain = document.querySelector<HTMLElement>('[data-chain]');
+    if (chain) {
+      reg(
+        chain,
+        () => {
+          [...chain.children].forEach((child) => {
+            const c = child as HTMLElement;
+            c.style.opacity = '.3';
+            c.style.transition = `opacity .2s ${ease}`;
+          });
+        },
+        () => {
+          [...chain.children].forEach((child, i) => {
+            setTimeout(() => {
+              (child as HTMLElement).style.opacity = '1';
+            }, i * 140);
+          });
+        }
+      );
+    }
+
+    // 4. L1–L5 階梯長條生長。每一列的第二個子元素才是長條。
+    const lbars = document.querySelector<HTMLElement>('[data-lbars]');
+    if (lbars) {
+      const bars = [...lbars.children]
+        .map((row) => row.children && (row.children[1] as HTMLElement | undefined))
+        .filter((b): b is HTMLElement => !!b && b.tagName === 'SPAN');
+      reg(
+        lbars,
+        () =>
+          bars.forEach((b, i) => {
+            b.style.transformOrigin = '0 50%';
+            b.style.transform = 'scaleX(0)';
+            b.style.transition = `transform .32s ${ease} ${i * 120}ms`;
+          }),
+        () => bars.forEach((b) => { b.style.transform = 'scaleX(1)'; })
+      );
+    }
+  }
+</script>

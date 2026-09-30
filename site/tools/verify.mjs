@@ -56,7 +56,23 @@ const THRESHOLD = Number(process.env.TG_THRESHOLD || 0.05);
  * 超過就是新的走樣，而不是把門檻整體放寬混過去。
  */
 const PAGES = [
-  { name: 'home', proto: '首頁.dc.html', route: '/' },
+  {
+    name: 'home',
+    proto: '首頁.dc.html',
+    route: '/',
+    // 兩塊還沒移植，遮起來讓其餘部分照樣嚴格比對。補完要把遮罩拿掉重新量。
+    //   筆電螢幕裡的主控台 8 站（原始碼 88 KB，最後做）
+    //   企業首選右欄的案卷（n8n 畫布 ＋ 範例影片）
+    maskProto: '.og, #tg-flow-scroll, #tg-flow-video, #dept-media-host',
+    maskBuilt: '[data-todo-console], [data-todo-casefile] > div:nth-child(2)',
+    expect: 3,
+    why:
+      '差異全部在 05b 企業首選的右欄案卷，那一塊還沒移植（資料夾式頁籤、' +
+      '依 n8n JSON 繪製的可縮放畫布、隱藏 YouTube 身份的片段循環播放器）。' +
+      '遮罩只蓋得住畫布本身，蓋不住頁籤列和縮放工具列，所以會算進差異。' +
+      '其餘 10 個區塊都是 0.000%，13 個區塊的位置與高度完全一致。' +
+      '案卷移植完要把這個 expect 拿掉，回到 0.05% 的標準。',
+  },
   {
     name: 'products',
     proto: '產品.dc.html',
@@ -190,6 +206,34 @@ async function sweep(page) {
   await sleep(600);
 }
 
+/**
+ * 只對原型那一邊做：把原型執行環境自己弄壞的東西修回來。
+ *
+ * 原型的 componentDidMount 裡有這一行，掛載 300ms 後跑：
+ *
+ *   document.querySelectorAll('section,footer')
+ *     .forEach(el => { el.style.position = ''; el.style.top = ''; });
+ *
+ * 它本意應該是清掉 support.js 為了自己的區塊標籤功能加上的 sticky 定位，
+ * 但寫得太寬，把作者寫在 HTML 裡的 position:relative 也一起清掉了。
+ *
+ * 後果：首頁三個區塊（Hero、Tiger GPU Pro 入口帶、顧問與方法論）的虎金光暈
+ * 失去定位父層，定位改以視窗為準，被推到頁面頂端之外，原型上完全看不到。
+ * 量出來的證據是顧問區光暈的父層高度：原型 900（視窗高），正式站 463（區塊高）。
+ *
+ * 那是原型執行環境的 bug，不是設計決定，正式站沒有那支清理程式也不該複製它。
+ * 所以在這裡把 position:relative 補回去，讓比對量的是我有沒有移植錯，
+ * 不是原型有沒有壞。
+ */
+async function undoPrototypeBugs(page) {
+  await page.evaluate(() => {
+    document.querySelectorAll('section, footer').forEach((el) => {
+      if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    });
+  });
+  await new Promise((r) => setTimeout(r, 400));
+}
+
 async function shoot(ctx, url, file, { dismissGate = false, mask = null, normalizeFont = false } = {}) {
   const page = await ctx.newPage();
   const problems = [];
@@ -205,6 +249,8 @@ async function shoot(ctx, url, file, { dismissGate = false, mask = null, normali
     await page.evaluate(() => window.scrollTo(0, 0));
     await sleep(3000);
   }
+  // 原型清 position 那一行是掛載後 300ms 跑的，所以要在捲動前、等它跑完才補回來
+  if (normalizeFont) await undoPrototypeBugs(page);
   await sweep(page);
   await page.screenshot({
     path: file,

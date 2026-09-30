@@ -1,0 +1,78 @@
+/* 首頁專用的 keyframes。數值照 design/首頁.dc.html 的 inline <style> 一字不改。
+   首頁動畫最多，抽成一支檔比塞在頁面裡好讀。 */
+
+/* ── 開場 logo 動畫（3.1 秒的時間軸）────────────────────
+   tg-sp-mark  虎頭徽章從 scale 4.15 淡入 → 3.65 → 3.83（律動一下）→ 1
+   tg-sp-w     右側文字容器寬度 0 → 197px 展開，字像從虎頭後面擠出來
+   tg-sp-ch    七個字母 path 依序由下 14px 淡入（每個差 0.12 秒）
+   tg-sp-out   整層往上滑出 */
+@keyframes tg-sp-mark {
+  0%   { opacity: 0; transform: scale(4.15) }
+  20%  { opacity: 1; transform: scale(3.65) }
+  50%  { transform: scale(3.83) }
+  100% { transform: none }
+}
+@keyframes tg-sp-w { from { width: 0 } to { width: 197px } }
+@keyframes tg-sp-ch { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
+@keyframes tg-sp-out { to { transform: translateY(-102%); visibility: hidden } }
+
+/* ── 通用進場 ────────────────────────────────────────
+   tg-in / tg-in2 內容一樣，交替使用是為了讓同一個元素重新觸發動畫 */
+@keyframes tg-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+@keyframes tg-in2 { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+
+/* ── Hero 筆電 ──────────────────────────────────────
+   tg-lid      上蓋從 rotateX(-72deg) 掀開
+   tg-boot     開機畫面在 60% 之後淡出
+   tg-bootbar  虎金進度線由左往右長出來 */
+@keyframes tg-lid { from { transform: rotateX(-72deg); opacity: .5 } to { transform: none; opacity: 1 } }
+@keyframes tg-boot { 0%, 60% { opacity: 1 } 100% { opacity: 0; visibility: hidden } }
+@keyframes tg-bootbar { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+
+/* ── 馬賽克掃場標題 ─────────────────────────────────
+   一道波 1 秒從句首掃到句尾，每個字經過時依序變成
+   灰白馬賽克格 → 虎金馬賽克格 → 金色字 → 白色正字
+   tg-blk  馬賽克格閃現（12% 亮起、84% 之後淡出）
+   tg-chr  正字在 65% 之後才出現 */
+@keyframes tg-blk { 0% { opacity: 0 } 12% { opacity: 1 } 84% { opacity: 1 } 100% { opacity: 0 } }
+@keyframes tg-chr { 0%, 65% { opacity: 0 } 66%, 100% { opacity: 1 } }
+
+/* ── 身分閘門 ───────────────────────────────────────
+   tg-drift  右上虎金光暈 14 秒來回漂移 */
+@keyframes tg-drift { from { transform: translate(0, 0) } to { transform: translate(-48px, 32px) } }
+
+/* ── 顧問區 ─────────────────────────────────────────
+   tg-cmq          頭像圈圈往左循環（清單接兩份，跑一半剛好接回起點）
+   tg-csin/csin2   去背人像從右側滑入 90px
+   tg-line/line2   資訊行由左往右逐行淡入 */
+@keyframes tg-cmq { to { transform: translateX(-50%) } }
+@keyframes tg-csin { from { opacity: 0; transform: translateX(90px) } to { opacity: 1; transform: none } }
+@keyframes tg-csin2 { from { opacity: 0; transform: translateX(90px) } to { opacity: 1; transform: none } }
+@keyframes tg-line { from { opacity: 0; transform: translateX(-14px) } to { opacity: 1; transform: none } }
+@keyframes tg-line2 { from { opacity: 0; transform: translateX(-14px) } to { opacity: 1; transform: none } }
+
+/* ── 夥伴翻牌牆 ─────────────────────────────────────
+   一格 64px、一欄 7 個再接回第 1 個，所以每階停在 -64px 的倍數 */
+@keyframes tg-logocol {
+  0%, 13.52%     { transform: translateY(0) }
+  14.29%, 27.81% { transform: translateY(-64px) }
+  28.57%, 42.09% { transform: translateY(-128px) }
+  42.86%, 56.38% { transform: translateY(-192px) }
+  57.14%, 70.66% { transform: translateY(-256px) }
+  71.43%, 84.95% { transform: translateY(-320px) }
+  85.71%, 99.24% { transform: translateY(-384px) }
+  100%           { transform: translateY(-448px) }
+}
+
+/* ── n8n 畫布 ───────────────────────────────────────
+   tg-dash  連線的虛線持續流動 */
+@keyframes tg-dash { to { stroke-dashoffset: -24 } }
+
+/* 企業首選左欄的流程清單，隱藏捲軸但保留可捲動 */
+#tg-flow-scroll::-webkit-scrollbar { display: none }
+
+/* 全站規則第 6 條：reduced-motion 下所有動畫直接跳終態 */
+@media (prefers-reduced-motion: reduce) {
+  [data-logocol] { animation: none !important }
+  * { animation-duration: .001ms !important; animation-delay: 0ms !important }
+}

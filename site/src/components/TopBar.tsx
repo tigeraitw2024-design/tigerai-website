@@ -20,10 +20,17 @@ import { NAV, CTA, type NavKey } from '../nav';
 export default function TopBar({
   current,
   start = 0,
+  startFrom,
   variant = 'default',
 }: {
   current?: NavKey;
   start?: number;
+  /**
+   * 首頁用：縮放的起點要等某個區塊捲過去才算，所以是「那個元素的底部 − 76px」，
+   * 得從 DOM 量。傳選擇器進來（首頁傳信任帶）。量不到就退回 start。
+   * 原型寫死在 _onScroll 裡：this._bandEl.offsetTop + offsetHeight - 76。
+   */
+  startFrom?: string;
   /**
    * 課程頁的頂欄跟其他頁不一樣：底色偏灰一階（#F2F2F1 而非 #FAFAF8），
    * 而且多一條 2px 的深色上邊框。因為那頁的滿版深色 Banner 緊貼在頂欄下方，
@@ -35,11 +42,19 @@ export default function TopBar({
   const raf = useRef(0);
 
   useEffect(() => {
+    // 每次捲動都重新找元素：原型也是這樣（isConnected 檢查），因為 island
+    // 掛載的時間點不保證那個區塊已經在 DOM 裡。
+    let band: HTMLElement | null = null;
+    const startAt = () => {
+      if (!startFrom) return start;
+      if (!band || !band.isConnected) band = document.querySelector<HTMLElement>(startFrom);
+      return band ? band.offsetTop + band.offsetHeight - 76 : start;
+    };
     const onScroll = () => {
       if (raf.current) return;
       raf.current = requestAnimationFrame(() => {
         raf.current = 0;
-        const next = Math.min(1, Math.max(0, ((window.scrollY || 0) - start) / 160));
+        const next = Math.min(1, Math.max(0, ((window.scrollY || 0) - startAt()) / 160));
         setP((prev) => (prev === next ? prev : next));
       });
     };
@@ -49,7 +64,7 @@ export default function TopBar({
       window.removeEventListener('scroll', onScroll);
       if (raf.current) cancelAnimationFrame(raf.current);
     };
-  }, [start]);
+  }, [start, startFrom]);
 
   // 線性插值，跟原型一樣取到小數第二位，避免每一幀都產生新字串。
   const l = (a: number, b: number) => Math.round((a + (b - a) * p) * 100) / 100;

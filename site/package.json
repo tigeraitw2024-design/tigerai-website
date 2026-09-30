@@ -22,7 +22,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "pixelmatch": "^6",
-    "playwright": "^1",
+    "playwright-core": "^1",
     "pngjs": "^7",
     "wrangler": "^4"
   }

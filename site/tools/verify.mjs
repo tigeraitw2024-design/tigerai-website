@@ -23,7 +23,10 @@ import { createReadStream, existsSync, statSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { chromium } from 'playwright';
+// playwright-core 而不是 playwright：core 版不會在安裝時下載 130MB 的瀏覽器。
+// 我們本來就用 channel:'chrome' 開機器上已裝的 Chrome，用不到它自帶的。
+// 這樣 Cloudflare 每次 build 也不會卡在下載瀏覽器。
+import { chromium } from 'playwright-core';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
 

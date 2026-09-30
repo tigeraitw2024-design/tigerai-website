@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/fonts.css">
+<link rel="stylesheet" href="assets/fonts/source-han-sans-tc.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/colors.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/typography.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/base.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/buttons.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/badges.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/cards.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles.css">
+<script src="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/_ds_bundle.js"></script>
+<style>:root{--font-sans:'Inter','Source Han Sans TC',sans-serif;--font-display:'Manrope','Source Han Sans TC',sans-serif}body{margin:0;background:#FAFAF8;font-family:'Inter','Source Han Sans TC',sans-serif;color:#0E0E0D}*{box-sizing:border-box}.tg-dd{position:relative;display:inline-flex;align-items:center}.tg-dd>div{position:absolute;left:0;top:100%;padding-top:12px;display:none;z-index:130}.tg-dd:hover>div{display:block}.tg-dd .tg-dd-in{background:#FFFFFF;border:1px solid var(--border-default);box-shadow:0 12px 28px rgba(14,14,13,.16);display:grid;min-width:170px}.tg-dd .tg-dd-in a{display:block;padding:10px 14px;font-size:13px;font-weight:500;color:#0E0E0D;text-decoration:none}.tg-dd .tg-dd-in a:hover{background:var(--slate-100);color:#C08423}a{color:#0E0E0D}a:hover{color:#C08423}</style>
+<script src="image-slot.js"></script>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;pointer-events:none">
+    <div style="pointer-events:auto;display:flex;justify-content:center;height:76px;width:100%;background:#F2F2F1;backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--border-subtle);{{ barStyle }}">
+    <div style="display:flex;align-items:center;gap:24px;width:100%;max-width:1440px;padding:0 clamp(16px,5vw,64px);{{ innerStyle }}">
+      <a href="首頁.dc.html" style="display:flex"><img src="assets/logo/color-horizontal-black-text.svg" alt="TigerAI 虎智科技" style="height:26px;display:block;{{ logoStyle }}"></a>
+      <nav style="display:flex;gap:24px;margin-left:24px">
+        <span class="tg-dd"><a href="產品.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">產品 ▾</a><div><div class="tg-dd-in"><a href="產品.dc.html">全部產品</a><a href="Tiger GPU Pro.dc.html">Tiger GPU Pro</a></div></div></span>
+        <a href="課程.dc.html" style="color:var(--tiger-600);text-decoration:none;font-size:14px;font-weight:600;padding-bottom:1px;border-bottom:2px solid var(--tiger-500)">課程</a>
+        <a href="顧問與方法論.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">顧問與方法論</a>
+        <a href="案例.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">案例</a>
+        <a href="部落格.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">部落格</a>
+        <a href="免費資源.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">免費資源</a>
+      </nav>
+      <div style="margin-left:auto">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="sm" hint-size="150px,32px">預約 30 分鐘諮詢</x-import>
+      </div>
+    </div>
+    </div>
+  </header>
+  <section data-screen-label="課程 Banner 輪播" style="padding:76px 0 0">
+      <div onMouseEnter="{{ bStop }}" onMouseLeave="{{ bGo }}" style="position:relative;overflow:hidden;background:#0E0E0D">
+        <div style="display:flex;width:200%;transform:{{ bTrack }};transition:transform .5s cubic-bezier(.22,.61,.36,1)">
+          <div style="width:calc(100% / 2);aspect-ratio:1983/793;position:relative;overflow:hidden"><image-slot id="course-banner-01" shape="rect" src="uploads/製造業BANNER_2.png" placeholder="拖入 Banner 圖 1（主打課程／活動主視覺）"></image-slot></div>
+          <div style="width:calc(100% / 2);aspect-ratio:1983/793;position:relative;overflow:hidden"><image-slot id="course-banner-02" shape="rect" src="uploads/製造業BANNER_1.png" placeholder="拖入 Banner 圖 2"></image-slot></div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:8px">
+          <span onClick="{{ bTo0 }}" style="{{ bDot0 }}"></span>
+          <span onClick="{{ bTo1 }}" style="{{ bDot1 }}"></span>
+        </div>
+      </div>
+  </section>
+
+  <section data-screen-label="最新課程" style="padding:64px 0 16px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">最新課程</span>
+        <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(24px,3vw,36px);font-weight:800;letter-spacing:-.02em;margin:0">新開班次。</h2>
+        <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">日期與期數為示意</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+        <div style="background:#fff;border:1px solid var(--border-subtle);display:flex;flex-direction:column;transition:transform .12s cubic-bezier(.22,.61,.36,1),box-shadow .12s cubic-bezier(.22,.61,.36,1)" style-hover="transform:translateY(-2px);box-shadow:var(--shadow-lg)">
+          <div style="aspect-ratio:16/9;border-bottom:1px solid var(--border-subtle);position:relative;overflow:hidden"><image-slot id="course-cover-01" shape="rect" placeholder="拖入課程封面 1"></image-slot></div>
+          <div style="padding:16px;display:grid;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tiger-700)">10/18 開課</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-secondary);border:1px solid var(--border-brand);background:var(--tiger-50);padding:2px 8px;white-space:nowrap">L2・16 小時</span>
+            </div>
+            <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.01em">n8n 自動化實戰</b>
+            <span style="font-size:13px;line-height:1.6;color:var(--fg-secondary)">第 12 期・n8n Taiwan Ambassador 授課・政府補助適用</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);display:flex;flex-direction:column;transition:transform .12s cubic-bezier(.22,.61,.36,1),box-shadow .12s cubic-bezier(.22,.61,.36,1)" style-hover="transform:translateY(-2px);box-shadow:var(--shadow-lg)">
+          <div style="aspect-ratio:16/9;border-bottom:1px solid var(--border-subtle);position:relative;overflow:hidden"><image-slot id="course-cover-02" shape="rect" placeholder="拖入課程封面 2"></image-slot></div>
+          <div style="padding:16px;display:grid;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tiger-700)">11/02 開課</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-secondary);border:1px solid var(--border-brand);background:var(--tiger-50);padding:2px 8px;white-space:nowrap">L3・12 小時</span>
+            </div>
+            <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.01em">Advanced RAG 知識庫實作</b>
+            <span style="font-size:13px;line-height:1.6;color:var(--fg-secondary)">第 5 期・把文件變成問得到答案的知識庫</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);display:flex;flex-direction:column;transition:transform .12s cubic-bezier(.22,.61,.36,1),box-shadow .12s cubic-bezier(.22,.61,.36,1)" style-hover="transform:translateY(-2px);box-shadow:var(--shadow-lg)">
+          <div style="aspect-ratio:16/9;border-bottom:1px solid var(--border-subtle);position:relative;overflow:hidden"><image-slot id="course-cover-03" shape="rect" placeholder="拖入課程封面 3"></image-slot></div>
+          <div style="padding:16px;display:grid;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tiger-700)">11/15 開課</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-secondary);border:1px solid var(--border-brand);background:var(--tiger-50);padding:2px 8px;white-space:nowrap">L4・24 小時</span>
+            </div>
+            <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.01em">地端 LLM 導入與治理</b>
+            <span style="font-size:13px;line-height:1.6;color:var(--fg-secondary)">第 3 期・Ollama＋LiteLLM 實機演練</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:48px 0 32px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">課程 L1–L5</span>
+      <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">從會用，到自己跑得動。</h1>
+      <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0 0 24px">先測你在 L 幾，再對號入座。課程名稱、時數與價格為版型示意。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;background:var(--ink-900);color:#fff">全部</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)">L1</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)">L2</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)">L3</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)">L4</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)">L5</span>
+      </div>
+    </div>
+  </section>
+  <section style="padding:32px 0 96px;flex:1">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="L2・16 小時" title="n8n 自動化實戰" hint-size="100%,180px">n8n Taiwan Ambassador 授課・學員 1,240+・政府補助適用（示意）。</x-import>
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="L3・12 小時" title="Advanced RAG 知識庫實作" hint-size="100%,180px">把文件變成問得到答案的知識庫・學員 680+（示意）。</x-import>
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="L4・24 小時" title="地端 LLM 導入與治理" hint-size="100%,180px">Ollama＋LiteLLM 實機演練・學員 320+（示意）。</x-import>
+        <span style="border:1px dashed var(--border-default);min-height:160px"></span>
+        <span style="border:1px dashed var(--border-default);min-height:160px"></span>
+        <span style="border:1px dashed var(--border-default);min-height:160px"></span>
+      </div>
+      <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">課程卡＝Payload「Courses」collection：名稱、L 級、時數、大綱、價格、補助、報名連結、封面</p>
+    </div>
+  </section>
+  <footer style="background:#0E0E0D;color:#878480;padding:24px 0;font-size:12px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between">
+      <span>© 2026 虎智科技股份有限公司 TigerAI</span>
+      <a href="首頁.dc.html" style="color:#B5B2AC;text-decoration:none">回首頁 →</a>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { p: 0 };
+  componentDidMount() {
+    this._onScroll = () => {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => {
+        this._raf = 0;
+        const p = Math.min(1, Math.max(0, (window.scrollY || 0) / 160));
+        if (p !== this.state.p) this.setState({ p });
+      });
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onScroll();
+    this._bT = setInterval(() => {
+      if (this._bHold || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      this.setState(s => ({ b: ((s.b || 0) + 1) % 2 }));
+    }, 5000);
+  }
+  componentWillUnmount() { window.removeEventListener('scroll', this._onScroll); if (this._raf) cancelAnimationFrame(this._raf); clearInterval(this._bT); }
+  renderVals() {
+    const p = this.state.p || 0;
+    const l = (a, b) => Math.round((a + (b - a) * p) * 100) / 100;
+    const b = this.state.b || 0;
+    const dot = i => 'width:' + (b === i ? 28 : 10) + 'px;height:10px;background:' + (b === i ? 'var(--tiger-500)' : 'rgba(255,255,255,.65)') + ';border:1px solid rgba(14,14,13,.45);box-shadow:0 1px 4px rgba(14,14,13,.3);cursor:pointer;transition:width .2s cubic-bezier(.22,.61,.36,1),background .2s cubic-bezier(.22,.61,.36,1)';
+    return {
+      barStyle: 'height:' + l(76, 56) + 'px;margin-top:' + l(0, 12) + 'px;width:min(' + l(4000, 960) + 'px,calc(100% - ' + l(0, 32) + 'px));background:rgba(242,242,241,' + l(1, 0.94) + ');border:1px solid rgba(14,14,13,' + l(0, 0.14) + ');border-top:2px solid rgba(14,14,13,' + l(0.82, 0.14) + ');border-bottom:1px solid rgba(14,14,13,' + l(0.12, 0.14) + ');box-shadow:0 ' + l(0, 12) + 'px ' + l(0, 28) + 'px rgba(14,14,13,' + l(0, 0.14) + ')',
+      innerStyle: 'padding:0 ' + l(64, 24) + 'px',
+      logoStyle: 'height:' + l(26, 21) + 'px',
+      bTrack: 'translateX(-' + (b * 100 / 2).toFixed(4) + '%)',
+      bStop: () => { this._bHold = true; },
+      bGo: () => { this._bHold = false; },
+      bTo0: () => this.setState({ b: 0 }),
+      bTo1: () => this.setState({ b: 1 }),
+      bTo2: () => this.setState({ b: 2 }),
+      bDot0: dot(0),
+      bDot1: dot(1),
+      bDot2: dot(2)
+    };
+  }
+}
+</script>
+</body>
+</html>

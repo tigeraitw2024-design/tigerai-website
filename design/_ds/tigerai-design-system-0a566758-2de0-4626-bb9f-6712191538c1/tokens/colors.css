@@ -1,0 +1,83 @@
+/* TigerAI — Color tokens.
+   95 / 5 rule: 95% neutral builds the order, 5% Tiger Gold carries the action.
+   One page = one Tiger Gold primary CTA. */
+
+:root {
+  /* ---------- BRAND: Tiger Gold ----------
+     --tiger-500 is the EXACT logo color and never changes.
+     Surrounding steps are deliberately desaturated so large fills
+     and tints read as refined rather than candy-bright. */
+  --tiger-50:  #FBF8F3;
+  --tiger-100: #F5EEDF;
+  --tiger-200: #E9D8B7;
+  --tiger-300: #DABE8B;
+  --tiger-400: #E3A945;
+  --tiger-500: #ECA42B;   /* PRIMARY — exact logo value, do not alter */
+  --tiger-600: #C08423;
+  --tiger-700: #90631B;
+  --tiger-800: #634414;
+  --tiger-900: #39270C;
+
+  /* ---------- INK: warm near-black, pulled toward the logo's black outline ---------- */
+  --ink-50:  #F7F7F6;
+  --ink-100: #EDECEA;
+  --ink-200: #D7D5D1;
+  --ink-300: #B5B2AC;
+  --ink-400: #878480;
+  --ink-500: #5E5C58;
+  --ink-600: #403F3C;
+  --ink-700: #2A2927;
+  --ink-800: #1A1918;
+  --ink-900: #0E0E0D;    /* primary text */
+
+  /* ---------- SLATE: neutrals for UI chrome ----------
+     Pulled slightly toward warm grey so it sits with Ink and Tiger
+     instead of reading as a separate blue system. */
+  --slate-50:  #F7F8F8;
+  --slate-100: #EEF0F1;
+  --slate-200: #DFE2E4;
+  --slate-300: #C3C8CC;
+  --slate-400: #8F9599;
+  --slate-500: #616A6F;
+  --slate-600: #454B50;
+  --slate-700: #31363A;
+  --slate-800: #212528;
+  --slate-900: #14171A;
+
+  /* ---------- SEMANTIC ----------
+     Desaturated on purpose: the 500 carries meaning on icons, rules and
+     solid fills; the 50 is a near-neutral tint so alert surfaces read as
+     paper with a colored accent, not as candy. */
+  --success-50:  #F2F5F3;
+  --success-500: #2F7D57;
+  --success-700: #1F5A3D;
+
+  --warning-50:  #FAF6EE;
+  --warning-500: #C08423;
+  --warning-700: #90631B;
+
+  --danger-50:   #F8F2F1;
+  --danger-500:  #B2453B;
+  --danger-700:  #7E2F28;
+
+  --info-50:     #F2F4F7;
+  --info-500:    #3D6489;
+  --info-700:    #2A4760;
+
+  /* ---------- SURFACES (semantic aliases) ---------- */
+  --bg-canvas:   #FAFAF8;     /* page — warm white */
+  --bg-surface:  #FFFFFF;     /* cards, panels */
+  --bg-sunken:   var(--slate-50);
+  --bg-inverse:  var(--ink-900);
+
+  --fg-primary:   var(--ink-900);
+  --fg-secondary: var(--ink-600);
+  --fg-tertiary:  var(--ink-400);
+  --fg-onbrand:   var(--ink-900);   /* black text on Tiger Gold reads best */
+  --fg-oninverse: #FFFFFF;
+
+  --border-subtle:  var(--slate-200);
+  --border-default: var(--slate-300);
+  --border-strong:  var(--ink-700);
+  --border-brand:   var(--tiger-500);
+}

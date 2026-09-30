@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/fonts.css">
+<link rel="stylesheet" href="assets/fonts/source-han-sans-tc.css">
+<script src="image-slot.js"></script>
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/colors.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/typography.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/base.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/buttons.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/badges.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/cards.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles.css">
+<script src="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/_ds_bundle.js"></script>
+<script src="assets/consultants.js"></script>
+<style>:root{--font-sans:'Inter','Source Han Sans TC',sans-serif;--font-display:'Manrope','Source Han Sans TC',sans-serif}body{margin:0;background:#FAFAF8;font-family:'Inter','Source Han Sans TC',sans-serif;color:#0E0E0D}*{box-sizing:border-box}.tg-dd{position:relative;display:inline-flex;align-items:center}.tg-dd>div{position:absolute;left:0;top:100%;padding-top:12px;display:none;z-index:130}.tg-dd:hover>div{display:block}.tg-dd .tg-dd-in{background:#FFFFFF;border:1px solid var(--border-default);box-shadow:0 12px 28px rgba(14,14,13,.16);display:grid;min-width:170px}.tg-dd .tg-dd-in a{display:block;padding:10px 14px;font-size:13px;font-weight:500;color:#0E0E0D;text-decoration:none}.tg-dd .tg-dd-in a:hover{background:var(--slate-100);color:#C08423}a{color:#0E0E0D}a:hover{color:#C08423}@keyframes cw-mq{to{transform:translateX(-50%)}}@keyframes cw-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes cw-in2{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-delay:0ms!important}}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;pointer-events:none">
+    <div style="pointer-events:auto;display:flex;justify-content:center;height:76px;width:100%;background:#FAFAF8;backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--border-subtle);{{ barStyle }}">
+    <div style="display:flex;align-items:center;gap:24px;width:100%;max-width:1440px;padding:0 clamp(16px,5vw,64px);{{ innerStyle }}">
+      <a href="首頁.dc.html" style="display:flex"><img src="assets/logo/color-horizontal-black-text.svg" alt="TigerAI 虎智科技" style="height:26px;display:block;{{ logoStyle }}"></a>
+      <nav style="display:flex;gap:24px;margin-left:24px">
+        <span class="tg-dd"><a href="產品.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">產品 ▾</a><div><div class="tg-dd-in"><a href="產品.dc.html">全部產品</a><a href="Tiger GPU Pro.dc.html">Tiger GPU Pro</a></div></div></span>
+        <a href="課程.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">課程</a>
+        <a href="顧問與方法論.dc.html" style="color:var(--tiger-600);text-decoration:none;font-size:14px;font-weight:600;padding-bottom:1px;border-bottom:2px solid var(--tiger-500)">顧問與方法論</a>
+        <a href="案例.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">案例</a>
+        <a href="部落格.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">部落格</a>
+        <a href="免費資源.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">免費資源</a>
+      </nav>
+      <div style="margin-left:auto">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="sm" hint-size="150px,32px">預約 30 分鐘諮詢</x-import>
+      </div>
+    </div>
+    </div>
+  </header>
+  <section style="padding:140px 0 48px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">顧問與方法論</span>
+      <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">方法公開，過程可驗。</h1>
+      <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0">C1–C5 是顧問思考能力的尺：不做公開測驗，靠九維拆解與 L.A.O.S. 拆題框架把過程攤在檯面上。</p>
+    </div>
+  </section>
+  <section style="padding:0 0 96px;flex:1">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:grid;gap:48px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px">
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">尺 1</span>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:20px;font-weight:700;margin:8px 0 6px">C1–C5 思考力</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">顧問的腦怎麼分級，方法論權威的來源，不做公開測驗。</p>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">尺 2</span>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:20px;font-weight:700;margin:8px 0 6px">九維拆解</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">把一個部門的問題拆成九個維度，逐維對應工具與流程。</p>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">尺 3</span>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:20px;font-weight:700;margin:8px 0 6px">L.A.O.S. 拆題</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">從痛點到上線的固定拆題路徑。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen-label="顧問群輪播" style="background:#FAFAF8;padding:64px 0 0;position:relative;overflow:hidden">
+    <b aria-hidden="true" style="position:absolute;top:66px;left:50%;transform:translateX(-50%);font-family:'Manrope',sans-serif;font-size:clamp(140px,19vw,260px);font-weight:800;letter-spacing:-.04em;color:rgba(14,14,13,.05);white-space:nowrap;pointer-events:none;line-height:1">30+ 門課</b>
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);position:relative">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">顧問群</span>
+      <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 8px">這些人，教出 4,085+ 位學員。</h2>
+      <p style="font-size:14px;line-height:1.7;color:var(--fg-secondary);margin:0">滑到誰，誰就停下來自我介紹。（學員數、社群數為示意）</p>
+    </div>
+    <div onMouseEnter="{{ cwStop }}" onMouseLeave="{{ cwGo }}" style="overflow:hidden;margin-top:40px;position:relative">
+      <div style="display:flex;gap:20px;width:max-content;padding:4px 0;animation:cw-mq 60s linear infinite;{{ cwTrack }}">
+        <sc-for list="{{ cwCards }}" as="c" hint-placeholder-count="6">
+          <div onMouseEnter="{{ c.on }}" onClick="{{ c.go }}" style="width:216px;flex:none;cursor:pointer;position:relative;background:#FFFFFF;border:1px solid {{ c.bd }};overflow:hidden;transition:border-color .12s cubic-bezier(.22,.61,.36,1)">
+            <span style="position:absolute;top:10px;left:10px;z-index:2;font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;background:rgba(255,255,255,.88);border:1px solid var(--border-default);color:var(--fg-primary)">{{ c.st }} 位學員</span>
+            <span style="position:absolute;top:10px;right:8px;z-index:2;writing-mode:vertical-rl;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--fg-tertiary)">{{ c.en }}</span>
+            <div style="height:216px;position:relative">
+              <img loading="lazy" src="{{ c.img }}" alt="{{ c.zh }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center">
+              <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#FFFFFF 96%)"></div>
+            </div>
+            <div style="padding:0 14px 14px;margin-top:-8px;position:relative">
+              <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.01em;color:var(--fg-primary);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.kw }}</b>
+              <span style="font-size:12px;color:var(--fg-secondary)">{{ c.zh }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border-subtle);margin-top:40px;background:#FFFFFF">
+      <div style="max-width:1440px;margin:0 auto;padding:40px clamp(16px,5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px;animation:{{ cwAnim }}">
+        <div style="display:grid;gap:12px;align-content:start">
+          <div style="display:flex;align-items:center;gap:14px">
+            <span style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:var(--slate-200);flex:none"><img loading="lazy" src="{{ cwAva }}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block"></span>
+            <span style="display:grid;gap:2px"><b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.01em">{{ cwName }}</b><span style="font-size:13px;color:var(--fg-secondary)">{{ cwTitle }}</span></span>
+          </div>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary);max-width:48ch">{{ cwBio }}</p>
+          <div style="display:grid;gap:6px;margin-top:4px">
+            <sc-for list="{{ cwExp }}" as="e" hint-placeholder-count="3">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-secondary)">・{{ e.t }}</span>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <sc-for list="{{ cwSk }}" as="s" hint-placeholder-count="3">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid var(--border-default);padding:4px 10px">{{ s.t }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;gap:8px;align-content:start">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">社群與內容（示意連結）</span>
+          <a href="#" style="display:flex;align-items:baseline;gap:10px;border:1px solid var(--border-subtle);background:#fff;padding:12px 14px;text-decoration:none;color:var(--fg-primary)" style-hover="border-color:var(--ink-600);color:var(--fg-primary)"><b style="font-size:14px;font-weight:700">Facebook 粉專</b><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">{{ cwFb }} 追蹤</span><span style="margin-left:auto;color:var(--tiger-600)">→</span></a>
+          <a href="#" style="display:flex;align-items:baseline;gap:10px;border:1px solid var(--border-subtle);background:#fff;padding:12px 14px;text-decoration:none;color:var(--fg-primary)" style-hover="border-color:var(--ink-600);color:var(--fg-primary)"><b style="font-size:14px;font-weight:700">Instagram</b><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">{{ cwIg }} 追蹤</span><span style="margin-left:auto;color:var(--tiger-600)">→</span></a>
+          <a href="#" style="display:flex;align-items:baseline;gap:10px;border:1px solid var(--border-subtle);background:#fff;padding:12px 14px;text-decoration:none;color:var(--fg-primary)" style-hover="border-color:var(--ink-600);color:var(--fg-primary)"><b style="font-size:14px;font-weight:700">YouTube</b><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">{{ cwYt }} 訂閱</span><span style="margin-left:auto;color:var(--tiger-600)">→</span></a>
+          <a href="課程.dc.html" style="font-size:14px;font-weight:600;color:var(--tiger-700);text-decoration:none;margin-top:8px">看他開的課：{{ cwCourse }} →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="survey" data-screen-label="測評入口" style="padding:40px 0;background:#fff;border-top:1px solid var(--border-subtle)">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:260px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">L1–L5 測評</span>
+        <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.01em;margin:6px 0 4px">5 分鐘，測你在 L 幾。</h2>
+        <p style="font-size:13px;line-height:1.7;color:var(--fg-secondary);margin:0">題目與計分在 AX Academy——中立診斷方，不是虎智自家測驗。</p>
+      </div>
+      <a href="https://tigeraiax-academy.pages.dev/assessment.html" target="_blank" rel="noopener" style="text-decoration:none">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="lg" hint-size="150px,48px">立刻填問卷 →</x-import>
+      </a>
+    </div>
+  </section>
+
+  <section id="coaching" data-screen-label="顧問陪跑" style="padding:96px 0;background:#FAFAF8;border-top:1px solid var(--border-subtle)">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">顧問陪跑</span>
+      <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 12px">顧問陪跑，快速落地。</h2>
+      <p style="font-size:15px;line-height:1.7;color:var(--fg-secondary);margin:0 0 48px;max-width:62ch">三到六個月，替每個部門打造用得上的 AI Agent，同步把你的人訓練成提示工程師。已累計部署 10,000+ 支 Agent，平均業務效率提升 25% 以上。</p>
+      <div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,1.4fr);gap:48px;align-items:start;padding-bottom:6vh">
+        <div data-stagecol="1" style="position:relative;padding-bottom:34vh">
+          <div data-stagehead="1" style="position:sticky;top:120px;z-index:5;background:#FAFAF8;border-top:2px solid var(--tiger-500);display:flex;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap;min-height:70px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--fg-tertiary)">01</span>
+            <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:25px;font-weight:700;margin:0">接觸 AI</h3>
+            <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:6px 14px">平均發掘 20+ 個痛點場景</span>
+          </div>
+          <div data-stagetext="1" style="min-height:56vh"><p style="margin:0;padding:24px 0 0;font-size:18px;line-height:1.8;color:var(--fg-secondary);text-wrap:pretty">顧問團隊進駐，深度訪談把部門的真實流程與痛點攤開。</p></div>
+          <div data-stagehead="2" style="position:sticky;top:190px;z-index:5;background:#FAFAF8;border-top:2px solid var(--tiger-500);display:flex;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap;min-height:70px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--fg-tertiary)">02</span>
+            <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:25px;font-weight:700;margin:0">使用 AI</h3>
+            <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:6px 14px">四週內交付首批成果</span>
+          </div>
+          <div data-stagetext="2" style="min-height:56vh"><p style="margin:0;padding:24px 0 0;font-size:18px;line-height:1.8;color:var(--fg-secondary);text-wrap:pretty">建立第一批 AI Agent、接進既有流程，讓團隊習慣與 AI 協作。</p></div>
+          <div data-stagehead="3" style="position:sticky;top:260px;z-index:5;background:#FAFAF8;border-top:2px solid var(--tiger-500);display:flex;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap;min-height:70px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--fg-tertiary)">03</span>
+            <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:25px;font-weight:700;margin:0">擁有 AI</h3>
+            <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:6px 14px">培養自主開發能力</span>
+          </div>
+          <div data-stagetext="3" style="min-height:56vh"><p style="margin:0;padding:24px 0 0;font-size:18px;line-height:1.8;color:var(--fg-secondary);text-wrap:pretty">實戰工作坊把 Agent 的操作與設計能力，整套轉移給你的團隊。</p></div>
+          <div data-stagehead="4" style="position:sticky;top:330px;z-index:5;background:#FAFAF8;border-top:2px solid var(--tiger-500);display:flex;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap;min-height:70px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--fg-tertiary)">04</span>
+            <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:25px;font-weight:700;margin:0">持續 AI</h3>
+            <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:6px 14px">AI 能力內化</span>
+          </div>
+          <div data-stagetext="4" style="padding-bottom:24px"><p style="margin:0;padding:24px 0 0;font-size:18px;line-height:1.8;color:var(--fg-secondary);text-wrap:pretty">顧問逐步退場，團隊自己建置、使用、維護，AI 變成公司日常。</p></div>
+        </div>
+        <div style="position:sticky;top:120px">
+          <div style="position:relative;aspect-ratio:16/11;max-height:64vh">
+            <div data-stack-img="1" data-rot="-3" style="position:absolute;left:6%;top:3%;width:74%;aspect-ratio:4/3;background:#fff;padding:10px;box-shadow:0 16px 32px rgba(14,14,13,.16);transform:rotate(-3deg);will-change:transform,filter"><image-slot id="coach-photo-01" shape="rect" src="uploads/6_11大豐內訊.jpg" placeholder="拖入「接觸 AI」情境圖（顧問進駐）"></image-slot></div>
+            <div data-stack-img="2" data-rot="11" style="position:absolute;left:19%;top:9%;width:74%;aspect-ratio:4/3;background:#fff;padding:10px;box-shadow:0 16px 32px rgba(14,14,13,.16);opacity:0;transform:translateY(160%) rotate(11deg);will-change:transform,filter"><image-slot id="coach-photo-02" shape="rect" src="uploads/S__30138385_0.jpg" placeholder="拖入「使用 AI」情境圖（實作工作坊）"></image-slot></div>
+            <div data-stack-img="3" data-rot="-13" style="position:absolute;left:3%;top:14%;width:74%;aspect-ratio:4/3;background:#fff;padding:10px;box-shadow:0 16px 32px rgba(14,14,13,.16);opacity:0;transform:translateY(160%) rotate(-13deg);will-change:transform,filter"><image-slot id="coach-photo-03" shape="rect" src="uploads/S__30138378_0.jpg" placeholder="拖入「擁有 AI」情境圖（企業授課）"></image-slot></div>
+            <div data-stack-img="4" data-rot="8" style="position:absolute;left:16%;top:6%;width:74%;aspect-ratio:4/3;background:#fff;padding:10px;box-shadow:0 16px 32px rgba(14,14,13,.16);opacity:0;transform:translateY(160%) rotate(8deg);will-change:transform,filter"><image-slot id="coach-photo-04" shape="rect" src="uploads/750522_0.jpg" placeholder="拖入「持續 AI」情境圖（成果發表）"></image-slot></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;border-top:1px solid var(--border-strong);border-bottom:1px solid var(--border-subtle);padding:32px 0;margin-bottom:48px">
+        <div><b style="font-family:'Manrope',sans-serif;font-size:40px;font-weight:800;letter-spacing:-.02em;display:block">200+</b><span style="font-size:13px;color:var(--fg-secondary)">企業導入經驗</span></div>
+        <div><b style="font-family:'Manrope',sans-serif;font-size:40px;font-weight:800;letter-spacing:-.02em;display:block">95%+</b><span style="font-size:13px;color:var(--fg-secondary)">學員滿意度</span></div>
+        <div><b style="font-family:'Manrope',sans-serif;font-size:40px;font-weight:800;letter-spacing:-.02em;display:block">25%+</b><span style="font-size:13px;color:var(--fg-secondary)">業務效率提升</span></div>
+        <div><b style="font-family:'Manrope',sans-serif;font-size:40px;font-weight:800;letter-spacing:-.02em;display:block">2,000+</b><span style="font-size:13px;color:var(--fg-secondary)">月節省人力時數</span></div>
+      </div>
+      <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.02em;margin:0 0 8px">不只幫你做，更教會你的團隊。</h3>
+      <p style="font-size:14px;line-height:1.7;color:var(--fg-secondary);margin:0 0 24px;max-width:62ch">導入成功的判準不是顧問多強，是你的人接不接得住。已有 2,000+ 位企業人員完成培訓，成為組織內部的 AI 推動者。</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:40px">
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+          <b style="font-family:'Manrope',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.02em">2,000+</b><span style="font-size:12px;color:var(--fg-tertiary)">　位完成培訓</span>
+          <h4 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:16px;font-weight:700;margin:8px 0 6px">培訓 AI 提示工程師</h4>
+          <p style="margin:0;font-size:13px;line-height:1.7;color:var(--fg-secondary)">每個部門至少一位種子人員，能獨立設計、開發與維護 Agent——通過率 90%+，平均每人可獨立開發 5+ 支。</p>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+          <b style="font-family:'Manrope',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.02em">75%</b><span style="font-size:12px;color:var(--fg-tertiary)">　平均部門採用率</span>
+          <h4 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:16px;font-weight:700;margin:8px 0 6px">建立組織 AI 文化</h4>
+          <p style="margin:0;font-size:13px;line-height:1.7;color:var(--fg-secondary)">一個部門的成功經驗擴散到全公司，AI 變成每位員工的日常工具，日常使用率超過 80%。</p>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+          <b style="font-family:'Manrope',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.02em">持續</b><span style="font-size:12px;color:var(--fg-tertiary)">　陪跑不斷線</span>
+          <h4 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:16px;font-weight:700;margin:8px 0 6px">持續技術支援</h4>
+          <p style="margin:0;font-size:13px;line-height:1.7;color:var(--fg-secondary)">每月一次線上回訓、即時技術問答群組、版本升級通知與教學：上線之後不斷線。</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <a href="首頁.dc.html#contact" style="text-decoration:none">
+          <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="lg" hint-size="200px,48px">立即諮詢顧問服務 →</x-import>
+        </a>
+        <span style="font-size:13px;color:var(--fg-secondary)">30 分鐘，帶著你最痛的那個部門來。</span>
+      </div>
+      <p style="margin:24px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-tertiary)">數據為你提供之營運資料（示意版型）・照片框可直接拖入圖片，重新整理仍保留</p>
+    </div>
+  </section>
+  <footer style="background:#0E0E0D;color:#878480;padding:24px 0;font-size:12px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between">
+      <span>© 2026 虎智科技股份有限公司 TigerAI</span>
+      <a href="首頁.dc.html" style="color:#B5B2AC;text-decoration:none">回首頁 →</a>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { p: 0 };
+  componentDidMount() {
+    setTimeout(() => {
+      this._stg = [...document.querySelectorAll('[data-stagehead]')];
+      this._imgs = [...document.querySelectorAll('[data-stack-img]')];
+      this._txts = [...document.querySelectorAll('[data-stagetext]')];
+      this._pins = this._stg.map(el => parseFloat(getComputedStyle(el).top) || 120);
+      this._col = document.querySelector('[data-stagecol]');
+      if (this._stg.length && this._imgs.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        this._onStk = () => {
+          if (this._stkRaf) return;
+          this._stkRaf = requestAnimationFrame(() => { this._stkRaf = 0; this._applyStack(); });
+        };
+        window.addEventListener('scroll', this._onStk, { passive: true });
+        this._applyStack();
+      }
+    }, 300);
+    this._onScroll = () => {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => {
+        this._raf = 0;
+        const p = Math.min(1, Math.max(0, (window.scrollY || 0) / 160));
+        if (p !== this.state.p) this.setState({ p });
+      });
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onScroll();
+    const cw = n => { if (window.TG_CONSULTANTS) { window.TG_CONSULTANTS.forEach(x => { [x.img, x.avatar, x.card].forEach(s => { if (s) { const im = new Image(); im.src = s; } }); }); this.forceUpdate(); return; } if (n < 25) setTimeout(() => cw(n + 1), 200); };
+    cw(0);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this._onScroll);
+    window.removeEventListener('scroll', this._onStk);
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._stkRaf) cancelAnimationFrame(this._stkRaf);
+  }
+  _applyStack() {
+    const vh = window.innerHeight || 800;
+    const t = this._stg.map((el, j) => {
+      if (j === 0) return 1;
+      return Math.min(1, Math.max(0, 1 - (el.getBoundingClientRect().top - this._pins[j]) / (vh * 0.55)));
+    });
+    this._imgs.forEach((im, i) => {
+      const cover = i + 1 < t.length ? t[i + 1] : 0;
+      const rot = parseFloat(im.dataset.rot) || 0;
+      im.style.transform = 'translateY(' + ((1 - t[i]) * 160).toFixed(2) + '%) rotate(' + rot + 'deg)';
+      im.style.opacity = i === 0 ? '1' : Math.min(1, t[i] * 2.4).toFixed(3);
+      im.style.filter = cover > 0.01 ? 'blur(' + (cover * 5).toFixed(1) + 'px)' : 'none';
+    });
+    this._txts.forEach((tx, i) => {
+      const head = this._stg[i];
+      if (!head) return;
+      const hb = this._pins[i] + head.offsetHeight;
+      const clip = Math.max(0, hb - tx.getBoundingClientRect().top);
+      tx.style.clipPath = clip > 0.5 ? 'inset(' + clip.toFixed(1) + 'px 0 0 0)' : 'none';
+    });
+    if (this._col) {
+      const cr = this._col.getBoundingClientRect();
+      const n = this._stg.length;
+      const dLast = Math.max(0, (this._pins[n - 1] + this._stg[n - 1].offsetHeight + 6) - cr.bottom);
+      this._stg.forEach((el, i) => {
+        const di = Math.max(0, (this._pins[i] + el.offsetHeight + 6) - cr.bottom);
+        const extra = Math.max(0, dLast - di);
+        el.style.transform = extra > 0.5 ? 'translateY(' + (-extra).toFixed(1) + 'px)' : '';
+      });
+    }
+  }
+  renderVals() {
+    const p = this.state.p || 0;
+    const l = (a, b) => Math.round((a + (b - a) * p) * 100) / 100;
+    return {
+      barStyle: 'height:' + l(76, 56) + 'px;margin-top:' + l(0, 12) + 'px;width:min(' + l(4000, 960) + 'px,calc(100% - ' + l(0, 32) + 'px));background:rgba(250,250,248,' + l(1, 0.94) + ');border:1px solid rgba(14,14,13,' + l(0, 0.14) + ');border-bottom:1px solid rgba(14,14,13,' + l(0.08, 0.14) + ');box-shadow:0 ' + l(0, 12) + 'px ' + l(0, 28) + 'px rgba(14,14,13,' + l(0, 0.14) + ')',
+      innerStyle: 'padding:0 ' + l(64, 24) + 'px',
+      logoStyle: 'height:' + l(26, 21) + 'px',
+      ...this._cwVals()
+    };
+  }
+  _cwVals() {
+    const CS = window.TG_CONSULTANTS || [];
+    const i = Math.min(this.state.cwIdx || 0, Math.max(CS.length - 1, 0));
+    const ST = ['1,240+', '680+', '520+', '410+', '320+', '860+', '290+', '450+', '960+', '—'];
+    const BIO = [
+      '從評估、POC 到上線的總負責人，13 部門 AI 同事的規劃者。',
+      '把重複的日常變成 workflow，n8n 中文社群的資深回答手。',
+      '文件變知識庫的架構師——答了有出處，是他的底線。',
+      '機房裡長大的導入顧問，負責硬體選型與算力規劃。',
+      '部門額度、熔斷與稽核軌跡的守門人。',
+      '資料不乾淨，AI 就不聰明——他管前面那一段。',
+      '開源模型隨裝隨換的實作者，版本管理不出事。',
+      '幫你決定先做哪個部門，導入路線圖工作坊主講。',
+      'L1–L5 內訓課表的設計者，帶過 960+ 位學員。',
+      '臺科大教授，C1–C5 方法論的學術把關。'
+    ];
+    const EXP = [
+      ['臺科大資工博士', '前系統整合商技術長', '導入 40+ 家企業'],
+      ['n8n Taiwan Ambassador', '自動化課程學員 1,240+', '模板下載 8,000+ 次'],
+      ['前搜尋引擎團隊工程師', 'Advanced RAG 課程主講', '知識庫上線 30+ 套'],
+      ['前伺服器原廠 FAE', 'AMD 合作案技術窗口', '機房建置 20+ 場'],
+      ['前金融業資安主管', 'LiteLLM 治理課程主講', '稽核輔導 15+ 家'],
+      ['前製造業資料工程師', 'ETL 與資料清理 10 年', '知識庫資料整備 30+ 案'],
+      ['開源社群貢獻者', 'Ollama 實戰課程主講', '模型佈署 50+ 次'],
+      ['前顧問公司專案總監', '導入路線圖工作坊 40+ 場', '九維拆解共同作者'],
+      ['企業內訓 300+ 小時', '政府補助案輔導 20+ 件', 'L1–L5 課綱設計'],
+      ['臺科大教授', 'C1–C5 思考力量表作者', '學術合作窗口']
+    ];
+    const SK = [
+      ['導入策略', 'POC 規劃', '13 部門 AI 同事'],
+      ['n8n', 'Workflow 設計', '流程稽核'],
+      ['RAG', '向量檢索', '出處回覆'],
+      ['Local GPT', '硬體選型', '算力規劃'],
+      ['LiteLLM', '額度治理', '熔斷設計'],
+      ['資料清理', 'ETL', '文件結構化'],
+      ['Ollama', '模型維運', '版本管理'],
+      ['L.A.O.S. 拆題', '九維拆解', '路線圖'],
+      ['企業內訓', '課綱設計', '補助申請'],
+      ['C1–C5', '方法論', '學術合作']
+    ];
+    const cName = x => (x.zh || '') + (x.en ? (x.zh ? ' ' : '') + x.en : '');
+    const cwCards = CS.concat(CS).map((x, k) => ({
+      img: x.card || x.img, zh: x.zh, en: x.en || 'TIGERAI', kw: x.course, st: ST[k % CS.length] || '—',
+      bd: (k % CS.length) === i ? 'var(--tiger-500)' : 'var(--border-subtle)',
+      on: () => { this._cwN = (this._cwN || 0) + 1; this.setState({ cwIdx: k % CS.length }); },
+      go: () => { location.href = '課程.dc.html'; }
+    }));
+    const a = CS[i] || { zh: '', en: '', title: '', course: '', avatar: '', img: '' };
+    const num = n => n.toLocaleString('en-US');
+    return {
+      cwCards,
+      cwTrack: this.state.cwPause ? 'animation-play-state:paused' : '',
+      cwStop: () => this.setState({ cwPause: true }),
+      cwGo: () => this.setState({ cwPause: false }),
+      cwAnim: this._cwN ? ((this._cwN % 2 ? 'cw-in' : 'cw-in2') + ' .3s cubic-bezier(.22,.61,.36,1) both') : 'none',
+      cwAva: a.avatar || a.img, cwName: cName(a), cwTitle: a.title, cwCourse: a.course,
+      cwBio: BIO[i] || '', 
+      cwExp: (EXP[i] || []).map(t => ({ t })),
+      cwSk: (SK[i] || []).map(t => ({ t })),
+      cwFb: num(4200 + i * 1730), cwIg: num(2800 + i * 940), cwYt: num(6500 + i * 2210)
+    };
+  }
+}
+</script>
+</body>
+</html>

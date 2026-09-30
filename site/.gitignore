@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# 視覺比對的產出（基準圖在 ../baseline/，這裡只放每次跑出來的比對結果）
+tools/out/
+
+# 這三層是 npm run sync 從 ../design/ 複製過來的產物，不進版控，
+# 免得同一批圖在 repo 裡存兩份。
+public/ds/
+public/assets/
+public/uploads/

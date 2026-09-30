@@ -1,0 +1,31 @@
+/* =========================================================
+   ALERTS
+   ========================================================= */
+.t-alert {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-14);
+  line-height: var(--lh-relaxed);
+  border: 1px solid transparent;
+}
+.t-alert .ico {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: grid; place-content: center;
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+}
+.t-alert__title { font-weight: var(--fw-semibold); margin: 0 0 2px; color: var(--ink-900); }
+.t-alert__body  { margin: 0; color: var(--ink-700); }
+
+.t-alert--info    { background: var(--info-50);    border-color: #dfe5ec; }
+.t-alert--info    .ico { background: var(--info-500); }
+.t-alert--success { background: var(--success-50); border-color: #dde7e0; }
+.t-alert--success .ico { background: var(--success-500); }
+.t-alert--warning { background: var(--warning-50); border-color: #ece0c8; }
+.t-alert--warning .ico { background: var(--warning-500); color: #fff; }
+.t-alert--danger  { background: var(--danger-50);  border-color: #ecdcda; }
+.t-alert--danger  .ico { background: var(--danger-500); }

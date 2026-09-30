@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/fonts.css">
+<link rel="stylesheet" href="assets/fonts/source-han-sans-tc.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/colors.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/typography.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/base.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/buttons.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/badges.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/cards.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles.css">
+<script src="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/_ds_bundle.js"></script>
+<style>:root{--font-sans:'Inter','Source Han Sans TC',sans-serif;--font-display:'Manrope','Source Han Sans TC',sans-serif}body{margin:0;background:#FAFAF8;font-family:'Inter','Source Han Sans TC',sans-serif;color:#0E0E0D}*{box-sizing:border-box}.tg-dd{position:relative;display:inline-flex;align-items:center}.tg-dd>div{position:absolute;left:0;top:100%;padding-top:12px;display:none;z-index:130}.tg-dd:hover>div{display:block}.tg-dd .tg-dd-in{background:#FFFFFF;border:1px solid var(--border-default);box-shadow:0 12px 28px rgba(14,14,13,.16);display:grid;min-width:170px}.tg-dd .tg-dd-in a{display:block;padding:10px 14px;font-size:13px;font-weight:500;color:#0E0E0D;text-decoration:none}.tg-dd .tg-dd-in a:hover{background:var(--slate-100);color:#C08423}a{color:#0E0E0D}a:hover{color:#C08423}@keyframes tg-fade{from{opacity:0}to{opacity:1}}@keyframes tg-zoom{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-delay:0ms!important}}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;pointer-events:none">
+    <div style="pointer-events:auto;display:flex;justify-content:center;height:76px;width:100%;background:#FAFAF8;backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--border-subtle);{{ barStyle }}">
+    <div style="display:flex;align-items:center;gap:24px;width:100%;max-width:1440px;padding:0 clamp(16px,5vw,64px);{{ innerStyle }}">
+      <a href="首頁.dc.html" style="display:flex"><img src="assets/logo/color-horizontal-black-text.svg" alt="TigerAI 虎智科技" style="height:26px;display:block;{{ logoStyle }}"></a>
+      <nav style="display:flex;gap:24px;margin-left:24px">
+        <span class="tg-dd"><a href="產品.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">產品 ▾</a><div><div class="tg-dd-in"><a href="產品.dc.html">全部產品</a><a href="Tiger GPU Pro.dc.html">Tiger GPU Pro</a></div></div></span>
+        <a href="課程.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">課程</a>
+        <a href="顧問與方法論.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">顧問與方法論</a>
+        <a href="案例.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">案例</a>
+        <a href="部落格.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">部落格</a>
+        <a href="免費資源.dc.html" style="color:var(--tiger-600);text-decoration:none;font-size:14px;font-weight:600;padding-bottom:1px;border-bottom:2px solid var(--tiger-500)">免費資源</a>
+      </nav>
+      <div style="margin-left:auto">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="sm" hint-size="150px,32px">預約 30 分鐘諮詢</x-import>
+      </div>
+    </div>
+    </div>
+  </header>
+  <section style="padding:140px 0 48px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">免費資源</span>
+      <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">先自己學，想快再找我們。</h1>
+    </div>
+  </section>
+  <section style="padding:0 0 96px;flex:1">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:grid;gap:48px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px">
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:32px">
+          <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Badge" hint-size="110px,22px">獨立・非商業</x-import>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:24px;font-weight:700;margin:16px 0 8px">n8n 中文課程庫</h3>
+          <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:var(--fg-secondary)">永遠獨立、永遠免費的 n8n 中文教材，官網只放連結，不會把你導去任何付費頁。</p>
+          <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" variant="outline" hint-size="150px,40px">前往課程庫 →</x-import>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:32px">
+          <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Badge" hint-size="90px,22px">開發者</x-import>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:24px;font-weight:700;margin:16px 0 8px">OpenGenie（GitHub）</h3>
+          <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:var(--fg-secondary)">主控台背後的開源專案，文件與原始碼在 GitHub Pages，直接深連結。</p>
+          <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" variant="outline" hint-size="150px,40px">前往 GitHub →</x-import>
+        </div>
+      </div>
+      <div>
+        <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 24px">免費影片牆</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px">
+          <sc-for list="{{ videos }}" as="v" hint-placeholder-count="6">
+            <div style="display:grid;gap:10px;min-width:0;align-content:start">
+              <button onClick="{{ v.open }}" title="{{ v.title }}" style="position:relative;display:block;width:100%;aspect-ratio:16/9;padding:0;border:1px solid var(--border-subtle);background:#0E0E0D;cursor:pointer;overflow:hidden" style-hover="border-color:var(--ink-600);box-shadow:var(--shadow-md)">
+                <span style="position:absolute;inset:0;display:block;opacity:.94;{{ v.thumbStyle }}"></span>
+                <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+                  <span style="width:52px;height:52px;background:rgba(250,250,248,.94);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md)">
+                    <span style="width:0;height:0;border-left:16px solid #0E0E0D;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px"></span>
+                  </span>
+                </span>
+              </button>
+              <b style="font-size:14px;font-weight:600;line-height:1.4">{{ v.title }}</b>
+            </div>
+          </sc-for>
+        </div>
+        <p style="margin:16px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">影片與縮圖為示意・影片牆＝Payload「Videos」collection：貼 YouTube 連結即自動抓縮圖、點了原地開播</p>
+      </div>
+    </div>
+  </section>
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModal }}" style="position:fixed;inset:0;z-index:400;background:rgba(14,14,13,.8);display:flex;align-items:center;justify-content:center;padding:6vh 4vw;animation:tg-fade .2s cubic-bezier(.22,.61,.36,1) both">
+      <div onClick="{{ stopProp }}" style="position:relative;width:min(1080px,100%);aspect-ratio:16/9;background:#0E0E0D;box-shadow:var(--shadow-xl);animation:tg-zoom .32s cubic-bezier(.22,.61,.36,1) both">
+        <iframe src="{{ modalSrc }}" title="影片播放" style="width:100%;height:100%;border:0;display:block" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen="{{ true }}"></iframe>
+        <button onClick="{{ closeModal }}" title="關閉" style="position:absolute;top:-40px;right:0;width:32px;height:32px;border:1px solid rgba(255,255,255,.45);background:transparent;color:#FFFFFF;cursor:pointer;font-size:15px;line-height:1" style-hover="background:rgba(255,255,255,.12)">✕</button>
+      </div>
+    </div>
+  </sc-if>
+  <footer style="background:#0E0E0D;color:#878480;padding:24px 0;font-size:12px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between">
+      <span>© 2026 虎智科技股份有限公司 TigerAI</span>
+      <a href="首頁.dc.html" style="color:#B5B2AC;text-decoration:none">回首頁 →</a>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { p: 0, video: null };
+  componentDidMount() {
+    this._esc = e => { if (e.key === 'Escape' && this.state.video) this.setState({ video: null }); };
+    window.addEventListener('keydown', this._esc);
+    this._onScroll = () => {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => {
+        this._raf = 0;
+        const p = Math.min(1, Math.max(0, (window.scrollY || 0) / 160));
+        if (p !== this.state.p) this.setState({ p });
+      });
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onScroll();
+  }
+  componentWillUnmount() { window.removeEventListener('scroll', this._onScroll); window.removeEventListener('keydown', this._esc); if (this._raf) cancelAnimationFrame(this._raf); }
+  renderVals() {
+    const p = this.state.p || 0;
+    const l = (a, b) => Math.round((a + (b - a) * p) * 100) / 100;
+    const VIDS = [
+      { id: 'qh3NGpYRG3I', title: 'n8n 自動化入門・示意影片' },
+      { id: 'qh3NGpYRG3I', title: '把文件變成知識庫（RAG）・示意影片' },
+      { id: 'qh3NGpYRG3I', title: '地端模型安裝實錄・示意影片' },
+      { id: 'qh3NGpYRG3I', title: '部門額度與熔斷設定・示意影片' },
+      { id: 'qh3NGpYRG3I', title: '合約審閱 Workflow 實戰・示意影片' },
+      { id: 'qh3NGpYRG3I', title: 'GPU 管理中心導覽・示意影片' }
+    ];
+    return {
+      videos: VIDS.map(v => ({
+        title: v.title,
+        thumbStyle: 'background:url(https://img.youtube.com/vi/' + v.id + '/hqdefault.jpg) center/cover no-repeat',
+        open: () => this.setState({ video: v.id })
+      })),
+      modalOpen: !!this.state.video,
+      modalSrc: this.state.video ? 'https://www.youtube.com/embed/' + this.state.video + '?autoplay=1' : '',
+      closeModal: () => this.setState({ video: null }),
+      stopProp: e => e.stopPropagation(),
+      barStyle: 'height:' + l(76, 56) + 'px;margin-top:' + l(0, 12) + 'px;width:min(' + l(4000, 960) + 'px,calc(100% - ' + l(0, 32) + 'px));background:rgba(250,250,248,' + l(1, 0.94) + ');border:1px solid rgba(14,14,13,' + l(0, 0.14) + ');border-bottom:1px solid rgba(14,14,13,' + l(0.08, 0.14) + ');box-shadow:0 ' + l(0, 12) + 'px ' + l(0, 28) + 'px rgba(14,14,13,' + l(0, 0.14) + ')',
+      innerStyle: 'padding:0 ' + l(64, 24) + 'px',
+      logoStyle: 'height:' + l(26, 21) + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

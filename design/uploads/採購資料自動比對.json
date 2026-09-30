@@ -1,0 +1,286 @@
+{
+  "name": "採購資料自動比對",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        -48
+      ],
+      "id": "049564df-45f9-4284-b5b9-5b3c93ab960f",
+      "name": "收到報價單 Email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ocDpTUxGn12wK5Hj",
+          "name": "Tigerai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "content",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        -48
+      ],
+      "id": "d94d03e4-059f-4c6b-8d8f-f494353487b0",
+      "name": "拆分品項 (Split)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jjylblLKYhbPEIuanKr3oBRUDmQluiddNnNzsd1wLy8",
+          "mode": "list",
+          "cachedResultName": "robin - 2025年度收支報表",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jjylblLKYhbPEIuanKr3oBRUDmQluiddNnNzsd1wLy8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jjylblLKYhbPEIuanKr3oBRUDmQluiddNnNzsd1wLy8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "日期",
+              "displayName": "日期",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "承辦",
+              "displayName": "承辦",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "賣方",
+              "displayName": "賣方",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "買方",
+              "displayName": "買方",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "統編",
+              "displayName": "統編",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "項目",
+              "displayName": "項目",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "內容",
+              "displayName": "內容",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "金額",
+              "displayName": "金額",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "年份",
+              "displayName": "年份",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "月份",
+              "displayName": "月份",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "紀錄時間",
+              "displayName": "紀錄時間",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        160,
+        -48
+      ],
+      "id": "944f94ab-9eef-405b-bf77-40331b08f66a",
+      "name": "寫入 Google Sheets 比價表",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "q0Ehpv6FINP9OAbh",
+          "name": "Tigerai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -48
+      ],
+      "id": "4f8fa3dd-6138-47bf-bf9e-73d91d502e93",
+      "name": "AI 讀取報價單",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nlPh2Ux3iZHZLw9M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        -48
+      ],
+      "id": "ce1a3524-e8d1-421a-a23b-7c1954e75d42",
+      "name": "格式標準化"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "拆分品項 (Split)": {
+      "main": [
+        [
+          {
+            "node": "寫入 Google Sheets 比價表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "收到報價單 Email": {
+      "main": [
+        [
+          {
+            "node": "格式標準化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 讀取報價單": {
+      "main": [
+        [
+          {
+            "node": "拆分品項 (Split)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "格式標準化": {
+      "main": [
+        [
+          {
+            "node": "AI 讀取報價單",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1cdec335-435d-42fe-877e-10a363afd23a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b17ad060fbbb8ca8b93015f624347e198e358bdd8ebfadef89df935ad63a83e0"
+  },
+  "id": "8cp7RzxiCMVVZ5cY",
+  "tags": []
+}

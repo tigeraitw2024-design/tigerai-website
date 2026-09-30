@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tigerai-website",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // 靜態檔案（Astro build 出來的 dist/）由 Cloudflare 直接發，
+  // 不經過 Worker，所以不算運算時間。
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  },
+
+  "observability": { "enabled": true }
+
+  // 後台 API、D1 資料庫、R2 圖片儲存等到第 7 階段再加進來：
+  // "main": "src/api/index.ts",
+  // "d1_databases": [{ "binding": "DB", "database_name": "tigerai", "database_id": "..." }],
+  // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "tigerai-media" }]
+}

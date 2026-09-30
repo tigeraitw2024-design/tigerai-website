@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/fonts.css">
+<link rel="stylesheet" href="assets/fonts/source-han-sans-tc.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/colors.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/typography.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/base.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/buttons.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/badges.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/forms.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/cards.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles.css">
+<script src="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/_ds_bundle.js"></script>
+<script src="https://unpkg.com/animejs@3.2.2/lib/anime.min.js"></script>
+<style>:root{--font-sans:'Inter','Source Han Sans TC',sans-serif;--font-display:'Manrope','Source Han Sans TC',sans-serif}body{margin:0;background:#FAFAF8;font-family:'Inter','Source Han Sans TC',sans-serif;color:#0E0E0D}*{box-sizing:border-box}.tg-dd{position:relative;display:inline-flex;align-items:center}.tg-dd>div{position:absolute;left:0;top:100%;padding-top:12px;display:none;z-index:130}.tg-dd:hover>div{display:block}.tg-dd .tg-dd-in{background:#FFFFFF;border:1px solid var(--border-default);box-shadow:0 12px 28px rgba(14,14,13,.16);display:grid;min-width:170px}.tg-dd .tg-dd-in a{display:block;padding:10px 14px;font-size:13px;font-weight:500;color:#0E0E0D;text-decoration:none}.tg-dd .tg-dd-in a:hover{background:var(--slate-100);color:#C08423}a{color:#0E0E0D}a:hover{color:#C08423}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;pointer-events:none">
+    <div style="pointer-events:auto;display:flex;justify-content:center;height:76px;width:100%;background:#FAFAF8;backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--border-subtle);{{ barStyle }}">
+    <div style="display:flex;align-items:center;gap:24px;width:100%;max-width:1440px;padding:0 clamp(16px,5vw,64px);{{ innerStyle }}">
+      <a href="首頁.dc.html" style="display:flex"><img src="assets/logo/color-horizontal-black-text.svg" alt="TigerAI 虎智科技" style="height:26px;display:block;{{ logoStyle }}"></a>
+      <nav style="display:flex;gap:24px;margin-left:24px">
+        <span class="tg-dd"><a href="產品.dc.html" style="color:var(--tiger-600);text-decoration:none;font-size:14px;font-weight:600;padding-bottom:1px;border-bottom:2px solid var(--tiger-500)">產品 ▾</a><div><div class="tg-dd-in"><a href="產品.dc.html">全部產品</a><a href="Tiger GPU Pro.dc.html">Tiger GPU Pro</a></div></div></span>
+        <a href="課程.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">課程</a>
+        <a href="顧問與方法論.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">顧問與方法論</a>
+        <a href="案例.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">案例</a>
+        <a href="部落格.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">部落格</a>
+        <a href="免費資源.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">免費資源</a>
+      </nav>
+      <div style="margin-left:auto">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="sm" hint-size="150px,32px">預約 30 分鐘諮詢</x-import>
+      </div>
+    </div>
+    </div>
+  </header>
+  <section data-screen-label="P0 拆解 Demo" style="position:relative;height:300vh;background:#FAFAF8">
+    <div id="tg-ex-stage" style="position:sticky;top:0;height:100vh;overflow:hidden">
+      <div style="max-width:1440px;margin:0 auto;padding:112px clamp(16px,5vw,64px) 0;position:relative;height:100%">
+        <div style="position:relative;z-index:3;pointer-events:none">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">Local GPT・產品 Demo</span>
+          <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 0">一台主機，拆給你看。</h1>
+        </div>
+        <div id="tg-ex-wrap" style="position:absolute;inset:0;z-index:1;will-change:transform">
+          <div id="tg-ex-scene" aria-hidden="true" style="position:absolute;inset:0;padding-top:56px">
+            <div id="tg-ex-canvas" style="width:100%;height:100%"></div>
+            <svg id="lx-svg" viewBox="0 0 900 780" style="display:none" fill="none" stroke="#1A1918" stroke-width="1.5">
+              <g id="lx-ch">
+                <rect x="300" y="250" width="300" height="300" fill="#FFFFFF"></rect>
+                <rect x="316" y="266" width="268" height="268" stroke-dasharray="4 4" opacity=".4"></rect>
+                <circle cx="392" cy="344" r="52" fill="#FFFFFF"></circle>
+                <circle cx="392" cy="344" r="46" opacity=".5"></circle>
+                <circle cx="392" cy="344" r="18" opacity=".6"></circle>
+                <line x1="412" y1="344" x2="436" y2="344" opacity=".5"></line><line x1="402" y1="361" x2="414" y2="382" opacity=".5"></line><line x1="382" y1="361" x2="370" y2="382" opacity=".5"></line><line x1="372" y1="344" x2="348" y2="344" opacity=".5"></line><line x1="382" y1="327" x2="370" y2="306" opacity=".5"></line><line x1="402" y1="327" x2="414" y2="306" opacity=".5"></line>
+                <circle cx="392" cy="344" r="8" fill="#ECA42B" stroke="none"></circle>
+                <line x1="480" y1="272" x2="480" y2="332"></line><line x1="494" y1="272" x2="494" y2="332"></line><line x1="508" y1="272" x2="508" y2="332"></line><line x1="522" y1="272" x2="522" y2="332"></line><line x1="536" y1="272" x2="536" y2="332"></line><line x1="550" y1="272" x2="550" y2="332"></line><line x1="564" y1="272" x2="564" y2="332"></line>
+                <rect x="472" y="264" width="100" height="76" opacity=".6"></rect>
+                <rect x="540" y="352" width="10" height="86" fill="#FFFFFF"></rect><rect x="556" y="352" width="10" height="86" fill="#FFFFFF"></rect><rect x="572" y="352" width="10" height="86" fill="#FFFFFF"></rect>
+                <line x1="540" y1="358" x2="550" y2="358" stroke="#ECA42B"></line><line x1="556" y1="358" x2="566" y2="358" stroke="#ECA42B"></line><line x1="572" y1="358" x2="582" y2="358" stroke="#ECA42B"></line>
+                <rect x="330" y="470" width="112" height="18" fill="#FFFFFF"></rect><line x1="426" y1="470" x2="426" y2="488"></line><rect x="340" y="474" width="40" height="10" opacity=".4"></rect>
+                <rect x="470" y="468" width="52" height="36" fill="#FFFFFF"></rect><circle cx="482" cy="478" r="3"></circle><circle cx="496" cy="478" r="3"></circle>
+                <path d="M470 440 C 500 430, 520 452, 548 442" stroke="#ECA42B" opacity=".5"></path>
+                <polyline points="330,300 360,300 360,270" stroke="#ECA42B" opacity=".4"></polyline>
+                <circle cx="310" cy="260" r="3" opacity=".6"></circle><circle cx="590" cy="260" r="3" opacity=".6"></circle><circle cx="310" cy="540" r="3" opacity=".6"></circle><circle cx="590" cy="540" r="3" opacity=".6"></circle>
+              </g>
+              <g id="lx-top" opacity="0" transform="translate(0 280)">
+                <rect x="350" y="64" width="200" height="112" fill="#FFFFFF"></rect>
+                <path d="M350 64 L318 88 L318 176 L350 176" fill="#FFFFFF"></path>
+                <path d="M550 64 L582 88 L582 176 L550 176" fill="#FFFFFF"></path>
+                <line x1="366" y1="96" x2="534" y2="96" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="366" y1="120" x2="534" y2="120" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="366" y1="144" x2="534" y2="144" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+              </g>
+              <g id="lx-sl" opacity="0" transform="translate(299 239)">
+                <rect x="72" y="70" width="158" height="182" fill="#FFFFFF"></rect>
+                <rect x="222" y="88" width="8" height="20" fill="#FFFFFF"></rect><rect x="222" y="214" width="8" height="20" fill="#FFFFFF"></rect>
+                <line x1="88" y1="94" x2="214" y2="94" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="88" y1="124" x2="214" y2="124" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="88" y1="154" x2="214" y2="154" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="88" y1="184" x2="214" y2="184" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="88" y1="214" x2="214" y2="214" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+              </g>
+              <g id="lx-sr" opacity="0" transform="translate(-299 239)">
+                <rect x="670" y="70" width="158" height="182" fill="#FFFFFF"></rect>
+                <rect x="662" y="88" width="8" height="20" fill="#FFFFFF"></rect><rect x="662" y="214" width="8" height="20" fill="#FFFFFF"></rect>
+                <line x1="686" y1="94" x2="812" y2="94" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="686" y1="124" x2="812" y2="124" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="686" y1="154" x2="812" y2="154" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="686" y1="184" x2="812" y2="184" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="686" y1="214" x2="812" y2="214" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+              </g>
+              <g id="lx-fr" opacity="0" transform="translate(314 -20)">
+                <rect x="70" y="255" width="132" height="330" rx="10" fill="#FFFFFF"></rect>
+                <line x1="90" y1="272" x2="90" y2="568" opacity=".15"></line><line x1="182" y1="272" x2="182" y2="568" opacity=".15"></line>
+                <circle cx="136" cy="300" r="11"></circle><circle cx="136" cy="300" r="4" fill="#ECA42B" stroke="none"></circle>
+                <rect x="118" y="336" width="36" height="4"></rect>
+                <rect x="124" y="364" width="24" height="7" rx="3.5"></rect>
+                <rect x="122" y="386" width="28" height="9"></rect><rect x="122" y="402" width="28" height="9"></rect>
+                <circle cx="136" cy="428" r="5"></circle>
+              </g>
+              <g id="lx-rr" opacity="0" transform="translate(-310 -20)">
+                <rect x="700" y="255" width="120" height="330" fill="#FFFFFF"></rect>
+                <rect x="716" y="276" width="22" height="10"></rect><rect x="716" y="292" width="22" height="10"></rect>
+                <rect x="716" y="312" width="28" height="9"></rect><rect x="716" y="329" width="28" height="9"></rect>
+                <rect x="716" y="348" width="24" height="16"></rect><line x1="722" y1="348" x2="722" y2="342"></line><line x1="734" y1="348" x2="734" y2="342"></line>
+                <rect x="762" y="276" width="30" height="22"></rect><circle cx="770" cy="287" r="1.5" fill="#1A1918" stroke="none"></circle><circle cx="777" cy="287" r="1.5" fill="#1A1918" stroke="none"></circle><circle cx="784" cy="287" r="1.5" fill="#1A1918" stroke="none"></circle>
+                <line x1="762" y1="320" x2="762" y2="470" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="776" y1="320" x2="776" y2="470" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="790" y1="320" x2="790" y2="470" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <circle cx="760" cy="516" r="30"></circle><circle cx="760" cy="516" r="6"></circle><line x1="760" y1="486" x2="760" y2="546" opacity=".4"></line><line x1="730" y1="516" x2="790" y2="516" opacity=".4"></line>
+              </g>
+              <g id="lx-ps" opacity="0" transform="translate(69 -289)">
+                <rect x="305" y="642" width="152" height="94" fill="#FFFFFF"></rect>
+                <line x1="318" y1="662" x2="400" y2="662" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="318" y1="680" x2="400" y2="680" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="318" y1="698" x2="400" y2="698" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="318" y1="716" x2="400" y2="716" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <rect x="410" y="654" width="38" height="22"></rect>
+                <text x="429" y="700" font-family="'JetBrains Mono',monospace" font-size="11" fill="#878480" stroke="none" text-anchor="middle">750W</text>
+              </g>
+              <g id="lx-bt" opacity="0" transform="translate(-136 -298)">
+                <rect x="492" y="656" width="188" height="84" fill="#FFFFFF"></rect>
+                <line x1="524" y1="678" x2="648" y2="678" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="524" y1="698" x2="648" y2="698" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <line x1="524" y1="718" x2="648" y2="718" stroke="#3A3835" stroke-width="3" stroke-dasharray="0.1 9" stroke-linecap="round" opacity=".8"></line>
+                <circle cx="508" cy="672" r="6" opacity=".6"></circle><circle cx="664" cy="672" r="6" opacity=".6"></circle><circle cx="508" cy="724" r="6" opacity=".6"></circle><circle cx="664" cy="724" r="6" opacity=".6"></circle>
+              </g>
+              <g id="lx-b1" opacity="0" transform="translate(289 -265)">
+                <path d="M146 628 L146 700 L188 700 L188 688 L158 688 L158 628 Z" fill="#FFFFFF"></path>
+                <circle cx="152" cy="642" r="2.5"></circle><circle cx="152" cy="668" r="2.5"></circle><circle cx="176" cy="694" r="2.5"></circle>
+              </g>
+              <g id="lx-b2" opacity="0" transform="translate(196 -258)">
+                <rect x="222" y="652" width="64" height="12" fill="#FFFFFF"></rect>
+                <circle cx="232" cy="658" r="2.5"></circle><circle cx="276" cy="658" r="2.5"></circle>
+              </g>
+              <g id="lx-an" opacity="0" transform="translate(-350 -275)">
+                <circle cx="770" cy="640" r="5" fill="#FFFFFF"></circle><circle cx="798" cy="632" r="5" fill="#FFFFFF"></circle>
+                <path d="M770 645 C 760 700, 830 690, 824 730"></path>
+                <path d="M798 637 C 812 690, 850 660, 852 706"></path>
+                <rect x="818" y="730" width="12" height="8"></rect><rect x="846" y="706" width="12" height="8"></rect>
+              </g>
+              <g id="lx-sc1" opacity="0" transform="translate(-110 -350)"><circle cx="560" cy="750" r="5"></circle><line x1="556" y1="750" x2="564" y2="750"></line><line x1="560" y1="746" x2="560" y2="754"></line></g>
+              <g id="lx-sc2" opacity="0" transform="translate(-135 -350)"><circle cx="585" cy="750" r="5"></circle><line x1="581" y1="750" x2="589" y2="750"></line><line x1="585" y1="746" x2="585" y2="754"></line></g>
+              <g id="lx-sc3" opacity="0" transform="translate(-160 -350)"><circle cx="610" cy="750" r="5"></circle><line x1="606" y1="750" x2="614" y2="750"></line><line x1="610" y1="746" x2="610" y2="754"></line></g>
+              <g id="lx-sc4" opacity="0" transform="translate(-185 -350)"><circle cx="635" cy="750" r="5"></circle><line x1="631" y1="750" x2="639" y2="750"></line><line x1="635" y1="746" x2="635" y2="754"></line></g>
+              <g id="lx-sc5" opacity="0" transform="translate(-210 -350)"><circle cx="660" cy="750" r="5"></circle><line x1="656" y1="750" x2="664" y2="750"></line><line x1="660" y1="746" x2="660" y2="754"></line></g>
+              <g id="lx-sc6" opacity="0" transform="translate(-235 -350)"><circle cx="685" cy="750" r="5"></circle><line x1="681" y1="750" x2="689" y2="750"></line><line x1="685" y1="746" x2="685" y2="754"></line></g>
+              <g id="lx-labels" opacity="0" font-family="'JetBrains Mono',monospace" font-size="11" letter-spacing="1">
+                <text x="450" y="44" fill="#878480" stroke="none" text-anchor="middle">TOP COVER</text><line x1="450" y1="52" x2="450" y2="62" stroke="#ECA42B"></line>
+                <text x="151" y="50" fill="#878480" stroke="none" text-anchor="middle">SIDE PANEL ×2</text><line x1="151" y1="56" x2="151" y2="66" stroke="#ECA42B"></line>
+                <text x="136" y="242" fill="#878480" stroke="none" text-anchor="middle">FRONT</text><line x1="136" y1="246" x2="136" y2="252" stroke="#ECA42B"></line>
+                <text x="760" y="242" fill="#878480" stroke="none" text-anchor="middle">REAR I/O</text><line x1="760" y1="246" x2="760" y2="252" stroke="#ECA42B"></line>
+                <line x1="352" y1="392" x2="306" y2="436" stroke="#ECA42B"></line><text x="300" y="450" fill="#878480" stroke="none" text-anchor="end">92mm FAN</text>
+                <line x1="584" y1="368" x2="628" y2="330" stroke="#ECA42B"></line><text x="632" y="326" fill="#878480" stroke="none">DDR5 ×3</text>
+                <line x1="386" y1="490" x2="386" y2="560" stroke="#ECA42B"></line><text x="386" y="576" fill="#878480" stroke="none" text-anchor="middle">M.2 NVMe</text>
+                <text x="381" y="762" fill="#878480" stroke="none" text-anchor="middle">PSU</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div id="tg-ex-t1" style="position:absolute;left:clamp(16px,5vw,64px);top:52%;transform:translateY(-50%);width:clamp(200px,23vw,330px);opacity:0;z-index:2;display:grid;gap:10px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">Step 01・打開機殼</span>
+          <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2">算力都在這一箱</b>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">GPU、模型、知識庫、Workflow 全裝在同一個機殼裡。跑在你的機房，回應不經任何雲端 API。</p>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-tertiary)">站 1–6 全站服務・13 部門 AI 同事</span>
+        </div>
+        <div id="tg-ex-t2" style="position:absolute;right:clamp(16px,5vw,64px);top:52%;transform:translateY(-50%);width:clamp(200px,23vw,330px);opacity:0;z-index:2;display:grid;gap:10px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">Step 02・拆到底</span>
+          <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.2">零件會換，資料不搬家</b>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">開源模型隨裝隨換，GPU 卡位可擴充。換零件不換資料，授權不用重簽。</p>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-tertiary)">圖為示意機型・實機配置以報價為準</span>
+        </div>
+        <div id="tg-ex-hint" style="position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:3;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">往下滑，拆開看 ↓</div>
+      </div>
+    </div>
+  </section>
+  <section style="padding:96px 0 48px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">產品</span>
+      <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">同一套系統，三個入口。</h1>
+      <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:62ch;margin:0">六條產品線對應主控台六站：你從哪個角色進來，看到的就是你關心的那一面。</p>
+    </div>
+  </section>
+  <section style="padding:0 0 96px;flex:1">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:48px">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="站 1・對話" title="Local GPT" hint-size="100%,160px">地端 AI 硬體導入，13 部門 AI 同事，資料不出企業。</x-import>
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="站 2・知識庫" title="Advanced RAG" hint-size="100%,160px">文件變成問得到答案的知識庫，答了有出處。</x-import>
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="站 3・Workflow" title="n8n 自動化" hint-size="100%,160px">看得見、改得動、過得了稽核的 SOP。</x-import>
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="站 4・模型" title="Ollama 模型管理" hint-size="100%,160px">開源模型隨裝隨換，不被供應商綁定。</x-import>
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="站 5・治理" title="LiteLLM 治理" hint-size="100%,160px">部門額度、即時花費、超標熔斷。</x-import>
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Card" eyebrow="站 6・儀表板" title="GPU 管理中心" hint-size="100%,160px">叢集排程、用量監控、成本控管：你的 GPU、你的機房。</x-import>
+      </div>
+      <div style="border:1px dashed var(--border-default);padding:48px;text-align:center">
+        <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">各產品詳情（受眾、賣點、功能區塊、FAQ）＝ Payload「Products」collection・填完發布即上線</p>
+      </div>
+    </div>
+  </section>
+  <footer style="background:#0E0E0D;color:#878480;padding:24px 0;font-size:12px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between">
+      <span>© 2026 虎智科技股份有限公司 TigerAI</span>
+      <a href="首頁.dc.html" style="color:#B5B2AC;text-decoration:none">回首頁 →</a>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { p: 0 };
+  componentDidMount() {
+    this._onScroll = () => {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => {
+        this._raf = 0;
+        const p = Math.min(1, Math.max(0, (window.scrollY || 0) / 160));
+        if (p !== this.state.p) this.setState({ p });
+      });
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onScroll();
+    const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+    const sm = (a, b, p) => { const t = clampN((p - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+    const armX = n => {
+      const stage = document.getElementById('tg-ex-stage');
+      const el = id => document.getElementById(id);
+      if (!stage || !el('tg-ex-canvas') || !el('tg-ex-t2')) { if (n < 30) setTimeout(() => armX(n + 1), 200); return; }
+      const red = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const apply = () => {
+        this._xraf = 0;
+        const vh = window.innerHeight;
+        const st = document.getElementById('tg-ex-stage');
+        const sec2 = st && st.parentElement;
+        if (!sec2) return;
+        const p = red ? 1 : clampN(-sec2.getBoundingClientRect().top / (sec2.offsetHeight - vh), 0, 1);
+        if (this._p3d) this._p3d.seek(red ? 1 : p);
+        el('tg-ex-wrap').style.transform = red ? 'none' : 'translateX(' + (13 * sm(.3, .5, p) - 28 * sm(.58, .85, p)) + '%)';
+        const o1 = red ? 1 : sm(.34, .46, p) * (1 - sm(.55, .66, p));
+        const t1 = el('tg-ex-t1');
+        t1.style.opacity = String(o1);
+        t1.style.transform = 'translateY(calc(-50% + ' + (red ? 0 : 10 - 10 * sm(.34, .46, p)) + 'px))';
+        const o2 = red ? 1 : sm(.7, .84, p);
+        const t2 = el('tg-ex-t2');
+        t2.style.opacity = String(o2);
+        t2.style.transform = 'translateY(calc(-50% + ' + (red ? 0 : 10 - 10 * o2) + 'px))';
+        el('tg-ex-hint').style.opacity = String(red ? 0 : 1 - sm(.02, .1, p));
+      };
+      this._onExp = () => apply();
+      window.addEventListener('scroll', this._onExp, { passive: true });
+      window.addEventListener('resize', this._onExp, { passive: true });
+      if (!this._p3d && !this._p3dLoading) {
+        this._p3dLoading = true;
+        import('./product3d.js').then(m => m.mount(document.getElementById('tg-ex-canvas'))).then(api => { this._p3d = api; if (this._onExp) this._onExp(); }).catch(e => console.warn('3D 場景載入失敗', e));
+      }
+      apply();
+    };
+    armX(0);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this._onScroll);
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._onExp) { window.removeEventListener('scroll', this._onExp); window.removeEventListener('resize', this._onExp); }
+    if (this._xraf) cancelAnimationFrame(this._xraf);
+    if (this._p3d) { this._p3d.dispose(); this._p3d = null; }
+  }
+  renderVals() {
+    const p = this.state.p || 0;
+    const l = (a, b) => Math.round((a + (b - a) * p) * 100) / 100;
+    return {
+      barStyle: 'height:' + l(76, 56) + 'px;margin-top:' + l(0, 12) + 'px;width:min(' + l(4000, 960) + 'px,calc(100% - ' + l(0, 32) + 'px));background:rgba(250,250,248,' + l(1, 0.94) + ');border:1px solid rgba(14,14,13,' + l(0, 0.14) + ');border-bottom:1px solid rgba(14,14,13,' + l(0.08, 0.14) + ');box-shadow:0 ' + l(0, 12) + 'px ' + l(0, 28) + 'px rgba(14,14,13,' + l(0, 0.14) + ')',
+      innerStyle: 'padding:0 ' + l(64, 24) + 'px',
+      logoStyle: 'height:' + l(26, 21) + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+/* TigerAI — Layout & stacking tokens. */
+
+:root {
+  --container-sm:  640px; /* @kind spacing */
+  --container-md:  768px; /* @kind spacing */
+  --container-lg: 1024px; /* @kind spacing */
+  --container-xl: 1280px; /* @kind spacing */
+  --container-2xl:1440px; /* @kind spacing */
+
+  --z-base:   1; /* @kind other */
+  --z-raise:  10; /* @kind other */
+  --z-sticky: 100; /* @kind other */
+  --z-modal:  1000; /* @kind other */
+  --z-toast:  2000; /* @kind other */
+}

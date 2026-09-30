@@ -1,0 +1,39 @@
+/* TigerAI — Typography tokens.
+   Manrope for display / KPI / nav, Inter for body & UI, JetBrains Mono for
+   tokens & metadata, Noto Sans TC carries all Traditional Chinese. */
+
+:root {
+  --font-sans: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Manrope', 'Inter', 'Noto Sans TC', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Modular scale — 1.200 (minor third) on 16px base */
+  --fs-12: 0.75rem;    /* 12 — caption (floor) */
+  --fs-13: 0.8125rem;  /* 13 — label sm */
+  --fs-14: 0.875rem;   /* 14 — body sm / UI */
+  --fs-16: 1rem;       /* 16 — body */
+  --fs-18: 1.125rem;   /* 18 — body lg */
+  --fs-20: 1.25rem;    /* 20 — h6 */
+  --fs-24: 1.5rem;     /* 24 — h5 */
+  --fs-30: 1.875rem;   /* 30 — h4 */
+  --fs-36: 2.25rem;    /* 36 — h3 */
+  --fs-48: 3rem;       /* 48 — h2 */
+  --fs-60: 3.75rem;    /* 60 — h1 */
+  --fs-72: 4.5rem;     /* 72 — display / hero */
+
+  --lh-tight:   1.1; /* @kind font */
+  --lh-snug:    1.25; /* @kind font */
+  --lh-normal:  1.5; /* @kind font */
+  --lh-relaxed: 1.7; /* @kind font */
+
+  --fw-regular:  400; /* @kind font */
+  --fw-medium:   500; /* @kind font */
+  --fw-semibold: 600; /* @kind font */
+  --fw-bold:     700; /* @kind font */
+  --fw-extra:    800; /* @kind font */
+
+  --tracking-tight:  -0.02em; /* @kind font */
+  --tracking-normal: 0; /* @kind font */
+  --tracking-wide:   0.04em; /* @kind font */
+  --tracking-caps:   0.12em; /* @kind font */
+}

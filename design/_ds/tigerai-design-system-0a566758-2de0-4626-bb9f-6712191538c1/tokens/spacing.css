@@ -1,0 +1,16 @@
+/* TigerAI — Spacing tokens. 4px base grid, 10 linear steps.
+   No magic numbers: never write margin-top: 13px. */
+
+:root {
+  --space-0:  0;
+  --space-1:  0.25rem;  /*   4 — icon gap */
+  --space-2:  0.5rem;   /*   8 — inline gap */
+  --space-3:  0.75rem;  /*  12 — control padding */
+  --space-4:  1rem;     /*  16 — paragraph rhythm, mobile page margin */
+  --space-5:  1.5rem;   /*  24 — card padding */
+  --space-6:  2rem;     /*  32 — above a subhead */
+  --space-7:  3rem;     /*  48 */
+  --space-8:  4rem;     /*  64 — section block, desktop page margin */
+  --space-9:  6rem;     /*  96 — hero / first screen */
+  --space-10: 8rem;     /* 128 */
+}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/fonts.css">
+<link rel="stylesheet" href="assets/fonts/source-han-sans-tc.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/colors.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/typography.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/base.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/buttons.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/badges.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/cards.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles.css">
+<script src="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/_ds_bundle.js"></script>
+<style>:root{--font-sans:'Inter','Source Han Sans TC',sans-serif;--font-display:'Manrope','Source Han Sans TC',sans-serif}body{margin:0;background:#FAFAF8;font-family:'Inter','Source Han Sans TC',sans-serif;color:#0E0E0D}*{box-sizing:border-box}.tg-dd{position:relative;display:inline-flex;align-items:center}.tg-dd>div{position:absolute;left:0;top:100%;padding-top:12px;display:none;z-index:130}.tg-dd:hover>div{display:block}.tg-dd .tg-dd-in{background:#FFFFFF;border:1px solid var(--border-default);box-shadow:0 12px 28px rgba(14,14,13,.16);display:grid;min-width:170px}.tg-dd .tg-dd-in a{display:block;padding:10px 14px;font-size:13px;font-weight:500;color:#0E0E0D;text-decoration:none}.tg-dd .tg-dd-in a:hover{background:var(--slate-100);color:#C08423}a{color:#0E0E0D}a:hover{color:#C08423}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;pointer-events:none">
+    <div style="pointer-events:auto;display:flex;justify-content:center;height:76px;width:100%;background:#FAFAF8;backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--border-subtle);{{ barStyle }}">
+    <div style="display:flex;align-items:center;gap:24px;width:100%;max-width:1440px;padding:0 clamp(16px,5vw,64px);{{ innerStyle }}">
+      <a href="首頁.dc.html" style="display:flex"><img src="assets/logo/color-horizontal-black-text.svg" alt="TigerAI 虎智科技" style="height:26px;display:block;{{ logoStyle }}"></a>
+      <nav style="display:flex;gap:24px;margin-left:24px">
+        <span class="tg-dd"><a href="產品.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">產品 ▾</a><div><div class="tg-dd-in"><a href="產品.dc.html">全部產品</a><a href="Tiger GPU Pro.dc.html">Tiger GPU Pro</a></div></div></span>
+        <a href="課程.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">課程</a>
+        <a href="顧問與方法論.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">顧問與方法論</a>
+        <a href="案例.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">案例</a>
+        <a href="部落格.dc.html" style="color:var(--tiger-600);text-decoration:none;font-size:14px;font-weight:600;padding-bottom:1px;border-bottom:2px solid var(--tiger-500)">部落格</a>
+        <a href="免費資源.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500;padding-bottom:3px;background:linear-gradient(var(--tiger-500),var(--tiger-500)) no-repeat left bottom/0% 2px;transition:background-size .2s cubic-bezier(.22,.61,.36,1)" style-hover="background-size:100% 2px;color:#0E0E0D">免費資源</a>
+      </nav>
+      <div style="margin-left:auto">
+        <x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="sm" hint-size="150px,32px">預約 30 分鐘諮詢</x-import>
+      </div>
+    </div>
+    </div>
+  </header>
+  <section style="padding:140px 0 32px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">部落格</span>
+      <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">文章與期刊。</h1>
+      <div style="display:flex;gap:8px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;background:var(--ink-900);color:#fff">全部</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)">部落格</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 12px;border:1px solid var(--border-default)">期刊</span>
+      </div>
+    </div>
+  </section>
+  <section style="padding:32px 0 96px;flex:1">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
+        <div style="border:1px dashed var(--border-default);aspect-ratio:4/3"></div>
+        <div style="border:1px dashed var(--border-default);aspect-ratio:4/3"></div>
+        <div style="border:1px dashed var(--border-default);aspect-ratio:4/3"></div>
+        <div style="border:1px dashed var(--border-default);aspect-ratio:4/3"></div>
+        <div style="border:1px dashed var(--border-default);aspect-ratio:4/3"></div>
+        <div style="border:1px dashed var(--border-default);aspect-ratio:4/3"></div>
+      </div>
+      <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">文章卡＝Payload「Posts」collection：標題、內文、分類、封面（不附圖自動生成品牌模板）</p>
+    </div>
+  </section>
+  <footer style="background:#0E0E0D;color:#878480;padding:24px 0;font-size:12px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between">
+      <span>© 2026 虎智科技股份有限公司 TigerAI</span>
+      <a href="首頁.dc.html" style="color:#B5B2AC;text-decoration:none">回首頁 →</a>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { p: 0 };
+  componentDidMount() {
+    this._onScroll = () => {
+      if (this._raf) return;
+      this._raf = requestAnimationFrame(() => {
+        this._raf = 0;
+        const p = Math.min(1, Math.max(0, (window.scrollY || 0) / 160));
+        if (p !== this.state.p) this.setState({ p });
+      });
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onScroll();
+  }
+  componentWillUnmount() { window.removeEventListener('scroll', this._onScroll); if (this._raf) cancelAnimationFrame(this._raf); }
+  renderVals() {
+    const p = this.state.p || 0;
+    const l = (a, b) => Math.round((a + (b - a) * p) * 100) / 100;
+    return {
+      barStyle: 'height:' + l(76, 56) + 'px;margin-top:' + l(0, 12) + 'px;width:min(' + l(4000, 960) + 'px,calc(100% - ' + l(0, 32) + 'px));background:rgba(250,250,248,' + l(1, 0.94) + ');border:1px solid rgba(14,14,13,' + l(0, 0.14) + ');border-bottom:1px solid rgba(14,14,13,' + l(0.08, 0.14) + ');box-shadow:0 ' + l(0, 12) + 'px ' + l(0, 28) + 'px rgba(14,14,13,' + l(0, 0.14) + ')',
+      innerStyle: 'padding:0 ' + l(64, 24) + 'px',
+      logoStyle: 'height:' + l(26, 21) + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+{
+  "name": "文件格式標準化",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI 智慧文書小幫手",
+        "formDescription": "貼上你的草稿，AI 自動幫你轉成 ISO 或正式公文格式。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "草稿內容",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "文件類型",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {},
+                  {},
+                  {}
+                ]
+              }
+            },
+            {
+              "fieldLabel": "接收 Email",
+              "fieldType": "email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -592,
+        -80
+      ],
+      "id": "3bd6e866-d7eb-491d-ab72-be4b3d488726",
+      "name": "輸入草稿表單",
+      "webhookId": "c2f25ced-164e-4ccf-b2f6-4534bf4d5bb2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "1111",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -80
+      ],
+      "id": "8ce8f44c-632d-4f22-8f92-67e83be22ebd",
+      "name": "建立 Google Doc",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "O6zBoWUkmIRjGlVi",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('輸入草稿表單').item.json.email }}",
+        "subject": "您的 AI 正式文件已生成",
+        "message": "=您好，\n\n您剛剛申請的【{{ $('輸入草稿表單').item.json.doc_type }}】已經製作完成。\n\n請點擊以下連結查看並編輯：\n{{ $json.webViewLink }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -80
+      ],
+      "id": "99992bde-2c4c-4b5f-9f51-bff76b57c5dc",
+      "name": "Email 通知結果",
+      "webhookId": "31354dfa-ca39-4dc8-8d3f-507e89497df7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ocDpTUxGn12wK5Hj",
+          "name": "Tigerai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        96
+      ],
+      "id": "4a0333cc-fb63-490f-bf54-939928c3a88d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Pja68PTaIDw6AxLB",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -80
+      ],
+      "id": "7fe62a36-7ec0-4cdb-ad23-8e38f3fb21c1",
+      "name": "轉換為PDF"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -80
+      ],
+      "id": "a71dae82-f71a-40f4-b139-7c178c3f3f74",
+      "name": "AI 格式化與潤飾"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -80
+      ],
+      "id": "37879250-95eb-4af5-b3b5-071e969cba00",
+      "name": "分析文件",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nlPh2Ux3iZHZLw9M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "建立 Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Email 通知結果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "輸入草稿表單": {
+      "main": [
+        [
+          {
+            "node": "分析文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI 格式化與潤飾",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "轉換為PDF": {
+      "main": [
+        [
+          {
+            "node": "建立 Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 格式化與潤飾": {
+      "main": [
+        [
+          {
+            "node": "轉換為PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分析文件": {
+      "main": [
+        [
+          {
+            "node": "AI 格式化與潤飾",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "32d1c482-ea1b-4bd4-9416-1f9f029deba1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b17ad060fbbb8ca8b93015f624347e198e358bdd8ebfadef89df935ad63a83e0"
+  },
+  "id": "UGQl7sHUY6vb8NsY",
+  "tags": []
+}

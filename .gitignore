@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.DS_Store
+Thumbs.db
+._*
+
+# 思源黑體 4 字重 OTF 共 64 MB。設計系統的字型堆疊是 'Inter','Noto Sans TC'，
+# 中文走 Google Fonts CDN，沒有任何 CSS 引用這四個檔，交付時多放的。
+design/assets/fonts/*.otf
+
+# 講師原始照片的壓縮包，裡面的 PNG 已經解出來了
+講師顧問資料.zip

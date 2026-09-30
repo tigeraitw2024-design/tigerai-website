@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/colors.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/tokens/typography.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/base.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/buttons.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/badges.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles/cards.css">
+<link rel="stylesheet" href="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/styles.css">
+<link rel="stylesheet" href="assets/fonts/source-han-sans-tc.css">
+<script src="_ds/tigerai-design-system-0a566758-2de0-4626-bb9f-6712191538c1/_ds_bundle.js"></script>
+<style>body{margin:0;background:#FAFAF8;font-family:'Inter','Source Han Sans TC','Noto Sans TC',sans-serif;color:#0E0E0D}*{box-sizing:border-box}.tg-dd{position:relative;display:inline-flex;align-items:center}.tg-dd>div{position:absolute;left:0;top:100%;padding-top:12px;display:none;z-index:130}.tg-dd:hover>div{display:block}.tg-dd .tg-dd-in{background:#FFFFFF;border:1px solid var(--border-default);box-shadow:0 12px 28px rgba(14,14,13,.16);display:grid;min-width:170px}.tg-dd .tg-dd-in a{display:block;padding:10px 14px;font-size:13px;font-weight:500;color:#0E0E0D;text-decoration:none}.tg-dd .tg-dd-in a:hover{background:var(--slate-100);color:#C08423}a{color:#0E0E0D}a:hover{color:#C08423}
+@keyframes tg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes tg-wa{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes tg-wb{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes tg-fa{from{opacity:0}to{opacity:1}}
+@keyframes tg-fb{from{opacity:0}to{opacity:1}}
+@keyframes tg-m1{0%{left:0;opacity:0}3%{left:0;opacity:1}17%{left:calc(100% - 150px);opacity:1}21%{opacity:0}100%{left:calc(100% - 150px);opacity:0}}
+@keyframes tg-m2{0%,24%{right:0;opacity:0}27%{right:0;opacity:1}40%{right:calc(100% - 160px);opacity:1}44%{opacity:0}100%{right:calc(100% - 160px);opacity:0}}
+@keyframes tg-m3{0%,47%{left:0;opacity:0}50%{left:0;opacity:1}60%{left:calc(100% - 132px);opacity:1}64%{opacity:0}100%{left:calc(100% - 132px);opacity:0}}
+@keyframes tg-sb{0%,62%{transform:scaleY(0)}70%,94%{transform:scaleY(1)}97%,100%{transform:scaleY(1);opacity:0}}
+@keyframes tg-row{0%,74%{opacity:0}80%,94%{opacity:1}98%,100%{opacity:0}}
+@keyframes tg-s1{0%{color:#6E6B66;border-color:rgba(14,14,13,.16)}3%,20%{color:#C08423;border-color:rgba(192,132,35,.6)}25%,100%{color:#6E6B66;border-color:rgba(14,14,13,.16)}}
+@keyframes tg-s2{0%,24%{color:#6E6B66;border-color:rgba(14,14,13,.16)}27%,44%{color:#C08423;border-color:rgba(192,132,35,.6)}49%,100%{color:#6E6B66;border-color:rgba(14,14,13,.16)}}
+@keyframes tg-s3{0%,47%{color:#6E6B66;border-color:rgba(14,14,13,.16)}50%,70%{color:#C08423;border-color:rgba(192,132,35,.6)}75%,100%{color:#6E6B66;border-color:rgba(14,14,13,.16)}}
+@keyframes tg-s4{0%,73%{color:#6E6B66;border-color:rgba(14,14,13,.16)}76%,94%{color:#C08423;border-color:rgba(192,132,35,.6)}98%,100%{color:#6E6B66;border-color:rgba(14,14,13,.16)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;animation-delay:0ms!important}}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <header style="position:sticky;top:0;z-index:100;background:rgba(250,250,248,.72);backdrop-filter:blur(16px) saturate(1.4);border-bottom:1px solid var(--border-subtle)">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);height:58px;display:flex;align-items:center;gap:24px">
+      <a href="首頁.dc.html" style="display:flex"><img src="assets/logo/color-horizontal-black-text.svg" alt="TigerAI 虎智科技" style="height:26px;display:block"></a>
+      <nav style="display:flex;gap:24px;margin-left:24px">
+        <span class="tg-dd"><a href="產品.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">產品 ▾</a><div><div class="tg-dd-in"><a href="產品.dc.html">全部產品</a><a href="Tiger GPU Pro.dc.html">Tiger GPU Pro</a></div></div></span>
+        <a href="課程.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">課程</a>
+        <a href="顧問與方法論.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">顧問與方法論</a>
+        <a href="案例.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">案例</a>
+        <a href="部落格.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">部落格</a>
+        <a href="免費資源.dc.html" style="color:#0E0E0D;text-decoration:none;font-size:14px;font-weight:500">免費資源</a>
+      </nav>
+      <div style="margin-left:auto">
+        <a href="首頁.dc.html#contact" style="text-decoration:none"><x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="sm" hint-size="150px,32px">預約 30 分鐘諮詢</x-import></a>
+      </div>
+    </div>
+  </header>
+
+  <section data-screen-label="TG-01 Hero+分流" style="padding:96px 0 64px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700);animation:tg-in .5s both">Tiger GPU Pro・地端部署 × 算力 × 控管</span>
+      <div style="position:relative;display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap;margin-bottom:40px" onMouseLeave="{{ wordLeave }}">
+      <div style="min-width:0;flex:0 1 auto">
+      <h1 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(30px,4.6vw,72px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px;white-space:nowrap;animation:tg-in .5s .05s both">AI 做出來了 <span onMouseEnter="{{ wordEnter }}" style="display:inline-block;min-width:5.2em;height:1.12em;line-height:1.12;vertical-align:top;color:var(--tiger-600);cursor:default;animation:{{ headAnim }}">{{ headWord }}</span><br>放在哪？</h1>
+      <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0;animation:tg-in .5s .1s both">真正的門檻在最後一哩：部署在哪、算力哪來、誰在控管。<br>Tiger GPU Pro 一次鋪好。</p>
+      </div>
+        <div onMouseEnter="{{ wordEnter }}" style="margin-top:12px;flex:0 1 400px;min-width:230px;max-width:100%;height:288px;overflow:hidden;background:#fff;border:1px solid var(--border-subtle);box-shadow:var(--shadow-lg);padding:20px;display:grid;grid-template-columns:1fr;grid-template-rows:1fr 1fr;gap:16px;animation:{{ cardAnim }}">
+          <div style="border-top:1px solid var(--border-strong);padding-top:12px"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">現況</span><p style="margin:8px 0 0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">{{ storyPain }}</p></div>
+          <div style="border-top:1px solid var(--border-strong);padding-top:12px"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">放進 Tiger GPU Pro</span><p style="margin:8px 0 0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">{{ storyFix }}</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+              <sc-for list="{{ storyMods }}" as="m"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:4px 10px">{{ m.t }}</span></sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section data-screen-label="TG-02 A to A 動畫" style="padding:64px 0 96px;background:#fff;border-top:1px solid var(--border-subtle)">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">A to A 自動部署</span>
+      <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 8px">5 分鐘，AI 自動部署。</h2>
+      <p style="font-size:15px;line-height:1.7;color:var(--fg-secondary);margin:0 0 32px;max-width:56ch">你只做一件事：把 docker-compose 丟給你的 AI。剩下的，它跟 TG 伺服器上的 OpenCode Agent 自己講。</p>
+      <div style="background:#FAFAF8;border:1px solid var(--border-subtle);padding:clamp(20px,3vw,32px);position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40%;right:-6%;width:420px;height:420px;background:radial-gradient(closest-side,rgba(236,164,43,.12),transparent 70%);pointer-events:none"></div>
+        <div style="position:relative;display:grid;grid-template-columns:170px 1fr 170px;gap:16px;align-items:stretch">
+          <div style="border:1px solid var(--border-subtle);background:#fff;padding:16px;display:grid;gap:6px;align-content:center;justify-items:center;text-align:center">
+            <span style="width:40px;height:40px;border:1px solid var(--border-brand);color:var(--tiger-700);background:var(--tiger-50);display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px">AI</span>
+            <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">你的本機 AI</b>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--fg-tertiary)">開發端</span>
+          </div>
+          <div style="position:relative;min-height:128px;border-bottom:1px dashed rgba(14,14,13,.2)">
+            <span style="position:absolute;top:6px;left:0;font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid var(--border-brand);color:var(--tiger-700);background:var(--tiger-50);padding:4px 8px;white-space:nowrap;animation:tg-m1 12s linear infinite">docker-compose.yml →</span>
+            <span style="position:absolute;top:44px;right:0;font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid var(--border-default);color:var(--fg-secondary);background:#fff;padding:4px 8px;white-space:nowrap;animation:tg-m2 12s linear infinite">← 環境需求・埠號確認</span>
+            <span style="position:absolute;top:82px;left:0;font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid var(--border-brand);color:var(--tiger-700);background:var(--tiger-50);padding:4px 8px;white-space:nowrap;animation:tg-m3 12s linear infinite">環境變數・確認 →</span>
+          </div>
+          <div style="border:1px solid var(--border-subtle);background:#fff;padding:16px;display:grid;gap:6px;align-content:center;justify-items:center;text-align:center">
+            <img src="assets/logo/color-square-mark.svg" alt="" style="width:40px;height:40px">
+            <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">TG 伺服器 AI</b>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--fg-tertiary)">OpenCode Agent</span>
+          </div>
+        </div>
+        <div style="position:relative;margin-top:16px;border:1px dashed rgba(192,132,35,.5);background:var(--tiger-50);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tiger-700);transform-origin:top;animation:tg-sb 12s linear infinite">Sandbox 建置中：自動拉映像檔、掛環境變數、開沙盒測試</div>
+        <div style="position:relative;margin-top:8px;border:1px solid var(--border-subtle);background:#fff;padding:10px 14px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;animation:tg-row 12s linear infinite"><span>opengenie-api・v1.0・port 8443</span><span style="color:var(--success-700)">✓ 已納入 TG 服務列表</span></div>
+        <div style="position:relative;display:flex;gap:8px;flex-wrap:wrap;margin-top:20px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid rgba(14,14,13,.16);color:#6E6B66;padding:5px 10px;animation:tg-s1 12s linear infinite">01 交付設定檔</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid rgba(14,14,13,.16);color:#6E6B66;padding:5px 10px;animation:tg-s2 12s linear infinite">02 雙端 AI 對話確認</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid rgba(14,14,13,.16);color:#6E6B66;padding:5px 10px;animation:tg-s3 12s linear infinite">03 自動建置 Sandbox</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid rgba(14,14,13,.16);color:#6E6B66;padding:5px 10px;animation:tg-s4 12s linear infinite">04 納入 TG 統一控管</span>
+        </div>
+      </div>
+      <p style="margin:12px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-tertiary)">A to A（AI-to-AI）部署示意・外部開發的 ERP 模組、AI 應用同樣可掛載</p>
+    </div>
+  </section>
+
+  <section data-screen-label="TG-03 三個模組" style="padding:96px 0">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">平台三件套</span>
+      <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 32px">部署、算力、控管，一套鋪到底。</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px;display:grid;gap:10px;align-content:start">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">模組 1</span>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:20px;font-weight:700;margin:0">TG 地端平台</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">伺服器買了沒人會管？TG 把地端 n8n 與微服務的部署變成圖形化開關：環境、埠號、版本，一個畫面控到底。</p>
+          <span style="justify-self:start;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:4px 10px">A to A 自動部署・沙盒納管</span>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px;display:grid;gap:10px;align-content:start">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">模組 2</span>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:20px;font-weight:700;margin:0">GPU Plus</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">GPU 買了，算力卻變不成服務？GPU Plus 自動把算力掛上指定模型、封裝成 API Key。沒有 GPU？我們連硬體一起規劃。</p>
+          <span style="justify-self:start;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:4px 10px">算力 → 模型 API・AI 自動調度</span>
+        </div>
+        <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px;display:grid;gap:10px;align-content:start">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)">模組 3</span>
+          <h3 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:20px;font-weight:700;margin:0">企業管控與報表</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">Key 發給誰、誰用了多少，一張報表講完。員工實名領 Key、超標可斷，機房排定維護就照表關機。</p>
+          <span style="justify-self:start;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:4px 10px">實名 API Key・計畫性關機</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen-label="TG-04 管控報表" style="padding:96px 0;background:#fff;border-top:1px solid var(--border-subtle)">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)">老闆看的那一面</span>
+      <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 8px">Key 發給誰、用多少，查得到。</h2>
+      <p style="font-size:15px;line-height:1.7;color:var(--fg-secondary);margin:0 0 32px;max-width:56ch">員工輸入工號＋帳密才領得到 API Key。每一把 Key 都有名字，每一次調用都有紀錄。</p>
+      <div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.6fr);gap:24px;align-items:start">
+        <div style="border:1px solid var(--border-subtle);background:#FAFAF8;padding:20px;display:grid;gap:12px">
+          <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">實名領 Key</b>
+          <div style="display:grid;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px">
+            <span style="border:1px solid var(--border-default);background:#fff;padding:8px 10px;color:var(--fg-secondary)">員工編號　TG-0417</span>
+            <span style="border:1px solid var(--border-default);background:#fff;padding:8px 10px;color:var(--fg-secondary)">帳號密碼　••••••••</span>
+            <span style="border:1px solid var(--border-brand);background:var(--tiger-50);padding:8px 10px;color:var(--tiger-700)">✓ 核發 sk-tg-a417-••••</span>
+          </div>
+          <span style="font-size:12px;color:var(--fg-tertiary);line-height:1.6">一人一把、可停用、可設額度。帳號共用查不到誰在用的年代結束了。</span>
+        </div>
+        <div style="border:1px solid var(--border-subtle);background:#FAFAF8;padding:20px;display:grid;gap:12px">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:baseline">
+            <b style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:14px;font-weight:700">本月用量</b>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-secondary)">調用 1.2M 次・流量 84 GB・活躍 Key 47</span>
+          </div>
+          <div style="display:grid;gap:6px;font-size:12px">
+            <div style="display:grid;grid-template-columns:88px 1fr 64px;gap:10px;align-items:center"><span style="font-family:'JetBrains Mono',monospace">法務・陳</span><span style="height:10px;background:var(--slate-100);position:relative"><span style="position:absolute;inset:0;width:82%;background:var(--tiger-500)"></span></span><span style="font-family:'JetBrains Mono',monospace;text-align:right">412K</span></div>
+            <div style="display:grid;grid-template-columns:88px 1fr 64px;gap:10px;align-items:center"><span style="font-family:'JetBrains Mono',monospace">客服・林</span><span style="height:10px;background:var(--slate-100);position:relative"><span style="position:absolute;inset:0;width:64%;background:var(--tiger-500)"></span></span><span style="font-family:'JetBrains Mono',monospace;text-align:right">318K</span></div>
+            <div style="display:grid;grid-template-columns:88px 1fr 64px;gap:10px;align-items:center"><span style="font-family:'JetBrains Mono',monospace">業務・張</span><span style="height:10px;background:var(--slate-100);position:relative"><span style="position:absolute;inset:0;width:41%;background:var(--tiger-500)"></span></span><span style="font-family:'JetBrains Mono',monospace;text-align:right">204K</span></div>
+            <div style="display:grid;grid-template-columns:88px 1fr 64px;gap:10px;align-items:center"><span style="font-family:'JetBrains Mono',monospace">研發・吳</span><span style="height:10px;background:var(--slate-100);position:relative"><span style="position:absolute;inset:0;width:28%;background:var(--warning-500)"></span></span><span style="font-family:'JetBrains Mono',monospace;text-align:right">139K</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--border-subtle);padding-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px"><span style="color:var(--fg-secondary)">計畫性關機　下次維護 10/15 02:00</span><span style="color:var(--success-700)">✓ 已排程</span></div>
+        </div>
+      </div>
+      <p style="margin:16px 0 0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fg-tertiary)">畫面與數字為示意・n8n 管理狀態、API 調用量、流量統計皆有視覺化報表</p>
+    </div>
+  </section>
+
+  <section data-screen-label="TG-05 CTA" style="background:var(--tiger-500);color:#0E0E0D;padding:64px 0">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:280px">
+        <h2 style="font-family:'Manrope','Source Han Sans TC',sans-serif;font-size:clamp(26px,3.5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:0 0 8px">帶你的架構圖來，30 分鐘。</h2>
+        <p style="font-size:15px;line-height:1.7;color:#1A1918;margin:0">我們會告訴你：這個東西放哪、要多少算力、Key 怎麼發。</p>
+      </div>
+      <a href="首頁.dc.html#contact" style="text-decoration:none"><x-import component-from-global-scope="TigerAIDesignSystem_0a5667.Button" size="lg" variant="secondary" hint-size="180px,48px">預約 30 分鐘諮詢 →</x-import></a>
+    </div>
+  </section>
+
+  <footer style="background:#0E0E0D;color:#878480;padding:24px 0;font-size:12px">
+    <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between">
+      <span>© 2026 虎智科技股份有限公司 TigerAI</span>
+      <a href="首頁.dc.html" style="color:#B5B5B2;text-decoration:none">回首頁 →</a>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sel: 0, open: false, w: 0 };
+  componentDidMount() {
+    this._wt = setInterval(() => { if (!this.state.open) this.setState(s => ({ w: (s.w || 0) + 1 })); }, 3600);
+  }
+  componentWillUnmount() { clearInterval(this._wt); }
+  renderVals() {
+    const W = ['Agent', 'Skill', '網站', 'App', '自動化流程'];
+    const T = [
+      ['AI Agent', 'Agent 跑在自己的筆電，關機就斷線；API Key 掛在個人帳號上，公司看不到。', '丟上 TG 變成常駐服務，Key 改由公司實名發放，Agent 不再跟著人下班。', ['TG 地端平台', '企業管控與報表']],
+      ['Skill 能力包', '每個人自己寫、存在自己電腦裡；誰有哪些 Skill、哪一版能用，沒人說得清。', 'Skill 上架到 TG 變成部門共用資產：一份版本大家取用，誰呼叫過都有紀錄。', ['TG 地端平台', '企業管控與報表']],
+      ['網站／前端', '放在雲端主機，資料與流量都在別人家；改版部署靠手動搬檔案。', 'TG 上開沙盒→測試→上線一條龍，網站與資料留在自己機房。', ['TG 地端平台']],
+      ['App／後端服務', 'Docker 會寫不會管：伺服器買了，沒人會設定、沒人敢重開。', '把 docker-compose 丟給你的 AI，A to A 自動建置、納管，圖形化開關。', ['TG 地端平台', 'GPU Plus']],
+      ['n8n 自動化流程', '流程在個人電腦的 n8n 上跑，帳號共用，出事查不到誰改的。', '地端 n8n 統一部署，每條流程有主人、有版本、有紀錄。', ['TG 地端平台', '企業管控與報表']]
+    ];
+    const a = T[this.state.w % T.length];
+    return {
+      headWord: W[this.state.w % W.length],
+      headAnim: (this.state.w % 2 ? 'tg-wa' : 'tg-wb') + ' .38s cubic-bezier(.22,.61,.36,1) both',
+      cardAnim: (this.state.w % 2 ? 'tg-fa' : 'tg-fb') + ' .6s cubic-bezier(.22,.61,.36,1) both',
+      wordOpen: !!this.state.open,
+      wordEnter: () => this.setState({ open: true }),
+      wordLeave: () => this.setState({ open: false }),
+      storyPain: a[1], storyFix: a[2],
+      storyMods: a[3].map(t => ({ t }))
+    };
+  }
+}
+</script>
+</body>
+</html>

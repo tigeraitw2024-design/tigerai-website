@@ -35,15 +35,41 @@ const OUT = path.join(HERE, 'out');
 
 const WIDTH = Number(process.env.TG_WIDTH || 1440);
 const HEIGHT = Number(process.env.TG_HEIGHT || 900);
-// 每頁容許的差異比例上限。超過就算沒過。
-const THRESHOLD = Number(process.env.TG_THRESHOLD || 0.5);
+// 沒有寫 expect 的頁面，差異要低於這個值才算過。目標是 0。
+const THRESHOLD = Number(process.env.TG_THRESHOLD || 0.05);
 
-/** 原型檔名 ↔ 重建站路由。名字是輸出檔名與命令列參數。 */
+/**
+ * 原型檔名 ↔ 重建站路由。名字是輸出檔名與命令列參數。
+ *
+ * maskProto / maskBuilt：兩邊都塗成純色再比的區塊，用來排除「原型專用工具」
+ * 造成的假差異。只有一種情況該用：原型那裡是 <image-slot> 拖圖框而且沒放圖，
+ * 正式站那裡會是後台的圖片欄位。複製拖拉工具的外觀是白做工，但版面尺寸還是
+ * 要對得上，所以遮罩只蓋內容、不影響位置與高度的比對。
+ *
+ * 遮罩不是用來遮掉「我還沒做完」的地方，那樣尺就失效了。
+ *
+ * expect：已知且刻意不一致的差異上限，一定要寫理由。沒寫 expect 的頁面用
+ * THRESHOLD（目標 0）。這是為了讓尺還有用：知道某頁的地板是 0.26%，
+ * 超過就是新的走樣，而不是把門檻整體放寬混過去。
+ */
 const PAGES = [
   { name: 'home', proto: '首頁.dc.html', route: '/' },
   { name: 'products', proto: '產品.dc.html', route: '/products' },
   { name: 'tiger-gpu-pro', proto: 'Tiger GPU Pro.dc.html', route: '/products/tiger-gpu-pro' },
-  { name: 'courses', proto: '課程.dc.html', route: '/courses' },
+  {
+    name: 'courses',
+    proto: '課程.dc.html',
+    route: '/courses',
+    // 三張「新開班次」圖卡的封面，原型是空的拖圖框
+    maskProto: '#course-cover-01, #course-cover-02, #course-cover-03',
+    maskBuilt: '[data-cms-image="course-cover"]',
+    expect: 0.3,
+    why:
+      '滿版 Banner。原型的 image-slot 把圖算成 1440.359×575.844（橫向 0.726353、' +
+      '縱向 0.726159，兩軸不同比例），也就是被拉寬 0.36px，那是它自己幾何計算的' +
+      '四捨五入誤差。我的圖是 1440×575.844 正好貼合外框，比原型更正確，' +
+      '所以刻意不複製那個誤差。差異全部落在 Banner 照片的高對比邊緣。',
+  },
   { name: 'consultants', proto: '顧問與方法論.dc.html', route: '/consultants' },
   { name: 'cases', proto: '案例.dc.html', route: '/cases' },
   { name: 'blog', proto: '部落格.dc.html', route: '/blog' },
@@ -98,7 +124,7 @@ async function sweep(page) {
   await sleep(600);
 }
 
-async function shoot(ctx, url, file, { dismissGate = false } = {}) {
+async function shoot(ctx, url, file, { dismissGate = false, mask = null } = {}) {
   const page = await ctx.newPage();
   const problems = [];
   page.on('pageerror', (e) => problems.push(`js 錯誤：${e.message.split('\n')[0]}`));
@@ -113,7 +139,12 @@ async function shoot(ctx, url, file, { dismissGate = false } = {}) {
     await sleep(3000);
   }
   await sweep(page);
-  await page.screenshot({ path: file, fullPage: true });
+  await page.screenshot({
+    path: file,
+    fullPage: true,
+    // 兩邊用同一個遮罩色，所以被遮的區塊一定相等，其餘照舊嚴格比對
+    ...(mask ? { mask: [page.locator(mask)], maskColor: '#FF00FF' } : {}),
+  });
   await page.close();
   return problems;
 }
@@ -173,39 +204,48 @@ for (const p of targets) {
   const dFile = path.join(OUT, `${p.name}.diff.png`);
   const gate = p.name === 'home';
 
-  const protoProblems = await shoot(ctx, `http://127.0.0.1:${proto.port}/${encodeURIComponent(p.proto)}`, aFile, { dismissGate: gate });
+  const protoProblems = await shoot(ctx, `http://127.0.0.1:${proto.port}/${encodeURIComponent(p.proto)}`, aFile, { dismissGate: gate, mask: p.maskProto });
 
   let builtProblems = [];
   let r = null;
   try {
-    builtProblems = await shoot(ctx, `http://127.0.0.1:${built.port}${p.route}`, bFile, { dismissGate: gate });
+    builtProblems = await shoot(ctx, `http://127.0.0.1:${built.port}${p.route}`, bFile, { dismissGate: gate, mask: p.maskBuilt });
     r = await compare(aFile, bFile, dFile);
   } catch (e) {
     rows.push({ name: p.name, err: e.message.split('\n')[0] });
     continue;
   }
-  rows.push({ name: p.name, ...r, protoProblems, builtProblems });
+  rows.push({ name: p.name, ...r, protoProblems, builtProblems, expect: p.expect, why: p.why });
 }
 
 await browser.close();
 proto.server.close();
 built.server.close();
 
-console.log(`\n視窗 ${WIDTH}×${HEIGHT}，動畫凍結，容許差異 ${THRESHOLD}%\n`);
-console.log('頁面            差異      尺寸（原型 → 重建）');
-console.log('─'.repeat(64));
-let worst = 0;
+console.log(`\n視窗 ${WIDTH}×${HEIGHT}，動畫凍結。沒標「已知」的頁面要低於 ${THRESHOLD}%\n`);
+console.log('    頁面            差異    上限    尺寸（原型 → 重建）');
+console.log('─'.repeat(70));
+let failed = 0;
+const notes = [];
 for (const r of rows) {
   if (r.err) {
-    console.log(`${r.name.padEnd(15)} 做不出來  ${r.err}`);
-    worst = 100;
+    console.log(`✗   ${r.name.padEnd(15)} 做不出來  ${r.err}`);
+    failed++;
     continue;
   }
-  const mark = r.pct <= THRESHOLD ? '✓' : '✗';
-  const size = r.sizeMatch ? r.sizeA : `${r.sizeA} → ${r.sizeB}  高度差 ${Math.abs(parseInt(r.sizeA.split('×')[1]) - parseInt(r.sizeB.split('×')[1]))}px`;
-  console.log(`${mark} ${r.name.padEnd(13)} ${r.pct.toFixed(2).padStart(6)}%   ${size}`);
-  worst = Math.max(worst, r.pct);
-  for (const s of new Set([...(r.builtProblems || [])])) console.log(`    重建站：${s}`);
+  const limit = r.expect ?? THRESHOLD;
+  const ok = r.pct <= limit;
+  if (!ok) failed++;
+  const size = r.sizeMatch
+    ? r.sizeA
+    : `${r.sizeA} → ${r.sizeB}  高度差 ${Math.abs(parseInt(r.sizeA.split('×')[1]) - parseInt(r.sizeB.split('×')[1]))}px`;
+  const tag = r.expect ? '已知' : '    ';
+  console.log(`${ok ? '✓' : '✗'} ${tag} ${r.name.padEnd(15)} ${r.pct.toFixed(2).padStart(5)}%  ${String(limit).padStart(5)}%  ${size}`);
+  for (const s of new Set([...(r.builtProblems || [])])) console.log(`      重建站：${s}`);
+  if (r.why) notes.push([r.name, r.why]);
+}
+for (const [name, why] of notes) {
+  console.log(`\n「${name}」的差異是刻意的：\n  ${why.replace(/(.{60})/g, '$1\n  ')}`);
 }
 console.log(`\n三聯圖在 tools/out/（*.proto.png / *.built.png / *.diff.png）`);
-process.exit(worst <= THRESHOLD ? 0 : 1);
+process.exit(failed ? 1 : 0);

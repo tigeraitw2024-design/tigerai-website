@@ -60,18 +60,29 @@ export default function BannerCarousel({ banners }: { banners: Banner[] }) {
               overflow: 'hidden',
             }}
           >
-            <img
-              src={b.src}
-              alt={b.alt}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
-            />
+            {/* 定位方式照原型的 image-slot 一模一樣：
+                外框 position:absolute inset:0 overflow:hidden 加一層淡灰底，
+                圖是 left/top 50% 再 translate(-50%,-50%)，不是 inset:0。
+
+                這不是龜毛。容器高度是 1440 ÷ (1983/793) = 575.85px，有小數，
+                用 inset:0 和用 50% + translate 會落在不同的次像素位置，
+                比對出來整張 Banner 的邊緣都會是紅的（那就是 0.28% 的全部來源）。 */}
+            <span style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'rgba(127,127,127,.08)' }}>
+              <img
+                src={b.src}
+                alt={b.alt}
+                style={{
+                  position: 'absolute',
+                  maxWidth: 'none',
+                  transform: 'translate(-50%,-50%)',
+                  left: '50%',
+                  top: '50%',
+                  width: '100%',
+                  height: '100%',
+                  userSelect: 'none',
+                }}
+              />
+            </span>
           </div>
         ))}
       </div>

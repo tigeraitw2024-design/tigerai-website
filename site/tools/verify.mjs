@@ -73,7 +73,16 @@ const PAGES = [
       '四捨五入誤差。我的圖是 1440×575.844 正好貼合外框，比原型更正確，' +
       '所以刻意不複製那個誤差。差異全部落在 Banner 照片的高對比邊緣。',
   },
-  { name: 'consultants', proto: '顧問與方法論.dc.html', route: '/consultants' },
+  {
+    name: 'consultants',
+    proto: '顧問與方法論.dc.html',
+    route: '/consultants',
+    // 陪跑四張照片。原型用 image-slot 裝，它會畫一圈虛線的拖曳提示框，
+    // 而且用自己的幾何算裁切；正式站是後台的圖片欄位加 object-fit:cover。
+    // 外面那層白框和陰影照樣比對，只遮掉裡面的圖。
+    maskProto: '#coach-photo-01, #coach-photo-02, #coach-photo-03, #coach-photo-04',
+    maskBuilt: '[data-stack-img] > span',
+  },
   { name: 'cases', proto: '案例.dc.html', route: '/cases' },
   { name: 'blog', proto: '部落格.dc.html', route: '/blog' },
   { name: 'resources', proto: '免費資源.dc.html', route: '/resources' },
@@ -245,14 +254,24 @@ const ctx = await browser.newContext({
   reducedMotion: 'reduce', // 見檔頭第 1 點
 });
 
-// reducedMotion 只凍得住 CSS 動畫。用 setInterval 跑的輪播（課程頁 Banner、
-// Tiger GPU Pro 的 Hero 換詞、顧問輪播、首頁身分閘門）不吃那個，兩邊載入
-// 差個零點幾秒就停在不同的項目上，比對出來像是移植錯了，其實只是相位不同。
+// 要讓兩邊停在同一個狀態，得凍住兩種東西，缺一不可：
 //
-// 所以在兩邊都把 setInterval 變成空的，全部停在初始狀態。setTimeout 留著，
-// 原型有些一次性的初始化靠它（例如夥伴 logo 的預先載入）。
+// 1) CSS 動畫。reducedMotion 只是讓頁面自己的 @media 規則生效，而各頁寫的是
+//    *{animation-duration:.001ms} ，無限循環的動畫還是在跑，只是跑很快，
+//    兩邊落點不同（顧問輪播 60 秒繞一圈，整條都會對不上）。
+//    直接 animation:none 讓所有元素停在「沒有動畫時的樣子」，兩邊必然一致。
+//    有 fill-mode:both 的進場動畫少了動畫也會停在正常狀態，不影響。
+//
+// 2) setInterval 跑的輪播（課程頁 Banner、Tiger GPU Pro 換詞、首頁身分閘門）。
+//    那是 JS 不是 CSS，凍不到。變成空的讓它們停在初始項目。
+//    setTimeout 留著，原型有一次性初始化靠它（例如夥伴 logo 預先載入）。
 await ctx.addInitScript(() => {
   window.setInterval = () => 0;
+  document.addEventListener('DOMContentLoaded', () => {
+    const s = document.createElement('style');
+    s.textContent = '*,*::before,*::after{animation:none!important}';
+    document.head.appendChild(s);
+  });
 });
 
 const rows = [];

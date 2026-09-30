@@ -1,0 +1,151 @@
+---
+// 顧問與方法論。移植自 design/顧問與方法論.dc.html，版面與文案一字不改。
+//
+// 全站規則第 7 條：AX Academy 測評寫成中立第三方，不是虎智自家測驗。
+// C1–C5 不做公開測驗（那是顧問的尺），只有 L1–L5 對外開放測。
+import Page from '../layouts/Page.astro';
+import TopBar from '../components/TopBar.tsx';
+import ConsultantCarousel from '../components/ConsultantCarousel.tsx';
+import CoachingStack from '../components/CoachingStack.astro';
+import FooterSlim from '../components/FooterSlim.astro';
+
+const rulers = [
+  { n: '尺 1', title: 'C1–C5 思考力', body: '顧問的腦怎麼分級，方法論權威的來源，不做公開測驗。' },
+  { n: '尺 2', title: '九維拆解', body: '把一個部門的問題拆成九個維度，逐維對應工具與流程。' },
+  { n: '尺 3', title: 'L.A.O.S. 拆題', body: '從痛點到上線的固定拆題路徑。' },
+];
+
+const stats = [
+  { n: '200+', label: '企業導入經驗' },
+  { n: '95%+', label: '學員滿意度' },
+  { n: '25%+', label: '業務效率提升' },
+  { n: '2,000+', label: '月節省人力時數' },
+];
+
+const transfer = [
+  { n: '2,000+', unit: '　位完成培訓', title: '培訓 AI 提示工程師', body: '每個部門至少一位種子人員，能獨立設計、開發與維護 Agent：通過率 90%+，平均每人可獨立開發 5+ 支。' },
+  { n: '75%', unit: '　平均部門採用率', title: '建立組織 AI 文化', body: '一個部門的成功經驗擴散到全公司，AI 變成每位員工的日常工具，日常使用率超過 80%。' },
+  { n: '持續', unit: '　陪跑不斷線', title: '持續技術支援', body: '每月一次線上回訓、即時技術問答群組、版本升級通知與教學：上線之後不斷線。' },
+];
+
+const MONO = "font-family:'JetBrains Mono',monospace";
+const EYEBROW = `${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`;
+const WRAP = 'max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)';
+const STAT = "font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.02em";
+---
+
+<Page
+  title="顧問與方法論｜TigerAI 虎智科技"
+  description="方法公開，過程可驗。C1–C5 是顧問思考能力的尺，靠九維拆解與 L.A.O.S. 拆題框架把過程攤在檯面上。"
+>
+  <Fragment slot="head">
+    <style>
+      /* 原型這頁 inline style 獨有的部分。
+         cw-mq        顧問輪播往左跑一半的距離（清單接了兩份，所以剛好接回起點）
+         cw-in/cw-in2 換人時詳情的進場，兩組內容一樣，交替用是為了重新觸發 */
+      @keyframes cw-mq { to { transform: translateX(-50%) } }
+      @keyframes cw-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+      @keyframes cw-in2 { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+      @media (prefers-reduced-motion: reduce) {
+        * { animation-duration: .001ms !important; animation-delay: 0ms !important }
+      }
+      /* 原型用 support.js 的 style-hover，這裡換成真 CSS */
+      .tg-social:hover { border-color: var(--ink-600); color: var(--fg-primary) }
+    </style>
+  </Fragment>
+
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    <TopBar current="consultants" client:load />
+
+    <section style="padding:140px 0 48px">
+      <div style={WRAP}>
+        <span style={EYEBROW}>顧問與方法論</span>
+        <h1 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">方法公開，過程可驗。</h1>
+        <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0">C1–C5 是顧問思考能力的尺：不做公開測驗，靠九維拆解與 L.A.O.S. 拆題框架把過程攤在檯面上。</p>
+      </div>
+    </section>
+
+    <section style="padding:0 0 96px;flex:1">
+      <div style={`${WRAP};display:grid;gap:48px`}>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px">
+          {rulers.map((r) => (
+            <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+              <span style={`${MONO};font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-tertiary)`}>{r.n}</span>
+              <h3 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:20px;font-weight:700;margin:8px 0 6px">{r.title}</h3>
+              <p style="margin:0;font-size:14px;line-height:1.7;color:var(--fg-secondary)">{r.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 顧問群輪播。背景那行巨型淡字是裝飾，aria-hidden 不念給螢幕閱讀器 -->
+    <section style="background:#FAFAF8;padding:64px 0 0;position:relative;overflow:hidden">
+      <b aria-hidden="true" style="position:absolute;top:66px;left:50%;transform:translateX(-50%);font-family:'Manrope',sans-serif;font-size:clamp(140px,19vw,260px);font-weight:800;letter-spacing:-.04em;color:rgba(14,14,13,.05);white-space:nowrap;pointer-events:none;line-height:1">30+ 門課</b>
+      <div style={`${WRAP};position:relative`}>
+        <span style={EYEBROW}>顧問群</span>
+        <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 8px">這些人，教出 4,085+ 位學員。</h2>
+        <p style="font-size:14px;line-height:1.7;color:var(--fg-secondary);margin:0">滑到誰，誰就停下來自我介紹。（學員數、社群數為示意）</p>
+      </div>
+      <ConsultantCarousel client:load />
+    </section>
+
+    <!-- L1–L5 測評入口，外連 AX Academy -->
+    <section id="survey" style="padding:40px 0;background:#fff;border-top:1px solid var(--border-subtle)">
+      <div style={`${WRAP};display:flex;align-items:center;gap:24px;flex-wrap:wrap`}>
+        <div style="flex:1;min-width:260px">
+          <span style={EYEBROW}>L1–L5 測評</span>
+          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.01em;margin:6px 0 4px">5 分鐘，測你在 L 幾。</h2>
+          <p style="font-size:13px;line-height:1.7;color:var(--fg-secondary);margin:0">題目與計分在 AX Academy：中立診斷方，不是虎智自家測驗。</p>
+        </div>
+        <a href="https://tigeraiax-academy.pages.dev/assessment.html" target="_blank" rel="noopener" style="text-decoration:none">
+          <button class="t-btn t-btn--primary t-btn--lg">立刻填問卷 →</button>
+        </a>
+      </div>
+    </section>
+
+    <!-- 顧問陪跑 01–04 -->
+    <section id="coaching" style="padding:96px 0;background:#FAFAF8;border-top:1px solid var(--border-subtle)">
+      <div style={WRAP}>
+        <span style={EYEBROW}>顧問陪跑</span>
+        <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 12px">顧問陪跑，快速落地。</h2>
+        <p style="font-size:15px;line-height:1.7;color:var(--fg-secondary);margin:0 0 48px;max-width:62ch">三到六個月，替每個部門打造用得上的 AI Agent，同步把你的人訓練成提示工程師。已累計部署 10,000+ 支 Agent，平均業務效率提升 25% 以上。</p>
+
+        <CoachingStack />
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:24px;border-top:1px solid var(--border-strong);border-bottom:1px solid var(--border-subtle);padding:32px 0;margin-bottom:48px">
+          {stats.map((s) => (
+            <div>
+              <b style={`${STAT};font-size:40px;display:block`}>{s.n}</b>
+              <span style="font-size:13px;color:var(--fg-secondary)">{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <h3 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.02em;margin:0 0 8px">不只幫你做，更教會你的團隊。</h3>
+        <p style="font-size:14px;line-height:1.7;color:var(--fg-secondary);margin:0 0 24px;max-width:62ch">導入成功的判準不是顧問多強，是你的人接不接得住。已有 2,000+ 位企業人員完成培訓，成為組織內部的 AI 推動者。</p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:40px">
+          {transfer.map((t) => (
+            <div style="background:#fff;border:1px solid var(--border-subtle);padding:24px">
+              <b style={`${STAT};font-size:28px`}>{t.n}</b><span style="font-size:12px;color:var(--fg-tertiary)">{t.unit}</span>
+              <h4 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:16px;font-weight:700;margin:8px 0 6px">{t.title}</h4>
+              <p style="margin:0;font-size:13px;line-height:1.7;color:var(--fg-secondary)">{t.body}</p>
+            </div>
+          ))}
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <a href="/#contact" style="text-decoration:none">
+            <button class="t-btn t-btn--primary t-btn--lg">立即諮詢顧問服務 →</button>
+          </a>
+          <span style="font-size:13px;color:var(--fg-secondary)">30 分鐘，帶著你最痛的那個部門來。</span>
+        </div>
+
+        <p style={`margin:24px 0 0;${MONO};font-size:11px;color:var(--fg-tertiary)`}>數據為你提供之營運資料（示意版型）・照片框可直接拖入圖片，重新整理仍保留</p>
+      </div>
+    </section>
+
+    <FooterSlim />
+  </div>
+</Page>

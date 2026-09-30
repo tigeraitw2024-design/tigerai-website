@@ -1,0 +1,140 @@
+---
+// 顧問陪跑 01–04：左欄四個標題依序 sticky 疊在上方，右欄照片一張一張從下面插上來。
+// 移植自 design/顧問與方法論.dc.html 的 _applyStack()，公式逐行照抄。
+//
+// 三件同時發生的事：
+//   1. 照片：進度 t 從 0 到 1，translateY 從 160% 收到 0，帶各自的隨機傾斜角。
+//      被下一張蓋住時同步 blur，最多 5px。
+//   2. 內文：一捲過自己標題的底線就從上方裁掉（clip-path inset），
+//      看起來像是被標題「吃掉」。
+//   3. 標題：捲到左欄底部時整組往上收，讓四個標題最後全部清楚並排，
+//      不再繼續疊。
+//
+// prefers-reduced-motion 下整段不掛捲動監聽，照片直接停在初始狀態。
+
+const stages = [
+  { n: '01', title: '接觸 AI', tag: '平均發掘 20+ 個痛點場景', text: '顧問團隊進駐，深度訪談把部門的真實流程與痛點攤開。', top: 120 },
+  { n: '02', title: '使用 AI', tag: '四週內交付首批成果', text: '建立第一批 AI Agent、接進既有流程，讓團隊習慣與 AI 協作。', top: 190 },
+  { n: '03', title: '擁有 AI', tag: '培養自主開發能力', text: '實戰工作坊把 Agent 的操作與設計能力，整套轉移給你的團隊。', top: 260 },
+  { n: '04', title: '持續 AI', tag: 'AI 能力內化', text: '顧問逐步退場，團隊自己建置、使用、維護，AI 變成公司日常。', top: 330 },
+];
+
+// 照片與它們散落的位置、角度。接後台後變成可換的圖片欄位。
+const photos = [
+  { src: '/uploads/6_11大豐內訊.jpg', left: '6%', top: '3%', rot: -3, alt: '顧問進駐訪談' },
+  { src: '/uploads/S__30138385_0.jpg', left: '19%', top: '9%', rot: 11, alt: '實作工作坊' },
+  { src: '/uploads/S__30138378_0.jpg', left: '3%', top: '14%', rot: -13, alt: '企業授課' },
+  { src: '/uploads/750522_0.jpg', left: '16%', top: '6%', rot: 8, alt: '成果發表' },
+];
+
+const MONO = "font-family:'JetBrains Mono',monospace";
+---
+
+<div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(0,1.4fr);gap:48px;align-items:start;padding-bottom:6vh">
+  <div data-stagecol="1" style="position:relative;padding-bottom:34vh">
+    {stages.map((s, i) => (
+      <>
+        <div
+          data-stagehead={i + 1}
+          style={`position:sticky;top:${s.top}px;z-index:5;background:#FAFAF8;border-top:2px solid var(--tiger-500);display:flex;align-items:center;gap:16px;padding:14px 0;flex-wrap:wrap;min-height:70px`}
+        >
+          <span style={`${MONO};font-size:16px;color:var(--fg-tertiary)`}>{s.n}</span>
+          <h3 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:25px;font-weight:700;margin:0">{s.title}</h3>
+          <span style={`margin-left:auto;${MONO};font-size:15px;color:var(--tiger-700);border:1px solid var(--border-brand);background:var(--tiger-50);padding:6px 14px`}>{s.tag}</span>
+        </div>
+        <div
+          data-stagetext={i + 1}
+          style={i === stages.length - 1 ? 'padding-bottom:24px' : 'min-height:56vh'}
+        >
+          <p style="margin:0;padding:24px 0 0;font-size:18px;line-height:1.8;color:var(--fg-secondary);text-wrap:pretty">{s.text}</p>
+        </div>
+      </>
+    ))}
+  </div>
+
+  <div style="position:sticky;top:120px">
+    <div style="position:relative;aspect-ratio:16/11;max-height:64vh">
+      {photos.map((p, i) => (
+        <div
+          data-stack-img={i + 1}
+          data-rot={p.rot}
+          style={`position:absolute;left:${p.left};top:${p.top};width:74%;aspect-ratio:4/3;background:#fff;padding:10px;box-shadow:0 16px 32px rgba(14,14,13,.16);will-change:transform,filter;${
+            i === 0
+              ? `transform:rotate(${p.rot}deg)`
+              : `opacity:0;transform:translateY(160%) rotate(${p.rot}deg)`
+          }`}
+        >
+          {/* 定位方式跟原型的 image-slot 一致：外框裁切，圖用 50% + translate 置中 */}
+          <span style="position:absolute;inset:10px;overflow:hidden;background:rgba(127,127,127,.08)">
+            <img
+              src={p.src}
+              alt={p.alt}
+              loading="lazy"
+              style="position:absolute;max-width:none;transform:translate(-50%,-50%);left:50%;top:50%;width:100%;height:100%;object-fit:cover"
+            />
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  // 公式照抄 design/顧問與方法論.dc.html 的 _applyStack()，不要自己改數字。
+  const heads = [...document.querySelectorAll<HTMLElement>('[data-stagehead]')];
+  const imgs = [...document.querySelectorAll<HTMLElement>('[data-stack-img]')];
+  const texts = [...document.querySelectorAll<HTMLElement>('[data-stagetext]')];
+  const col = document.querySelector<HTMLElement>('[data-stagecol]');
+  const pins = heads.map((el) => parseFloat(getComputedStyle(el).top) || 120);
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (heads.length && imgs.length && !reduce) {
+    let raf = 0;
+    const apply = () => {
+      const vh = window.innerHeight || 800;
+      // 每一階的進度：標題離它的固定位置還有多遠，換算成 0 到 1
+      const t = heads.map((el, j) =>
+        j === 0 ? 1 : Math.min(1, Math.max(0, 1 - (el.getBoundingClientRect().top - pins[j]) / (vh * 0.55)))
+      );
+
+      imgs.forEach((im, i) => {
+        const cover = i + 1 < t.length ? t[i + 1] : 0;
+        const rot = parseFloat(im.dataset.rot || '0') || 0;
+        im.style.transform = `translateY(${((1 - t[i]) * 160).toFixed(2)}%) rotate(${rot}deg)`;
+        im.style.opacity = i === 0 ? '1' : Math.min(1, t[i] * 2.4).toFixed(3);
+        im.style.filter = cover > 0.01 ? `blur(${(cover * 5).toFixed(1)}px)` : 'none';
+      });
+
+      texts.forEach((tx, i) => {
+        const head = heads[i];
+        if (!head) return;
+        const hb = pins[i] + head.offsetHeight;
+        const clip = Math.max(0, hb - tx.getBoundingClientRect().top);
+        tx.style.clipPath = clip > 0.5 ? `inset(${clip.toFixed(1)}px 0 0 0)` : 'none';
+      });
+
+      if (col) {
+        // 捲到左欄底部時，四個標題一起往上收，最後全部清楚並排
+        const cr = col.getBoundingClientRect();
+        const n = heads.length;
+        const dLast = Math.max(0, pins[n - 1] + heads[n - 1].offsetHeight + 6 - cr.bottom);
+        heads.forEach((el, i) => {
+          const di = Math.max(0, pins[i] + el.offsetHeight + 6 - cr.bottom);
+          const extra = Math.max(0, dLast - di);
+          el.style.transform = extra > 0.5 ? `translateY(${(-extra).toFixed(1)}px)` : '';
+        });
+      }
+    };
+
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        apply();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    apply();
+  }
+</script>

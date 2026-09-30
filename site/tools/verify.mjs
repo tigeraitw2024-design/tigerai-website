@@ -57,7 +57,17 @@ const THRESHOLD = Number(process.env.TG_THRESHOLD || 0.05);
  */
 const PAGES = [
   { name: 'home', proto: '首頁.dc.html', route: '/' },
-  { name: 'products', proto: '產品.dc.html', route: '/products' },
+  {
+    name: 'products',
+    proto: '產品.dc.html',
+    route: '/products',
+    // P0 的 3D 拆解 Demo 還沒做（Robin 指示先跳過）。原型那裡是 three.js 畫布，
+    // 正式站現在是佔位框。整段的高度、標題、兩段文案、底部提示都照原型做了，
+    // 所以遮掉畫布之後，這頁其餘部分照樣能嚴格比對。
+    // 3D 補上之後要把這兩行遮罩拿掉，重新量。
+    maskProto: '#tg-ex-canvas',
+    maskBuilt: '[data-todo-3d]',
+  },
   { name: 'tiger-gpu-pro', proto: 'Tiger GPU Pro.dc.html', route: '/products/tiger-gpu-pro' },
   {
     name: 'courses',

@@ -60,16 +60,10 @@ const PAGES = [
     name: 'home',
     proto: '首頁.dc.html',
     route: '/',
-    // 主控台已經移植，遮罩拿掉了。剩下企業首選右欄的案卷還沒做。
-    maskProto: '#tg-flow-scroll, #tg-flow-video, #dept-media-host',
-    maskBuilt: '[data-todo-casefile] > div:nth-child(2)',
-    expect: 3,
-    why:
-      '差異全部在 05b 企業首選的右欄案卷，那一塊還沒移植（資料夾式頁籤、' +
-      '依 n8n JSON 繪製的可縮放畫布、隱藏 YouTube 身份的片段循環播放器）。' +
-      '遮罩只蓋得住畫布本身，蓋不住頁籤列和縮放工具列，所以會算進差異。' +
-      '其餘 10 個區塊都是 0.000%，13 個區塊的位置與高度完全一致。' +
-      '案卷移植完要把這個 expect 拿掉，回到 0.05% 的標準。',
+    // 13 部門模式的圖框，原型是拖圖框、正式站是後台圖片欄位，兩邊都遮掉。
+    // 預設是流程模式，所以這個遮罩平常不會生效，留著是為了之後測 13 部門。
+    maskProto: '#dept-media-host',
+    maskBuilt: '[data-cms-image="dept-media"]',
   },
   {
     name: 'products',

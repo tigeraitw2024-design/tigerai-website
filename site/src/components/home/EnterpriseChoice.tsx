@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { flows as FLOWS } from '../../data/flows';
 import { depts as DEPTS } from '../../data/depts';
+import CaseFilePane from './CaseFilePane';
 
 /**
  * 企業首選（首頁 05b）。移植自 design/首頁.dc.html。
@@ -141,27 +142,16 @@ export default function EnterpriseChoice() {
           </div>
         </div>
 
-        {/* 右欄案卷。尺寸照原型，內容待下一個增量。 */}
+        {/* 右欄案卷 */}
         <div style={{ minWidth: 0, position: 'sticky', top: 120 }}>
-          <div data-todo-casefile style={{ border: '1px solid var(--border-subtle)', background: '#fff' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
-              <span style={{ fontFamily: MONO, fontSize: 12, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-tertiary)' }}>
-                {deptOpen ? `13 部門・案卷 ${active.no}／13` : `企業首選工作流・卷 ${active.no}／06`}
-              </span>
-              <b style={{ fontFamily: DISPLAY, fontSize: 14, fontWeight: 700 }}>{active.name}</b>
-              <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 11, color: 'var(--fg-tertiary)' }}>
-                {deptOpen ? active.kpi : `${FLOWS[flowSel]?.nodes.length ?? 0} 節點`}
-              </span>
-            </div>
-            <div style={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAFAF8' }}>
-              <span style={{ fontFamily: MONO, fontSize: 12, color: 'var(--fg-tertiary)', border: '1px dashed var(--border-default)', padding: '14px 20px' }}>
-                案卷（n8n 畫布／範例影片，待移植）
-              </span>
-            </div>
-            <p style={{ margin: 0, padding: '10px 16px', fontSize: 12, color: 'var(--fg-tertiary)', borderTop: '1px solid var(--border-subtle)' }}>
-              看底層：n8n 原檔繪製，虛線是資料在跑，⤢ 放大看。
-            </p>
-          </div>
+          <CaseFilePane
+            mode={deptOpen ? 'dept' : 'flow'}
+            flow={FLOWS[flowSel]}
+            flowIndex={flowSel}
+            deptNo={deptRows[deptSel].no}
+            deptName={deptRows[deptSel].name}
+            deptKpi={deptRows[deptSel].kpi}
+          />
         </div>
       </div>
     </>

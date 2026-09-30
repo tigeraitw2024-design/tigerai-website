@@ -18,3 +18,6 @@ design/交付說明.md
 
 # 手機版體檢的截圖，產物不進版控
 site/tools/out/
+
+# 本機測試用的環境變數，內含密語，不進版控
+site/.dev.vars

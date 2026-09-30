@@ -1,0 +1,13 @@
+---
+// 會員登入／註冊／忘記密碼。三種模式共用一張卡。
+import AppPage from '../../layouts/AppPage.astro';
+import AuthView from '../../components/shop/AuthView.tsx';
+---
+<AppPage
+  title="登入｜TigerAI 虎智科技"
+  eyebrow="會員"
+  heading="登入或註冊。"
+  description="購課紀錄、上課資格、訂單都會留在你的帳號裡。不註冊也能用訪客身分結帳。"
+>
+  <AuthView client:only="react" />
+</AppPage>

@@ -10,7 +10,9 @@ import Page from '../layouts/Page.astro';
 import TopBar from '../components/TopBar.tsx';
 import PartnerWall from '../components/PartnerWall.astro';
 import FooterSlim from '../components/FooterSlim.astro';
-import { partners } from '../data/partners';
+import { getPartners } from '../content';
+
+const partners = await getPartners();
 
 // 成效卡。接上後台之後換成 Cases collection，客戶名稱一律不出現。
 const cards = [

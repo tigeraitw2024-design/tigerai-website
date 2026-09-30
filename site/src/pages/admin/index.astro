@@ -1,0 +1,40 @@
+---
+// 後台。
+//
+// 整個後台是一支 React 應用，路由用網址的 # 部分，所以伺服器上只需要
+// 這一個檔案，不用設任何重寫規則。
+//
+// client:only 是刻意的：後台沒有一個字需要被 Google 讀到，也沒有「第一眼
+// 就要看到內容」的需求（沒登入的人看到的是登入框）。在建置時先渲染一次
+// 只會拖慢建置，還會因為 localStorage、matchMedia 這些瀏覽器專屬的東西出錯。
+//
+// 這一頁刻意不用前台的 Page.astro：前台那套版面是為了跟原型對到 0.00% 的，
+// 動不得，而且後台不需要前台的字型與樣式。
+import AdminApp from '../../admin/App.tsx';
+---
+
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>虎智後台</title>
+    {/* 後台永遠不該出現在搜尋結果裡 */}
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/assets/logo/color-square-mark.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;700;800&display=swap"
+    />
+  </head>
+  <body class="tg-admin">
+    <AdminApp client:only="react" />
+    <noscript>
+      <div style="padding:32px;font-family:system-ui,sans-serif">
+        後台需要 JavaScript 才能運作。請在瀏覽器設定裡開啟。
+      </div>
+    </noscript>
+  </body>
+</html>

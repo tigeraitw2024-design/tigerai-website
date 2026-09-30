@@ -277,6 +277,8 @@ async function shoot(ctx, url, file, { dismissGate = false, mask = null, normali
   if (normalizeFont) await undoPrototypeBugs(page);
   // 一次性動畫此時已經跑完，只凍住永遠不會停的那些
   await freezeLoopingAnimations(page);
+  // 再確認畫面真的不動了才拍。見 settle() 的說明。
+  await settle(page);
   await sweep(page);
   await page.screenshot({
     path: file,
@@ -286,6 +288,38 @@ async function shoot(ctx, url, file, { dismissGate = false, mask = null, normali
   });
   await page.close();
   return problems;
+}
+
+/**
+ * 等畫面真的定下來。
+ *
+ * 只等固定秒數不夠：筆電螢幕裡的主控台會在開機後延遲推一則訊息，
+ * 推之前和推之後，整塊聊天區的高度差大約 10 像素。等 8 秒在空機上夠，
+ * 機器一忙就可能剛好卡在中間，於是同一份程式碼跑兩次會得到兩個不同的答案
+ * （首頁在 0.00% 和 0.07% 之間跳）。那不是版面壞了，是尺在抖。
+ *
+ * 這裡改成問 DOM：每 250 毫秒量一次整頁的文字長度與高度，連續三次都一樣
+ * 才算穩定，最多等 8 秒。原型和重建站都跑同一套，所以兩邊一定是在
+ * 「都安定下來」的狀態下比較。
+ */
+async function settle(page, quietRounds = 3, maxMs = 8000) {
+  const t0 = Date.now();
+  let last = '';
+  let same = 0;
+  while (Date.now() - t0 < maxMs) {
+    const now = await page.evaluate(() => {
+      const d = document.documentElement;
+      return `${document.body.innerText.length}|${d.scrollHeight}|${document.querySelectorAll('*').length}`;
+    });
+    if (now === last) {
+      if (++same >= quietRounds) return true;
+    } else {
+      same = 0;
+      last = now;
+    }
+    await sleep(250);
+  }
+  return false;
 }
 
 async function compare(aFile, bFile, diffFile) {

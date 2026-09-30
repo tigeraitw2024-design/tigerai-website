@@ -1,0 +1,50 @@
+---
+// 購物車、會員、法遵那幾頁共用的外框。
+//
+// 原型只做了八頁行銷頁，這幾頁是後來長出來的，所以另外開一個外框，
+// 而不是去改 Page.astro——那支的版面是為了跟原型對到 0.00% 的，動不得。
+//
+// 這裡刻意沿用同一套 Page.astro 當殼（字型、設計系統、色票都一樣），
+// 只是把「標題 ＋ 一段說明 ＋ 內容」這個重複的骨架抽出來。
+import Page from './Page.astro';
+import TopBar from '../components/TopBar.tsx';
+import FooterSlim from '../components/FooterSlim.astro';
+
+interface Props {
+  title: string;
+  heading: string;
+  eyebrow: string;
+  description?: string;
+  /** 不給搜尋引擎收錄。會員與購物車這種頁面沒有被搜尋的意義。 */
+  noindex?: boolean;
+}
+
+const { title, heading, eyebrow, description, noindex = true } = Astro.props;
+
+const MONO = "font-family:'JetBrains Mono',monospace";
+const WRAP = 'max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)';
+---
+
+<Page title={title} description={description} noindex={noindex}>
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    <TopBar client:load />
+
+    <section style="padding:140px 0 32px">
+      <div style={WRAP}>
+        <span style={`${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`}>{eyebrow}</span>
+        <h1 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">{heading}</h1>
+        {description && (
+          <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0">{description}</p>
+        )}
+      </div>
+    </section>
+
+    <section style="padding:0 0 96px;flex:1">
+      <div style={WRAP}>
+        <slot />
+      </div>
+    </section>
+
+    <FooterSlim />
+  </div>
+</Page>

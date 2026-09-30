@@ -23,15 +23,25 @@ import Page from '../layouts/Page.astro';
 import '../styles/home.css';
 import TopBar from '../components/TopBar.tsx';
 import PartnerWall from '../components/PartnerWall.astro';
-import { partners } from '../data/partners';
+import { getPartners, getFlows, getDepts, getConsultants, getHome, text, num, list } from '../content';
 import IntroSplash from '../components/home/IntroSplash.astro';
 import IdentityGate from '../components/home/IdentityGate.tsx';
 import HeroLaptop from '../components/home/HeroLaptop.tsx';
 import EnterpriseChoice from '../components/home/EnterpriseChoice.tsx';
 import ConsultantStrip from '../components/home/ConsultantStrip.tsx';
+import LeadForm from '../components/LeadForm.tsx';
 import BookingCard from '../components/home/BookingCard.tsx';
 import FooterFull from '../components/home/FooterFull.astro';
 import ScrollReveal from '../components/home/ScrollReveal.astro';
+
+// 內容在建置時取得：有設 CONTENT_API 就去後台拿，沒設就用 src/data 與
+// 下面寫死的預設值。兩種情況渲染出來的 HTML 一模一樣——這是刻意的，
+// 後台接不上的時候網站不該跟著變樣。見 src/content。
+const partners = await getPartners();
+const flows = await getFlows();
+const depts = await getDepts();
+const consultants = await getConsultants();
+const home = await getHome();
 
 const MONO = "font-family:'JetBrains Mono',monospace";
 const EYEBROW = `${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`;
@@ -41,21 +51,25 @@ const H2 = "font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(30px
 const SECTION = 'padding:clamp(56px,9vw,96px) 0';
 const HOVER_CARD = 'transition:transform .12s cubic-bezier(.22,.61,.36,1),box-shadow .12s cubic-bezier(.22,.61,.36,1)';
 
-// 03 立場宣言的四張痛點卡
-const pains = [
+// 03 立場宣言的四張痛點卡。後台「首頁文案 → ③ 立場宣言 - 四張卡」可以改。
+const pains = list<{ n?: string; title: string; body: string }>(home, 'shadowCards', [
   { n: '01', title: '分散刷卡', body: '每人每月各訂各的，財務對不出一本總帳。' },
   { n: '02', title: '機密外流', body: '合約、報價、名單貼進雲端視窗，資料跟著提問出機房。' },
   { n: '03', title: '稽核斷點', body: '帳號共用、對話即刪，誰問了什麼，查不到。' },
   { n: '04', title: '供應商綁定', body: '漲價、改條款只能接受，資料還搬不走。' },
-];
+]).map((p, i) => ({ ...p, n: p.n || String(i + 1).padStart(2, '0') }));
 
-// 雲端訂閱 vs 地端開源，左灰右白
-const compare = [
+// 雲端訂閱 vs 地端開源，左灰右白。後台存的是 {cloud, local} 物件陣列，
+// 這裡轉回頁面本來吃的兩格陣列；後台沒填就用下面那份。
+const compareFromCms = list<{ cloud: string; local: string }>(home, 'compare', [])
+  .map((r) => [r.cloud, r.local] as [string, string]);
+const compareFallback: [string, string][] = [
   ['資料跟著提問出機房', '資料不出機房，回應不經雲端 API'],
   ['每人每月訂閱，用越多繳越多', '一次建置，部門額度超標熔斷'],
   ['模型是租的，說換就得換', '開源模型隨裝隨換，授權不用重簽'],
   ['誰問了什麼，查不到', '紀錄留在你手上，過得了稽核'],
 ];
+const compare = compareFromCms.length ? compareFromCms : compareFallback;
 
 // 04 產品入口三卡
 const entries = [
@@ -87,6 +101,10 @@ const courseCards = [
   { eyebrow: 'L3・12 小時', title: 'Advanced RAG 知識庫實作', body: '把文件變成問得到答案的知識庫・學員 680+（示意）。' },
   { eyebrow: 'L4・24 小時', title: '地端 LLM 導入與治理', body: 'Ollama＋LiteLLM 實機演練・學員 320+（示意）。' },
 ];
+
+// 02 信任帶的兩個數字。Robin 說過這些是真的資料，所以後台要能改。
+const trustCompanies = num(home, 'trustCompanies', 166);
+const trustStudents = num(home, 'trustStudents', 4085);
 
 // 09 三張成效卡。data-count 由 ScrollReveal 滾動上來。
 const resultCards = [
@@ -145,12 +163,12 @@ const resultCards = [
     <section data-trust-band style="background:#fff;border-bottom:1px solid var(--border-subtle)">
       <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:24px 64px;display:flex;flex-wrap:wrap;align-items:center;gap:16px 64px">
         <span style="display:flex;align-items:baseline;gap:8px">
-          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count="166">166</span>+</b>
+          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count={String(trustCompanies)}>{trustCompanies}</span>+</b>
           <span style="font-size:13px;color:var(--fg-secondary)">企業導入</span>
         </span>
         <span style="width:1px;height:28px;background:var(--border-subtle)"></span>
         <span style="display:flex;align-items:baseline;gap:8px">
-          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count="4085" data-comma="1">4,085</span>+</b>
+          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count={String(trustStudents)} data-comma="1">{trustStudents.toLocaleString('en-US')}</span>+</b>
           <span style="font-size:13px;color:var(--fg-secondary)">學員結業</span>
         </span>
         <span style="width:1px;height:28px;background:var(--border-subtle)"></span>
@@ -167,8 +185,8 @@ const resultCards = [
       <div style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start`}>
         <div style="position:sticky;top:120px">
           <span style={EYEBROW}>Shadow AI Spend</span>
-          <h2 style={`${H2};margin:12px 0 16px`}>錢和資料，正在一起流出去。</h2>
-          <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:40ch;margin:0">員工自己刷卡訂 ChatGPT、Claude、Gemini：財務看到的是零碎小額，資安看不到貼進雲端的機密。這不是「導入好難」，是 Shadow AI Spend。</p>
+          <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'shadowTitle', "錢和資料，正在一起流出去。")}</h2>
+          <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:40ch;margin:0">{text(home, 'shadowBody', "員工自己刷卡訂 ChatGPT、Claude、Gemini：財務看到的是零碎小額，資安看不到貼進雲端的機密。這不是「導入好難」，是 Shadow AI Spend。")}</p>
         </div>
         <div style="display:grid;gap:24px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -200,8 +218,8 @@ const resultCards = [
     <section id="products" style={`${SECTION};background:#fff;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)`}>
       <div style={WRAP}>
         <span style={EYEBROW}>產品入口</span>
-        <h2 style={`${H2};margin:12px 0 16px`}>同一套系統，三個入口。</h2>
-        <p style="font-size:18px;line-height:1.7;color:var(--fg-secondary);max-width:62ch;margin:0 0 32px">Local GPT 硬體、AI 服務啟動、GPU 資源管理，三條產品線其實是同一套系統。你從哪個角色進來，看到的就是你關心的那一面。</p>
+        <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'productsTitle', "同一套系統，三個入口。")}</h2>
+        <p style="font-size:18px;line-height:1.7;color:var(--fg-secondary);max-width:62ch;margin:0 0 32px">{text(home, 'productsBody', "Local GPT 硬體、AI 服務啟動、GPU 資源管理，三條產品線其實是同一套系統。你從哪個角色進來，看到的就是你關心的那一面。")}</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
           {entries.map((e) => (
             <div class="t-card">
@@ -221,7 +239,7 @@ const resultCards = [
       <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:0 64px;position:relative;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
         <div style="flex:1;min-width:280px">
           <span style={EYEBROW_DARK}>Tiger GPU Pro・新上線</span>
-          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:10px 0 8px">做出來了，放哪裡？</h2>
+          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:10px 0 8px">{text(home, 'gpuTitle', "做出來了，放哪裡？")}</h2>
           <p style="font-size:15px;line-height:1.7;color:#B5B2AC;margin:0;max-width:52ch">AI 幫你把 Agent、網站、App 都寫完了。部署、算力、控管的最後一哩，Tiger GPU Pro 鋪好，兩端 AI 自己談部署。</p>
         </div>
         <a href="/products/tiger-gpu-pro" style="text-decoration:none"><button class="t-btn t-btn--primary t-btn--lg">看 Tiger GPU Pro →</button></a>
@@ -232,7 +250,7 @@ const resultCards = [
     <section id="workflows" style={SECTION}>
       <div style={WRAP}>
         <span style={EYEBROW}>Workflow 展示櫃</span>
-        <h2 style={`${H2};margin:12px 0 32px`}>看得見、改得動、過得了稽核的 SOP。</h2>
+        <h2 style={`${H2};margin:12px 0 32px`}>{text(home, 'workflowTitle', "看得見、改得動、過得了稽核的 SOP。")}</h2>
         <div data-chain="1" style={`display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:32px;${MONO};font-size:13px`}>
           {chain.map((c) => (
             <>
@@ -253,8 +271,7 @@ const resultCards = [
         </div>
         <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;background:#fff;border:1px solid var(--border-subtle);padding:24px">
           <span style="font-size:14px;color:var(--fg-secondary);margin-right:auto;max-width:44ch;line-height:1.7">節點可點、模板可下載：留 Email，模板 JSON 直接寄給你。</span>
-          <input class="t-input" placeholder="name@company.com" style="width:260px" />
-          <button class="t-btn t-btn--outline">寄模板給我</button>
+          <LeadForm source="workflow-template" client:visible />
         </div>
       </div>
     </section>
@@ -262,7 +279,7 @@ const resultCards = [
     <!-- 05b 企業首選 -->
     <section id="departments" style="padding:96px 0;background:#fff;border-top:1px solid var(--border-subtle)">
       <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:0 64px">
-        <EnterpriseChoice client:load />
+        <EnterpriseChoice flows={flows} depts={depts} client:load />
       </div>
     </section>
 
@@ -271,7 +288,7 @@ const resultCards = [
       <div data-m="stack" style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center`}>
         <div>
           <span style={EYEBROW}>L1–L5 成熟度</span>
-          <h2 style={`${H2};margin:12px 0 16px`}>5 分鐘，測你在 L 幾。</h2>
+          <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'assessTitle', "5 分鐘，測你在 L 幾。")}</h2>
           <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:44ch;margin:0 0 32px">題目和計分都是 AX Academy 的：中立的診斷方，不是虎智自家測驗。測完直接對應：該上哪門課、該導哪一階產品。</p>
           <a href="https://tigeraiax-academy.pages.dev/assessment.html" target="_blank" rel="noopener" style="text-decoration:none"><button class="t-btn t-btn--outline t-btn--lg">去 AX Academy 測評 →</button></a>
         </div>
@@ -291,7 +308,7 @@ const resultCards = [
     <section id="courses" style={SECTION}>
       <div style={WRAP}>
         <span style={EYEBROW}>課程 L1–L5</span>
-        <h2 style={`${H2};margin:12px 0 32px`}>從會用，到自己跑得動。</h2>
+        <h2 style={`${H2};margin:12px 0 32px`}>{text(home, 'coursesTitle', "從會用，到自己跑得動。")}</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
           {courseCards.map((c) => (
             <div class="t-card">
@@ -313,8 +330,8 @@ const resultCards = [
       <div style={`${WRAP};position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center`}>
         <div>
           <span style={EYEBROW_DARK}>顧問與方法論</span>
-          <h2 style={`${H2};margin:12px 0 16px`}>顧問的腦，怎麼驗證？</h2>
-          <p style="font-size:16px;line-height:1.7;color:#B5B2AC;max-width:52ch;margin:0 0 24px">C1–C5 是顧問思考能力的尺，搭配九維拆解與 L.A.O.S. 拆題框架：方法公開，過程可驗，不靠形容詞。</p>
+          <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'methodTitle', "顧問的腦，怎麼驗證？")}</h2>
+          <p style="font-size:16px;line-height:1.7;color:#B5B2AC;max-width:52ch;margin:0 0 24px">{text(home, 'methodBody', "C1–C5 是顧問思考能力的尺，搭配九維拆解與 L.A.O.S. 拆題框架：方法公開，過程可驗，不靠形容詞。")}</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px">
             {['C1–C5 思考力', '九維拆解', 'L.A.O.S. 拆題'].map((t) => (
               <span style={`${MONO};font-size:12px;border:1px solid rgba(255,255,255,.22);padding:6px 12px`}>{t}</span>
@@ -322,7 +339,7 @@ const resultCards = [
           </div>
           <a href="/consultants" style="font-size:14px;font-weight:600;color:#ECA42B;text-decoration:none">認識顧問群 →</a>
         </div>
-        <ConsultantStrip client:load />
+        <ConsultantStrip data={consultants} client:load />
       </div>
     </section>
 
@@ -330,7 +347,7 @@ const resultCards = [
     <section id="cases" style={`${SECTION};background:#fff;border-bottom:1px solid var(--border-subtle)`}>
       <div style={WRAP}>
         <span style={EYEBROW}>案例</span>
-        <h2 style={`${H2};margin:12px 0 32px`}>只講模式，不講客戶機密。</h2>
+        <h2 style={`${H2};margin:12px 0 32px`}>{text(home, 'casesTitle', "只講模式，不講客戶機密。")}</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:48px">
           {resultCards.map((c) => (
             <div class="tg-hovercard" style={`border:1px solid var(--border-subtle);padding:32px 24px;${HOVER_CARD}`}>
@@ -353,8 +370,8 @@ const resultCards = [
     <section id="contact" data-m="cta" style="background:linear-gradient(90deg,var(--tiger-500) 50%,#FFFFFF 50%);color:#0E0E0D;padding:0">
       <div style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));column-gap:0;row-gap:32px;align-items:center`}>
         <div style="padding-right:clamp(24px,5vw,64px)">
-          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(34px,5vw,60px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px">預約 30 分鐘諮詢。</h2>
-          <p style="font-size:18px;line-height:1.7;color:#1A1918;max-width:52ch;margin:0">帶著你最痛的那個部門來。我們會告訴你這件事該用哪一階、要多少算力、資料怎麼留在機房。</p>
+          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(34px,5vw,60px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px">{text(home, 'ctaTitle', "預約 30 分鐘諮詢。")}</h2>
+          <p style="font-size:18px;line-height:1.7;color:#1A1918;max-width:52ch;margin:0">{text(home, 'ctaBody', "帶著你最痛的那個部門來。我們會告訴你這件事該用哪一階、要多少算力、資料怎麼留在機房。")}</p>
         </div>
         <BookingCard client:load />
       </div>

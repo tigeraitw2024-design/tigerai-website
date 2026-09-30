@@ -1,0 +1,52 @@
+---
+// 找不到頁面。
+//
+// 由 wrangler.jsonc 的 assets.not_found_handling: "404-page" 指到這裡，
+// 所以任何打不到的網址都會看到這一頁，而不是 Cloudflare 那個灰底白字的預設頁。
+//
+// 不放搜尋框：這個站只有十幾頁，列出來比讓人打字快。
+import Page from '../layouts/Page.astro';
+import TopBar from '../components/TopBar.tsx';
+import FooterSlim from '../components/FooterSlim.astro';
+
+const links = [
+  { href: '/', label: '首頁', desc: '從頭看一遍' },
+  { href: '/products', label: '產品', desc: '六條產品線與硬體' },
+  { href: '/courses', label: '課程', desc: 'L1–L5，先測再選' },
+  { href: '/consultants', label: '顧問與方法論', desc: '方法公開，過程可驗' },
+  { href: '/cases', label: '案例', desc: '只講模式，不講客戶機密' },
+  { href: '/#contact', label: '預約諮詢', desc: '30 分鐘，帶著你最痛的那個部門來' },
+];
+
+const MONO = "font-family:'JetBrains Mono',monospace";
+const WRAP = 'max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)';
+---
+
+<Page title="找不到這一頁｜TigerAI 虎智科技" description="這個網址不存在，或是已經搬走了。" noindex>
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    <TopBar client:load />
+
+    <section style="padding:140px 0 48px;flex:1">
+      <div style={WRAP}>
+        <span style={`${MONO};font-size:12px;letter-spacing:.12em;color:var(--tiger-700)`}>404</span>
+        <h1 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">
+          這個網址找不到東西。
+        </h1>
+        <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0 0 48px">
+          可能是打錯了，也可能是那一頁搬走了。下面是站上有的東西。
+        </p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;max-width:1100px">
+          {links.map((l) => (
+            <a href={l.href} class="t-card" style="text-decoration:none;color:inherit;display:block">
+              <h3 class="t-card__title">{l.label} →</h3>
+              <p class="t-card__body">{l.desc}</p>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <FooterSlim />
+  </div>
+</Page>

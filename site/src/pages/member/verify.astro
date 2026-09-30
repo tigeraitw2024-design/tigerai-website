@@ -1,0 +1,8 @@
+---
+// 從註冊確認信點進來的。一進頁面就自動驗證，不用再按一次。
+import AppPage from '../../layouts/AppPage.astro';
+import TokenView from '../../components/shop/TokenView.tsx';
+---
+<AppPage title="驗證 Email｜TigerAI 虎智科技" eyebrow="會員" heading="驗證 Email。">
+  <TokenView kind="verify" client:only="react" />
+</AppPage>

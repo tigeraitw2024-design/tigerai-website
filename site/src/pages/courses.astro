@@ -14,6 +14,13 @@ import Page from '../layouts/Page.astro';
 import TopBar from '../components/TopBar.tsx';
 import BannerCarousel from '../components/BannerCarousel.tsx';
 import FooterSlim from '../components/FooterSlim.astro';
+import AddToCart from '../components/shop/AddToCart.tsx';
+import { getCourses } from '../content';
+
+// 後台有課程就用後台的，沒有就用下面那份原型的示意資料。
+// 有價格的課才會長出「加入購物車」——沒接後台的時候一顆都不會出現，
+// 所以跟原型的像素比對不受影響。
+const cmsCourses = await getCourses();
 
 const banners = [
   { src: '/uploads/製造業BANNER_2.png', alt: '主打課程主視覺' },
@@ -113,18 +120,29 @@ const PLACEHOLDERS = 3;
     <section style="padding:32px 0 96px;flex:1">
       <div style="max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
-          {cards.map((c) => (
-            <div class="t-card">
-              <p class="t-card__eyebrow">{c.eyebrow}</p>
-              <h3 class="t-card__title">{c.title}</h3>
-              <p class="t-card__body">{c.body}</p>
-            </div>
-          ))}
-          {Array.from({ length: PLACEHOLDERS }).map(() => (
+          {cmsCourses.length
+            ? cmsCourses.map((c) => (
+                <div class="t-card">
+                  <p class="t-card__eyebrow">{c.level}{c.hours ? `・${c.hours} 小時` : ''}</p>
+                  <h3 class="t-card__title">{c.title}</h3>
+                  <p class="t-card__body">{c.summary}</p>
+                  {c.price > 0 && <AddToCart courseId={c.id} price={c.price} client:visible />}
+                </div>
+              ))
+            : cards.map((c) => (
+                <div class="t-card">
+                  <p class="t-card__eyebrow">{c.eyebrow}</p>
+                  <h3 class="t-card__title">{c.title}</h3>
+                  <p class="t-card__body">{c.body}</p>
+                </div>
+              ))}
+          {!cmsCourses.length && Array.from({ length: PLACEHOLDERS }).map(() => (
             <span style="border:1px dashed var(--border-default);min-height:160px"></span>
           ))}
         </div>
-        <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">課程卡＝Payload「Courses」collection：名稱、L 級、時數、大綱、價格、補助、報名連結、封面</p>
+        {!cmsCourses.length && (
+          <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">課程卡＝Payload「Courses」collection：名稱、L 級、時數、大綱、價格、補助、報名連結、封面</p>
+        )}
       </div>
     </section>
 

@@ -1,0 +1,8 @@
+---
+// 會員中心。沒登入會直接導去登入頁。
+import AppPage from '../../layouts/AppPage.astro';
+import AccountView from '../../components/shop/AccountView.tsx';
+---
+<AppPage title="會員中心｜TigerAI 虎智科技" eyebrow="會員中心" heading="你的課程與訂單。">
+  <AccountView client:only="react" />
+</AppPage>

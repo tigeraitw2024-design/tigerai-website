@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { flows as FLOWS } from '../../data/flows';
-import { depts as DEPTS } from '../../data/depts';
+import type { Flow } from '../../data/flows';
+import type { DeptCase } from '../../data/depts';
 import CaseFilePane from './CaseFilePane';
 
 /**
@@ -33,20 +33,23 @@ const FLOW_DEMO = [
 
 type Row = { no: string; name: string; scene: string; kpi: string; pain: string; fix: string; result: string };
 
-const flowRows: Row[] = FLOWS.map((f, i) => {
-  const m = FLOW_DEMO[i] ?? ['', '', '', '', ''];
-  return { no: `0${i + 1}`, name: f.name, scene: m[0], kpi: m[1], pain: m[2], fix: m[3], result: m[4] };
-});
+// 資料是頁面傳進來的，所以這兩個表要在元件裡算，不能留在模組層。
+const toFlowRows = (flows: Flow[]): Row[] =>
+  flows.map((f, i) => {
+    const m = FLOW_DEMO[i] ?? ['', '', '', '', ''];
+    return { no: `0${i + 1}`, name: f.name, scene: m[0], kpi: m[1], pain: m[2], fix: m[3], result: m[4] };
+  });
 
-const deptRows: Row[] = DEPTS.map((d, i) => ({
-  no: String(i + 1).padStart(2, '0'),
-  name: d.d,
-  scene: d.s,
-  kpi: d.k,
-  pain: d.p,
-  fix: d.f,
-  result: d.r,
-}));
+const toDeptRows = (depts: DeptCase[]): Row[] =>
+  depts.map((d, i) => ({
+    no: String(i + 1).padStart(2, '0'),
+    name: d.d,
+    scene: d.s,
+    kpi: d.k,
+    pain: d.p,
+    fix: d.f,
+    result: d.r,
+  }));
 
 function List({
   rows,
@@ -97,7 +100,14 @@ function List({
   );
 }
 
-export default function EnterpriseChoice() {
+/**
+ * 工作流與部門案例由頁面在建置時取得後當 props 傳進來（見 src/content）。
+ * 元件自己不 import src/data：那樣資料會被打包進瀏覽器要下載的 JS，
+ * 而且接了後台之後前台還是舊的。
+ */
+export default function EnterpriseChoice({ flows: FLOWS, depts: DEPTS }: { flows: Flow[]; depts: DeptCase[] }) {
+  const flowRows = toFlowRows(FLOWS);
+  const deptRows = toDeptRows(DEPTS);
   const [deptOpen, setDeptOpen] = useState(false);
   const [flowSel, setFlowSel] = useState(0);
   const [deptSel, setDeptSel] = useState(0);

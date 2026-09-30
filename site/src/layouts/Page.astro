@@ -18,9 +18,11 @@ interface Props {
    * 所以保留這個區分。
    */
   fonts?: 'standard' | 'tgpro';
+  /** 不要讓搜尋引擎收錄這一頁（404、法遵頁的草稿版本等） */
+  noindex?: boolean;
 }
 
-const { title, description, bodyBackground, fonts = 'standard' } = Astro.props;
+const { title, description, bodyBackground, fonts = 'standard', noindex = false } = Astro.props;
 const DS = '/ds';
 
 const FONT_CSS = {
@@ -41,6 +43,7 @@ const FONT_CSS = {
   <meta property="og:title" content={title} />
   {description && <meta property="og:description" content={description} />}
   <meta property="og:type" content="website" />
+  {noindex && <meta name="robots" content="noindex, follow" />}
   <link rel="icon" href="/assets/logo/color-square-mark.svg" type="image/svg+xml" />
 
   <!-- 中文字型走 Google Fonts 的 Noto Sans TC。

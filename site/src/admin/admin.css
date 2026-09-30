@@ -1,0 +1,276 @@
+/*
+  後台的樣式。
+  刻意跟前台分開：前台那套是為了跟原型對到 0.00%，動不得；
+  後台要的是「一眼看懂、手機上點得到」，兩者的標準不一樣。
+
+  手機優先：先寫窄螢幕的樣子，寬螢幕再用 media query 加東西。
+  Robin 說後台手機桌機都要能用，而後台最常用的場合其實是
+  「人在外面，手機收到預約通知，點進來確認」。
+*/
+
+:root {
+  --a-bg: #F7F6F4;
+  --a-panel: #FFFFFF;
+  --a-line: #E3E0DB;
+  --a-line-strong: #C9C5BE;
+  --a-fg: #16150F;
+  --a-fg-2: #5E5A52;
+  --a-fg-3: #8B867C;
+  --a-brand: #C08423;
+  --a-brand-soft: #FCF6EA;
+  --a-danger: #B3261E;
+  --a-ok: #1E7A43;
+  --a-radius: 4px;
+  --a-nav-h: 56px;
+  --a-tabbar-h: 64px;
+}
+
+* { box-sizing: border-box; }
+
+body.tg-admin {
+  margin: 0;
+  background: var(--a-bg);
+  color: var(--a-fg);
+  font-family: 'Noto Sans TC', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+.a-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+/* ── 版面骨架 ────────────────────────────────────────────────── */
+
+.a-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+
+.a-top {
+  position: sticky; top: 0; z-index: 30;
+  height: var(--a-nav-h);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 14px;
+  background: var(--a-fg); color: #fff;
+}
+.a-top__brand { font-weight: 800; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+.a-top__brand img { width: 26px; height: 26px; display: block; }
+.a-top__spacer { margin-left: auto; }
+.a-top__who { font-size: 12px; color: #B9B5AC; }
+
+.a-body { flex: 1; display: flex; min-height: 0; }
+
+/* 側欄：手機上是抽屜，桌機上固定在左邊 */
+.a-side {
+  position: fixed; inset: var(--a-nav-h) auto 0 0; z-index: 25;
+  width: min(280px, 82vw);
+  background: var(--a-panel);
+  border-right: 1px solid var(--a-line);
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform .16s cubic-bezier(.22,.61,.36,1);
+  padding-bottom: 24px;
+}
+.a-side--open { transform: none; }
+.a-scrim {
+  position: fixed; inset: var(--a-nav-h) 0 0 0; z-index: 24;
+  background: rgba(0,0,0,.4);
+}
+.a-main { flex: 1; min-width: 0; padding: 16px 14px calc(var(--a-tabbar-h) + 24px); }
+
+@media (min-width: 900px) {
+  .a-side { position: sticky; top: var(--a-nav-h); height: calc(100dvh - var(--a-nav-h)); transform: none; inset: auto; }
+  .a-scrim, .a-burger, .a-tabbar { display: none !important; }
+  .a-main { padding: 24px 32px 48px; }
+  .a-body { align-items: flex-start; }
+}
+
+/* 手機底部的快速切換。最常用的四個，拇指按得到。 */
+.a-tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 26;
+  height: var(--a-tabbar-h);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--a-panel); border-top: 1px solid var(--a-line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.a-tabbar a {
+  display: grid; place-items: center; gap: 2px;
+  font-size: 11px; color: var(--a-fg-3); text-decoration: none;
+}
+.a-tabbar a[data-on='1'] { color: var(--a-brand); font-weight: 700; }
+.a-tabbar svg { width: 20px; height: 20px; }
+
+/* ── 側欄內容 ────────────────────────────────────────────────── */
+
+.a-navgroup { padding: 14px 12px 4px; font-size: 11px; letter-spacing: .12em; color: var(--a-fg-3); }
+.a-navlink {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 46px; padding: 0 14px;
+  color: var(--a-fg); text-decoration: none; font-size: 14px;
+  border-left: 3px solid transparent;
+}
+.a-navlink:hover { background: var(--a-bg); }
+.a-navlink[data-on='1'] { background: var(--a-brand-soft); border-left-color: var(--a-brand); font-weight: 700; }
+.a-navlink svg { width: 17px; height: 17px; flex: none; color: var(--a-fg-2); }
+.a-navlink[data-on='1'] svg { color: var(--a-brand); }
+.a-navbadge { margin-left: auto; font-size: 11px; background: var(--a-brand); color: #fff; padding: 1px 7px; }
+
+/* ── 一般元件 ────────────────────────────────────────────────── */
+
+.a-h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 4px; }
+.a-intro { color: var(--a-fg-2); font-size: 13px; margin: 0 0 18px; max-width: 62ch; }
+
+.a-panel { background: var(--a-panel); border: 1px solid var(--a-line); padding: 16px; margin-bottom: 16px; }
+.a-panel__h { font-size: 13px; font-weight: 700; margin: 0 0 12px; color: var(--a-fg-2); }
+
+.a-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 18px;
+  border: 1px solid var(--a-fg); background: var(--a-fg); color: #fff;
+  font: inherit; font-weight: 700; cursor: pointer;
+  border-radius: var(--a-radius);
+}
+.a-btn:hover { opacity: .88; }
+.a-btn:disabled { opacity: .45; cursor: not-allowed; }
+.a-btn--ghost { background: transparent; color: var(--a-fg); border-color: var(--a-line-strong); font-weight: 400; }
+.a-btn--brand { background: var(--a-brand); border-color: var(--a-brand); color: #fff; }
+.a-btn--danger { background: transparent; color: var(--a-danger); border-color: var(--a-danger); }
+.a-btn--sm { min-height: 36px; padding: 0 12px; font-size: 13px; font-weight: 400; }
+
+.a-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.a-spacer { margin-left: auto; }
+
+.a-msg { padding: 12px 14px; margin-bottom: 14px; font-size: 14px; border-left: 3px solid; }
+.a-msg--err { background: #FDF2F1; border-color: var(--a-danger); color: #7A1A15; }
+.a-msg--ok { background: #F0F8F3; border-color: var(--a-ok); color: #14532B; }
+.a-msg--info { background: var(--a-brand-soft); border-color: var(--a-brand); color: #6B4A12; }
+.a-msg ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* ── 表單 ────────────────────────────────────────────────────── */
+
+.a-form { display: grid; gap: 18px; }
+@media (min-width: 760px) {
+  .a-form { grid-template-columns: repeat(6, 1fr); }
+  .a-f[data-w='full'] { grid-column: span 6; }
+  .a-f[data-w='half'] { grid-column: span 3; }
+  .a-f[data-w='third'] { grid-column: span 2; }
+}
+.a-f { display: grid; gap: 6px; grid-column: span 6; min-width: 0; }
+.a-f__label { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.a-f__req { color: var(--a-danger); font-size: 11px; }
+.a-f__pii { font-size: 10px; background: #F1EEE9; color: var(--a-fg-2); padding: 1px 6px; }
+.a-f__help { font-size: 12px; color: var(--a-fg-3); line-height: 1.55; }
+.a-f__count { font-size: 11px; color: var(--a-fg-3); text-align: right; }
+.a-f__count[data-over='1'] { color: var(--a-danger); font-weight: 700; }
+
+.a-input, .a-select, .a-textarea {
+  width: 100%; min-height: 44px; padding: 10px 12px;
+  border: 1px solid var(--a-line-strong); background: #fff; color: var(--a-fg);
+  font: inherit; border-radius: var(--a-radius);
+  /* 16px 以下 iOS Safari 會在聚焦時自動放大整頁，回不去 */
+  font-size: 16px;
+}
+.a-textarea { min-height: 96px; resize: vertical; line-height: 1.7; }
+.a-input:focus, .a-select:focus, .a-textarea:focus { outline: 2px solid var(--a-brand); outline-offset: -1px; }
+.a-input[readonly] { background: #F4F2EF; color: var(--a-fg-2); }
+
+.a-check { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.a-check input { width: 20px; height: 20px; accent-color: var(--a-brand); }
+
+/* 重複欄位組 */
+.a-arr { border: 1px solid var(--a-line); }
+.a-arr__item { border-bottom: 1px solid var(--a-line); padding: 14px; background: #FCFBFA; }
+.a-arr__item:last-of-type { border-bottom: 0; }
+.a-arr__head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.a-arr__n { font-size: 11px; color: var(--a-fg-3); }
+.a-arr__add { padding: 10px; border-top: 1px solid var(--a-line); background: #fff; }
+
+/* ── 列表 ────────────────────────────────────────────────────── */
+
+.a-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.a-search { flex: 1; min-width: 180px; }
+
+/* 手機是卡片，桌機是表格。同一份資料，兩種呈現。 */
+.a-cards { display: grid; gap: 10px; }
+.a-card {
+  background: var(--a-panel); border: 1px solid var(--a-line);
+  padding: 14px; display: grid; gap: 6px;
+  text-decoration: none; color: inherit;
+}
+.a-card:hover { border-color: var(--a-line-strong); }
+.a-card__t { font-weight: 700; font-size: 15px; }
+.a-card__meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--a-fg-2); }
+.a-card__meta b { font-weight: 400; color: var(--a-fg-3); }
+
+.a-table { display: none; }
+@media (min-width: 900px) {
+  .a-cards { display: none; }
+  .a-table { display: table; width: 100%; border-collapse: collapse; background: var(--a-panel); }
+  .a-table th, .a-table td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--a-line); font-size: 14px; }
+  .a-table th { font-size: 12px; color: var(--a-fg-2); background: #FBFAF8; font-weight: 700; }
+  .a-table tbody tr:hover { background: #FBFAF8; cursor: pointer; }
+  .a-table td { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.a-pill { display: inline-block; font-size: 11px; padding: 2px 8px; border: 1px solid var(--a-line-strong); background: #fff; }
+.a-pill[data-tone='ok'] { border-color: var(--a-ok); color: var(--a-ok); }
+.a-pill[data-tone='warn'] { border-color: var(--a-brand); color: var(--a-brand); background: var(--a-brand-soft); }
+.a-pill[data-tone='off'] { color: var(--a-fg-3); }
+
+.a-empty { text-align: center; padding: 48px 16px; color: var(--a-fg-3); }
+
+/* 拖曳排序的握把 */
+.a-grab { cursor: grab; touch-action: none; color: var(--a-fg-3); padding: 6px; margin: -6px; }
+.a-dragging { opacity: .4; }
+
+/* ── 檔案庫 ──────────────────────────────────────────────────── */
+
+.a-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.a-thumb {
+  aspect-ratio: 1; border: 1px solid var(--a-line); background: #fff;
+  display: grid; place-items: center; overflow: hidden; cursor: pointer; position: relative;
+}
+.a-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.a-thumb[data-on='1'] { outline: 3px solid var(--a-brand); outline-offset: -3px; }
+.a-thumb__ext { font-size: 12px; color: var(--a-fg-2); }
+
+.a-picker { display: flex; gap: 10px; align-items: flex-start; }
+.a-picker__prev { width: 84px; height: 84px; border: 1px solid var(--a-line); background: #fff; display: grid; place-items: center; overflow: hidden; flex: none; }
+.a-picker__prev img { width: 100%; height: 100%; object-fit: contain; }
+
+/* ── 對話框 ──────────────────────────────────────────────────── */
+
+.a-modal { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.45); display: grid; place-items: end center; }
+@media (min-width: 760px) { .a-modal { place-items: center; } }
+.a-modal__box {
+  background: var(--a-panel); width: min(720px, 100%); max-height: 88dvh; overflow: auto;
+  border: 1px solid var(--a-line); padding: 18px;
+}
+.a-modal__head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.a-modal__head h3 { margin: 0; font-size: 17px; }
+
+/* ── 登入頁 ──────────────────────────────────────────────────── */
+
+.a-login { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--a-fg); }
+.a-login__box { width: min(420px, 100%); background: var(--a-panel); border: 1px solid var(--a-line); padding: 28px 24px; }
+.a-login__logo { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-weight: 800; font-size: 18px; }
+.a-login__logo img { width: 32px; height: 32px; }
+
+/* ── 儀表板 ──────────────────────────────────────────────────── */
+
+.a-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.a-stat { background: var(--a-panel); border: 1px solid var(--a-line); padding: 14px; }
+.a-stat b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+.a-stat span { font-size: 12px; color: var(--a-fg-2); }
+.a-stat[data-alert='1'] b { color: var(--a-brand); }
+
+/* ── 操作手冊 ────────────────────────────────────────────────── */
+
+.a-doc { max-width: 68ch; }
+.a-doc h2 { font-size: 17px; margin: 26px 0 8px; padding-top: 18px; border-top: 1px solid var(--a-line); }
+.a-doc h2:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.a-doc h3 { font-size: 14px; margin: 16px 0 4px; }
+.a-doc p, .a-doc li { font-size: 14px; color: var(--a-fg-2); line-height: 1.8; }
+.a-doc code { background: #EFEDE9; padding: 1px 5px; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+.a-doc ol, .a-doc ul { padding-left: 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

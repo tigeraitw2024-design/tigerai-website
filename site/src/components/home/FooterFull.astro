@@ -2,8 +2,10 @@
 // 首頁的完整 Footer（四欄）。子頁用的是單列精簡版，在 FooterSlim.astro。
 // 移植自 design/首頁.dc.html 的 11 區，文案一字不改。
 //
-// 隱私權政策和服務條款在原型裡是 href="#top" 的空連結。Robin 說這兩份內容
-// 要一起處理，等文件寫好再把網址接上，現在先留空連結，跟原型一致。
+// 隱私權政策和服務條款在原型裡是 href="#top" 的空連結，現在接到 /legal/。
+// 內容存在後台的「全站設定」，後台沒填就用依本站實際資料流程寫的初稿。
+// 這裡刻意維持兩個連結（沒有多加「退費規則」），因為多一個連結版面就跟原型不一樣了；
+// 退費規則從服務條款內文連過去。
 const columns = [
   {
     title: '站內導覽',
@@ -59,8 +61,8 @@ const LINK = 'color:#D7D5D1;text-decoration:none';
     <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#878480">
       <span>© 2026 虎智科技股份有限公司 TigerAI · 開源地端 AI</span>
       <span style="display:flex;gap:16px">
-        <a href="#top" style="color:#B5B2AC;text-decoration:none">隱私權政策</a>
-        <a href="#top" style="color:#B5B2AC;text-decoration:none">服務條款</a>
+        <a href="/legal/privacy" style="color:#B5B2AC;text-decoration:none">隱私權政策</a>
+        <a href="/legal/terms" style="color:#B5B2AC;text-decoration:none">服務條款</a>
       </span>
     </div>
   </div>

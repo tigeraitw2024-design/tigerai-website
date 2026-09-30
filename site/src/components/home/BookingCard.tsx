@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * 三步預約卡。移植自 design/首頁.dc.html 的 10 區，邏輯與文案一字不改。
@@ -14,8 +14,17 @@ import { useRef, useState } from 'react';
  *
  * 右上角放大鈕是給年長者看的：點開變成置中放大 1.3 倍的彈窗，點外側收回。
  *
- * ⚠ 現在只做到前端。送出之後真正要寄信、排程、24 小時未回覆自動取消，
- *   那些是第 8 階段的事（後端 API ＋ 寄信）。目前按確認只會切到完成頁。
+ * 送出之後會 POST 到 /api/booking：存進資料庫、寄確認信給客戶、
+ * 寄通知信給公司，24 小時沒人確認由排程自動取消並把時段放回去。
+ *
+ * 月曆的時段有兩種來源：
+ *   後台開了時段  →  只有後台開的那些日期與時間可以選，送出時帶 slotId，
+ *                    名額會扣，兩個人同時按不會超賣
+ *   後台沒開時段  →  退回原型那份固定時段（週一到週五、上面寫死的十個時間），
+ *                    送出時不帶 slotId，由人工約時間
+ *
+ * 那條退路讓這張卡在「後台還沒接上」的時候照樣是完整可用的，
+ * 外觀也跟原型一模一樣。
  */
 
 const STAFF = [
@@ -38,6 +47,8 @@ const MONO = "'JetBrains Mono',monospace";
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 
+type ApiSlot = { id: string; startAt: string; minutes: number; channel: string };
+
 export default function BookingCard() {
   const [step, setStep] = useState(0);
   const [staff, setStaff] = useState('advisor');
@@ -48,6 +59,39 @@ export default function BookingCard() {
   const [tzI, setTzI] = useState(0);
   const [zoom, setZoom] = useState(false);
   const mailRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const topicRef = useRef<HTMLTextAreaElement>(null);
+
+  // 後台開的時段。抓不到或一個都沒開就維持 null，走原型那份固定時段。
+  const [apiSlots, setApiSlots] = useState<ApiSlot[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const [code, setCode] = useState('');
+
+  useEffect(() => {
+    fetch('/api/booking/slots')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.slots?.length) setApiSlots(d.slots);
+      })
+      .catch(() => {
+        // 後台沒接上就是沒接上，不用吵使用者，退回固定時段就好
+      });
+  }, []);
+
+  /** 後台時段按日期分組：'2026-10-3' → [{id, '09:00'}, ...] */
+  const slotsByDay = useMemo(() => {
+    const m = new Map<string, { id: string; tm: string }[]>();
+    for (const s of apiSlots || []) {
+      const d = new Date(s.startAt);
+      const k = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      const tm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      if (!m.has(k)) m.set(k, []);
+      m.get(k)!.push({ id: s.id, tm });
+    }
+    for (const list of m.values()) list.sort((a, b) => a.tm.localeCompare(b.tm));
+    return m;
+  }, [apiSlots]);
 
   const tzOff = TZS[tzI][1];
   /** 把台北時間換算成選定時區，跨日標 +1／−1 */
@@ -70,9 +114,18 @@ export default function BookingCard() {
   for (let i = 0; i < monthStart.getDay(); i++) cells.push({ n: '', off: true, sel: false });
   for (let d = 1; d <= daysInMonth; d++) {
     const dt = new Date(monthStart.getFullYear(), monthStart.getMonth(), d);
-    const off = dt < today || dt.getDay() === 0 || dt.getDay() === 6;
+    // 後台有開時段時，能不能選由「那天有沒有時段」決定，不再是「週末不能選」——
+    // 有些公司真的會在週六接會議，那不該被前端寫死的規則擋掉。
+    const off = apiSlots
+      ? dt < today || !slotsByDay.has(dayKey(dt))
+      : dt < today || dt.getDay() === 0 || dt.getDay() === 6;
     cells.push({ n: String(d), off, sel: dateKey === dayKey(dt), dt });
   }
+
+  // 這一天可選的時間。後台有開就用後台的，沒有就用寫死的那十個。
+  const daySlots = dateKey ? slotsByDay.get(dateKey) || [] : [];
+  const slotList = apiSlots ? daySlots.map((x) => x.tm) : SLOTS;
+  const slotIdFor = (tm: string) => daySlots.find((x) => x.tm === tm)?.id || '';
 
   const staffName = (STAFF.find((s) => s.id === staff) || STAFF[0]).name;
   const dObj = dateObj ? new Date(dateObj) : null;
@@ -87,17 +140,50 @@ export default function BookingCard() {
     if (step === 0) setStep(1);
     else if (step === 1 && dateKey && time) setStep(2);
   };
-  const submit = () => {
+  const submit = async () => {
     const mail = mailRef.current;
     if (mail && !mail.value.includes('@')) {
       mail.style.borderColor = 'var(--danger-500, #C4453B)';
       mail.focus();
       return;
     }
-    setStep(3);
+    const name = nameRef.current?.value.trim() || '';
+    if (!name) {
+      nameRef.current?.focus();
+      setErr('請填姓名');
+      return;
+    }
+
+    setBusy(true);
+    setErr('');
+    try {
+      const r = await fetch('/api/booking', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          slotId: time ? slotIdFor(time) : '',
+          name,
+          email: mail?.value.trim() || '',
+          topic: topicRef.current?.value.trim() || '',
+          // 沒有後台時段的情況下，客戶選的日期時間只能當文字帶過去，
+          // 由人工回信確認。帶上對象與時區，不然收到信也不知道他約的是誰。
+          source: `home-booking｜對象 ${staffName}｜${summary}｜時區 ${TZS[tzI][0]}`,
+        }),
+      });
+      const d = await r.json().catch(() => null);
+      if (!r.ok) throw new Error(d?.error || '送出失敗，請稍後再試。');
+      setCode(d?.code || '');
+      setStep(3);
+    } catch (e: any) {
+      setErr(String(e?.message || e));
+    } finally {
+      setBusy(false);
+    }
   };
   const reset = () => {
     setStep(0);
+    setErr('');
+    setCode('');
     setDateKey(null);
     setDateObj(null);
     setTime(null);
@@ -232,7 +318,7 @@ export default function BookingCard() {
                 </div>
               </div>
               <div data-m="slots" style={{ maxHeight: 300, overflowY: 'auto', display: 'grid', gap: 6, alignContent: 'start', paddingRight: 2 }}>
-                {SLOTS.map((tm) => {
+                {slotList.map((tm) => {
                   const on = time === tm;
                   return (
                     <span
@@ -268,7 +354,7 @@ export default function BookingCard() {
                 ))}
               </select>
               <span style={{ fontFamily: MONO, fontSize: 10, color: 'var(--fg-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                時段為示意，由後台管理
+                {apiSlots ? '時段由後台管理' : '時段為示意，送出後由顧問回信確認'}
               </span>
             </div>
 
@@ -284,12 +370,17 @@ export default function BookingCard() {
         {step === 2 && (
           <div style={{ display: 'grid', gap: 10, height: 384, gridTemplateRows: 'auto auto auto minmax(0,1fr) auto' }}>
             <span style={{ fontFamily: MONO, fontSize: 11, color: 'var(--tiger-700)', border: '1px solid var(--border-brand)', background: 'var(--tiger-50)', padding: '6px 10px' }}>{summary}</span>
-            <input placeholder="姓名" style={{ border: '1px solid var(--border-default)', padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }} />
+            {err && (
+              <span role="alert" style={{ fontSize: 12, color: 'var(--danger-700, #8E2F27)', lineHeight: 1.5 }}>{err}</span>
+            )}
+            <input ref={nameRef} placeholder="姓名" style={{ border: '1px solid var(--border-default)', padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }} />
             <input ref={mailRef} type="email" placeholder="name@company.com" style={{ border: '1px solid var(--border-default)', padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }} />
-            <textarea placeholder="想先解決哪個部門的什麼問題？（選填）" style={{ border: '1px solid var(--border-default)', padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', width: '100%', height: '100%', boxSizing: 'border-box', minHeight: 0, resize: 'none', overflowY: 'auto' }} />
+            <textarea ref={topicRef} placeholder="想先解決哪個部門的什麼問題？（選填）" style={{ border: '1px solid var(--border-default)', padding: '10px 12px', fontSize: 14, fontFamily: 'inherit', width: '100%', height: '100%', boxSizing: 'border-box', minHeight: 0, resize: 'none', overflowY: 'auto' }} />
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {BACK}
-              <button className="t-btn t-btn--secondary t-btn--block" onClick={submit}>確認預約</button>
+              <button className="t-btn t-btn--secondary t-btn--block" onClick={submit} disabled={busy}>
+                {busy ? '送出中…' : '確認預約'}
+              </button>
             </div>
           </div>
         )}
@@ -298,7 +389,9 @@ export default function BookingCard() {
           <div style={{ display: 'grid', gap: 10, justifyItems: 'start' }}>
             <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--success-50)', color: 'var(--success-700)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>✓</span>
             <b style={{ fontFamily: "'Manrope','Noto Sans TC',sans-serif", fontSize: 18, fontWeight: 800 }}>已送出預約</b>
-            <span style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--fg-secondary)' }}>{summary}・顧問一個工作天內回信確認時段。</span>
+            <span style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--fg-secondary)' }}>
+              {summary}・顧問一個工作天內回信確認時段。{code ? ` 預約編號 ${code}。` : ''}
+            </span>
             <div style={{ border: '1px solid var(--border-subtle)', background: 'var(--slate-50)', padding: '10px 12px', display: 'grid', gap: 6 }}>
               <span style={{ fontSize: 13, lineHeight: 1.6 }}><b>請立刻到信箱收確認信</b>：24 小時內沒收到你的回信，這場會議將自動取消。</span>
               <span style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--fg-secondary)' }}>會議中我們會評估你的狀況，請帶著現階段實際遇到的問題來，我們才能給出對應的解法。</span>

@@ -1,0 +1,13 @@
+---
+// 從「忘記密碼」信點進來的。
+import AppPage from '../../layouts/AppPage.astro';
+import TokenView from '../../components/shop/TokenView.tsx';
+---
+<AppPage
+  title="重設密碼｜TigerAI 虎智科技"
+  eyebrow="會員"
+  heading="設定新密碼。"
+  description="改完之後所有裝置上的登入狀態都會清掉，要重新登入。"
+>
+  <TokenView kind="reset" client:only="react" />
+</AppPage>

@@ -1,0 +1,213 @@
+---
+// 隱私權政策、服務條款、退費規則。
+//
+// 內容存在後台的「全站設定」裡，這三頁只負責把它排版出來。做成可編輯而不是
+// 寫死在程式裡，是因為這三份東西一定會改：接了金流要改、開始寄電子報要改、
+// 個資保存期限變了也要改。寫死的話每次都要找工程師。
+//
+// 後台沒填的時候用下面那份預設稿。預設稿寫的是「這個網站實際上做了什麼」
+// ——收哪些資料、存在哪裡、誰看得到、留多久——那是照著程式碼寫的，不是抄來的範本。
+// 但它**沒有經過法務看過**，正式上線前 Robin 要自己或找人審一遍。
+import Page from '../../layouts/Page.astro';
+import TopBar from '../../components/TopBar.tsx';
+import FooterSlim from '../../components/FooterSlim.astro';
+import { getSettings, text } from '../../content';
+
+export function getStaticPaths() {
+  return [{ params: { doc: 'privacy' } }, { params: { doc: 'terms' } }, { params: { doc: 'refund' } }];
+}
+
+const { doc } = Astro.params;
+const settings = await getSettings();
+const company = text(settings, 'companyName', '虎智科技股份有限公司');
+const email = text(settings, 'email', 'tiger.ai.tw@gmail.com');
+
+const DEFAULTS: Record<string, { title: string; desc: string; key: string; body: string }> = {
+  privacy: {
+    title: '隱私權政策',
+    desc: '我們收哪些資料、存在哪裡、誰看得到、留多久。',
+    key: 'privacy',
+    body: `
+<h3>我們收什麼</h3>
+<p>只在你主動填寫時收集，沒有任何背景追蹤：</p>
+<ul>
+  <li><strong>預約諮詢</strong>：姓名、Email、電話、公司、職稱、公司人數、你想談的問題。</li>
+  <li><strong>索取檔案或模板</strong>：Email，以及你另外填寫的姓名與公司。</li>
+  <li><strong>註冊會員或購課</strong>：姓名、Email、電話、公司；開立三聯發票時另收抬頭與統一編號。</li>
+</ul>
+<p>系統另外會記錄你送出表單時的 IP，用途只有一個：擋掉自動灌單的程式。</p>
+
+<h3>存在哪裡</h3>
+<p>資料存在 Cloudflare 的資料庫（D1）與檔案空間（R2）。密碼存的是不可逆的雜湊值，
+我們自己也讀不出你的密碼。</p>
+
+<h3>誰看得到</h3>
+<p>後台帳號分四種角色。負責網站內容的同事（editor 角色）<strong>看不到任何客戶資料</strong>，
+那些頁面在他的畫面上不會出現，直接呼叫介面也會被擋下來。
+只有負責聯繫你的人（owner、sales 角色）看得到完整的聯絡方式。
+每一次讀取與修改都會留下紀錄。</p>
+
+<h3>會不會給別人</h3>
+<p>不會賣、不會交換、不會提供給行銷名單商。只有在下列情況會提供給第三方：</p>
+<ul>
+  <li>為了完成你要求的事（例如寄信給你，需要經過寄信服務商）。</li>
+  <li>法律要求或司法機關依法調取。</li>
+</ul>
+
+<h3>行銷訊息</h3>
+<p>索取檔案的同意，不等於同意收行銷信。這兩件事在我們的系統裡是分開記錄的。
+沒有明確勾選同意，我們不會寄電子報給你。</p>
+
+<h3>留多久</h3>
+<ul>
+  <li>預約紀錄：結案後保留兩年，供後續服務參考。</li>
+  <li>名單：保留到你要求刪除為止。</li>
+  <li>會員與訂單：依稅務法規保留，交易紀錄至少五年。</li>
+  <li>登入狀態：後台 7 天、會員 30 天，到期自動清除。</li>
+</ul>
+
+<h3>你的權利</h3>
+<p>依個人資料保護法，你可以要求查詢、閱覽、補充、更正、停止使用或刪除你的資料。
+寄信到 <strong>${email}</strong>，我們會在七個工作天內處理。</p>
+
+<h3>Cookie</h3>
+<p>這個網站只使用維持功能所必要的 cookie：登入狀態、購物車、以及「開場動畫看過了」的紀錄。
+沒有廣告追蹤 cookie。除非另行公告並取得同意，我們不載入第三方追蹤程式。</p>
+`,
+  },
+  terms: {
+    title: '服務條款',
+    desc: '使用這個網站與購買課程的規則。',
+    key: 'terms',
+    body: `
+<h3>適用範圍</h3>
+<p>你使用 ${company}（以下稱「我們」）的網站、預約諮詢、購買課程或服務時，
+即表示同意這份條款。</p>
+
+<h3>帳號</h3>
+<ul>
+  <li>註冊時請填寫正確資料。資料不實導致無法上課或無法開立發票，我們無法負責。</li>
+  <li>帳號密碼請自行保管。以你的帳號所做的操作，視為你本人所為。</li>
+  <li>發現帳號被盜用請立刻通知我們。</li>
+</ul>
+
+<h3>課程</h3>
+<ul>
+  <li>課程內容、時數、講師與開課日期以課程頁面公告為準。</li>
+  <li>我們保留因人數不足、講師不可抗力等因素調整或取消班次的權利。取消時全額退費。</li>
+  <li>課程教材與錄影僅供報名者個人學習使用，不得重製、散布、公開播送或轉售。</li>
+</ul>
+
+<h3>付款</h3>
+<p>目前採「下單後由專人聯繫確認付款方式」。付款完成並經確認後才取得上課資格。</p>
+
+<h3>諮詢預約</h3>
+<p>預約送出後請留意信箱。<strong>24 小時內未完成確認，系統會自動取消並釋出時段。</strong>
+諮詢內容為初步評估，不構成任何形式的保證或承諾。</p>
+
+<h3>智慧財產</h3>
+<p>網站上的文字、圖片、影片、課程教材、方法論框架（含 C1–C5、九維拆解、L.A.O.S.）
+著作權均屬我們或授權方所有。案例中提及的第三方商標屬各該公司所有。</p>
+
+<h3>免責</h3>
+<ul>
+  <li>網站內容僅供參考，不構成投資、法律或稅務建議。</li>
+  <li>案例中的成效數字是特定客戶在特定條件下的結果，不代表你會得到相同結果。</li>
+  <li>因不可抗力、網路中斷、第三方服務故障造成的損失，我們不負賠償責任。</li>
+</ul>
+
+<h3>條款變更</h3>
+<p>我們可能修改這份條款，修改後公告於本頁面。持續使用即視為同意修改後的內容。</p>
+
+<h3>準據法</h3>
+<p>本條款以中華民國法律為準據法。因本條款發生爭議時，以臺灣臺北地方法院為第一審管轄法院。</p>
+`,
+  },
+  refund: {
+    title: '退費規則',
+    desc: '課程與服務的退費條件與期限。',
+    key: 'refund',
+    body: `
+<h3>實體與線上直播課程</h3>
+<ul>
+  <li>開課日七天前（含）提出：全額退費。</li>
+  <li>開課日前一至六天提出：退還已繳費用的九成。</li>
+  <li>開課當日起提出：已開課部分不予退費，未開課時數按比例退還。</li>
+  <li>我們取消班次：全額退費，或轉至下一期由你選擇。</li>
+</ul>
+
+<h3>錄影課程</h3>
+<p>開通觀看權限後，若觀看進度未超過總時數 10%，且購買未滿七天，可申請全額退費。
+超過其一則不接受退費。</p>
+
+<h3>顧問與導入服務</h3>
+<p>依個別合約約定。合約另有約定者，從其約定。</p>
+
+<h3>怎麼申請</h3>
+<p>寄信到 <strong>${email}</strong>，信裡附上訂單編號與退費原因。
+我們會在收到後七個工作天內回覆處理進度。退款以原付款方式退回，
+匯款手續費由申請方負擔。</p>
+
+<h3>政府補助課程</h3>
+<p>適用政府補助的班次，退費依該補助方案的規定辦理，可能與上述條件不同。
+報名時會另行說明。</p>
+`,
+  },
+};
+
+const d = DEFAULTS[doc!];
+if (!d) return Astro.redirect('/404');
+
+// 後台填了就用後台的，沒填就用上面那份預設稿
+const body = text(settings, d.key, d.body);
+const fromCms = !!settings?.[d.key];
+
+const MONO = "font-family:'JetBrains Mono',monospace";
+const WRAP = 'max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px)';
+---
+
+<Page title={`${d.title}｜TigerAI 虎智科技`} description={d.desc}>
+  <Fragment slot="head">
+    <style>
+      /* 法遵頁的內文排版。跟前台其他頁分開，因為這裡的內容是後台填的 HTML，
+         結構不可預測，要靠這裡把它排得可讀。 */
+      .tg-legal h3 {
+        font-family: 'Manrope', 'Noto Sans TC', sans-serif;
+        font-size: 18px; font-weight: 800; letter-spacing: -.01em;
+        margin: 36px 0 10px; padding-top: 24px;
+        border-top: 1px solid var(--border-subtle);
+      }
+      .tg-legal h3:first-child { border-top: 0; padding-top: 0; margin-top: 0 }
+      .tg-legal p, .tg-legal li { font-size: 15px; line-height: 1.9; color: var(--fg-secondary) }
+      .tg-legal ul, .tg-legal ol { padding-left: 22px; margin: 10px 0 }
+      .tg-legal li { margin-bottom: 6px }
+      .tg-legal strong { color: var(--fg-primary) }
+      .tg-legal a { color: var(--tiger-700) }
+    </style>
+  </Fragment>
+
+  <div style="min-height:100vh;display:flex;flex-direction:column">
+    <TopBar client:load />
+
+    <section style="padding:140px 0 32px">
+      <div style={WRAP}>
+        <span style={`${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`}>法律文件</span>
+        <h1 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(30px,4.5vw,48px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:12px 0 16px">{d.title}</h1>
+        <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:56ch;margin:0">{d.desc}</p>
+      </div>
+    </section>
+
+    <section style="padding:0 0 96px;flex:1">
+      <div style={`${WRAP}`}>
+        <div class="tg-legal" style="max-width:68ch" set:html={body} />
+
+        <p style={`margin:48px 0 0;${MONO};font-size:11px;color:var(--fg-tertiary);line-height:1.8`}>
+          {company}
+          {!fromCms && <><br />這份是依本站實際的資料流程寫成的初稿，尚未經法務審閱。正式版本請於後台「全站設定」填入。</>}
+        </p>
+      </div>
+    </section>
+
+    <FooterSlim />
+  </div>
+</Page>

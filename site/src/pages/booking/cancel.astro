@@ -1,0 +1,13 @@
+---
+// 從預約確認信點進來的。要編號加 Email 才取消得了，光有編號不算。
+import AppPage from '../../layouts/AppPage.astro';
+import TokenView from '../../components/shop/TokenView.tsx';
+---
+<AppPage
+  title="取消預約｜TigerAI 虎智科技"
+  eyebrow="預約"
+  heading="取消預約。"
+  description="取消之後時段會放回去。要重新預約隨時可以。"
+>
+  <TokenView kind="cancel" client:only="react" />
+</AppPage>

@@ -7,9 +7,13 @@
     "dev": "npm run sync && astro dev",
     "prebuild": "npm run sync",
     "build": "astro build",
-    "preview": "wrangler dev",
+    "api": "wrangler dev --port 8787 --local",
     "deploy": "astro build && wrangler deploy",
-    "verify": "node tools/verify.mjs"
+    "schema": "node tools/schema-sql.mjs --write",
+    "verify": "node tools/verify.mjs",
+    "mobile": "node tools/mobile.mjs",
+    "smoke": "node tools/smoke.mjs",
+    "admin-shots": "node tools/admin-shots.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4",
@@ -25,6 +29,7 @@
     "pixelmatch": "^6",
     "playwright-core": "^1",
     "pngjs": "^7",
+    "sharp": "^0.34.4",
     "wrangler": "^4"
   }
 }

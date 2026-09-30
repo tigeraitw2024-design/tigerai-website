@@ -2,10 +2,17 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tigerai-website",
   "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
 
-  // 目前是「只有靜態檔案」的 Worker：沒有 main，Astro build 出來的 dist/
-  // 由 Cloudflare 直接發，不經過 Worker 運算，所以不吃免費方案每次請求
-  // 10 毫秒的額度。
+  // 後台 API。只有 /api/* 會叫到它，見下面的 run_worker_first。
+  "main": "src/api/index.ts",
+
+  // 前台八頁 ＋ 後台介面，全部是靜態檔，由 Cloudflare 直接發。
+  //
+  // run_worker_first 只列 /api/*，意思是「除了 API 以外，都不要叫 Worker」。
+  // 這一行是整個免費方案能跑的關鍵：載入一頁會抓 HTML、CSS、JS 和十幾張圖，
+  // 如果每一個都經過 Worker，一天 10 萬次請求的額度很快就沒了，
+  // 而且每一次都在跟 10 毫秒的運算上限賽跑。
   //
   // Cloudflare 的 Workers Builds 設定要配合：
   //   Root directory   site
@@ -13,15 +20,55 @@
   //   Deploy command   npx wrangler deploy
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // 後台的資料庫。建立方式：
+  //   npx wrangler d1 create tigerai
+  // 建完把它印出來的 database_id 貼到下面，然後跑：
+  //   npx wrangler d1 execute tigerai --remote --file=./migrations/0001_init.sql
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tigerai",
+      "database_id": "PLACEHOLDER-執行-wrangler-d1-create-之後把-id-貼到這裡"
+    }
+  ],
+
+  // 圖片與檔案。建立方式：
+  //   npx wrangler r2 bucket create tigerai-media
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "tigerai-media"
+    }
+  ],
+
+  // 排程：寄佇列裡的信、逾時預約自動取消、清過期資料。
+  // 每小時一次就夠，設太密只是白白消耗額度。
+  "triggers": {
+    "crons": ["17 * * * *"]
+  },
+
+  // 這裡只放「不是秘密」的設定。
+  // 金鑰、密碼、Deploy Hook 網址一律用 npx wrangler secret put，
+  // 因為這個檔案會進 git，而 repo 是公開的。
+  //
+  // 要用 secret 設定的有：
+  //   BOOTSTRAP_SECRET   第一次開 owner 帳號用的一次性密語（用完請刪掉）
+  //   DEPLOY_HOOK_URL    後台按「發布到前台」時要打的網址
+  //   RESEND_API_KEY     用 Resend 寄信時才要
+  //   SMTP_RELAY_URL / SMTP_RELAY_TOKEN   走公司信箱中繼時才要
+  //   ECPAY_MERCHANT_ID / ECPAY_HASH_KEY / ECPAY_HASH_IV   接綠界時才要
+  "vars": {
+    "MAIL_PROVIDER": "console",
+    "MAIL_FROM": "TigerAI 虎智科技 <noreply@tigerai.com.tw>",
+    "MAIL_INTERNAL_TO": "",
+    "PAYMENT_PROVIDER": "none",
+    "SITE_URL": ""
   },
 
   "observability": { "enabled": true }
-
-  // 後台 API、D1 資料庫、R2 圖片儲存等到第 7 階段再加。
-  // 那時候才會需要 main 和 nodejs_compat：
-  // "main": "src/api/index.ts",
-  // "compatibility_flags": ["nodejs_compat"],
-  // "d1_databases": [{ "binding": "DB", "database_name": "tigerai", "database_id": "..." }],
-  // "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "tigerai-media" }]
 }

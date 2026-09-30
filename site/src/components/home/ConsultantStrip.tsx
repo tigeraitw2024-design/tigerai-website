@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCoarsePointer } from '../../hooks/useCoarsePointer';
-import { consultants as DATA } from '../../data/consultants';
+import type { Consultant } from '../../data/consultants';
 
 /**
  * 首頁 08 區的顧問頭像帶。移植自 design/首頁.dc.html。
@@ -22,7 +22,12 @@ const EASE = 'cubic-bezier(.22,.61,.36,1)';
 /** assets/consultants/c01p.png → c01p.png 或 c01p@2x.png */
 const cutoutName = (src: string, suffix = '') => src.split('/').pop()!.replace('.png', `${suffix}.png`);
 
-export default function ConsultantStrip() {
+/**
+ * 顧問名單由頁面在建置時取得後傳進來（見 src/content）。
+ * 元件自己不去 import src/data：那樣資料會被打包進瀏覽器要下載的 JS，
+ * 而且接了後台之後還是舊的。
+ */
+export default function ConsultantStrip({ data: DATA }: { data: Consultant[] }) {
   // 沒有滑鼠的人碰不到 hover。這裡改成點一下先選人（看介紹），
   // 已經選到的人再點一次才進課程頁——不然手指一碰就被帶走，
   // 這一整段互動在手機上等於不存在。

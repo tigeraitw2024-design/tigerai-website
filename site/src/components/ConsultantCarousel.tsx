@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCoarsePointer } from '../hooks/useCoarsePointer';
-import { consultants } from '../data/consultants';
+import type { Consultant } from '../data/consultants';
 
 /**
  * 顧問群輪播。移植自 design/顧問與方法論.dc.html。
@@ -58,7 +58,8 @@ const MONO = "'JetBrains Mono',monospace";
 const num = (n: number) => n.toLocaleString('en-US');
 const fullName = (c: { zh: string; en: string }) => c.zh + (c.en ? (c.zh ? ' ' : '') + c.en : '');
 
-export default function ConsultantCarousel() {
+/** 顧問名單由頁面在建置時取得後傳進來，理由同 ConsultantStrip。 */
+export default function ConsultantCarousel({ data: consultants }: { data: Consultant[] }) {
   // 同 ConsultantStrip：沒有滑鼠就點一下選人，選到的再點一次才進課程頁。
   const coarse = useCoarsePointer();
   const [i, setI] = useState(0);

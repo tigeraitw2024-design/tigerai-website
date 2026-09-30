@@ -33,6 +33,11 @@ const PAGES = [
   ['cases', '/cases'],
   ['blog', '/blog'],
   ['resources', '/resources'],
+  // 原型沒有的頁面，但一樣要在手機上能用
+  ['cart', '/cart'],
+  ['member-login', '/member/login'],
+  ['legal-privacy', '/legal/privacy'],
+  ['404', '/404.html'],  // Cloudflare 會把找不到的網址發這個檔（wrangler 的 not_found_handling）
 ];
 
 const MIME = {

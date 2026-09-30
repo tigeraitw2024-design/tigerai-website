@@ -6,6 +6,7 @@
 import Page from '../layouts/Page.astro';
 import TopBar from '../components/TopBar.tsx';
 import ConsultantCarousel from '../components/ConsultantCarousel.tsx';
+import { getConsultants } from '../content';
 import CoachingStack from '../components/CoachingStack.astro';
 import FooterSlim from '../components/FooterSlim.astro';
 
@@ -27,6 +28,9 @@ const transfer = [
   { n: '75%', unit: '　平均部門採用率', title: '建立組織 AI 文化', body: '一個部門的成功經驗擴散到全公司，AI 變成每位員工的日常工具，日常使用率超過 80%。' },
   { n: '持續', unit: '　陪跑不斷線', title: '持續技術支援', body: '每月一次線上回訓、即時技術問答群組、版本升級通知與教學：上線之後不斷線。' },
 ];
+
+// 內容在建置時取得：有設 CONTENT_API 就用後台的，沒設就用 src/data。見 src/content。
+const consultants = await getConsultants();
 
 const MONO = "font-family:'JetBrains Mono',monospace";
 const EYEBROW = `${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`;
@@ -87,7 +91,7 @@ const STAT = "font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.
         <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:12px 0 8px">這些人，教出 4,085+ 位學員。</h2>
         <p style="font-size:14px;line-height:1.7;color:var(--fg-secondary);margin:0">滑到誰，誰就停下來自我介紹。（學員數、社群數為示意）</p>
       </div>
-      <ConsultantCarousel client:load />
+      <ConsultantCarousel data={consultants} client:load />
     </section>
 
     <!-- L1–L5 測評入口，外連 AX Academy -->

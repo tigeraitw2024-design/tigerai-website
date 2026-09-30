@@ -1,0 +1,13 @@
+---
+// 購物車與結帳。價格與折扣一律由後端重算，這一頁不做任何加總。
+import AppPage from '../layouts/AppPage.astro';
+import CartView from '../components/shop/CartView.tsx';
+---
+<AppPage
+  title="購物車｜TigerAI 虎智科技"
+  eyebrow="購物車"
+  heading="確認一下要買什麼。"
+  description="金流還在接，現在是下單後由專人聯繫確認付款方式。"
+>
+  <CartView client:only="react" />
+</AppPage>

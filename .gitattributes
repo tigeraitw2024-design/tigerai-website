@@ -1,0 +1,20 @@
+# 這個 repo 的文字檔一律用 LF。
+#
+# 原本沒有這個檔，Windows 上 checkout 出來是 CRLF、工具寫回去是 LF，
+# 同一個檔案裡兩種換行混在一起，跨行的字串比對會莫名其妙對不上。
+* text=auto eol=lf
+
+# 二進位檔不要動
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.otf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.mp4 binary
+*.zip binary
+*.pdf binary

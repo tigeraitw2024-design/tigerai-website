@@ -7,7 +7,9 @@
 //
 // 標記 d:1 的 9 個 logo 不進牆（原型的 filter(x => !x.d)），
 // 但「N 家企業」那個數字算全部 60 個。
-import { partners } from '../data/partners';
+import { getPartners } from '../content';
+
+const partners = await getPartners();
 
 const SLOTS = 8;
 const PER_SLOT = 7;

@@ -85,7 +85,8 @@ const run = async (url, label) => {
   }
   let out;
   try {
-    out = await p.evaluate(`(() => { ${expr.includes('return') ? expr : `return ${expr}`} })()`);
+    // async 包起來，這樣片段裡可以用 await（例如先觸發 hover 再等它出現）
+    out = await p.evaluate(`(async () => { ${expr.includes('return') ? expr : `return ${expr}`} })()`);
   } catch (e) {
     out = `錯誤：${e.message.split('\n')[0]}`;
   }

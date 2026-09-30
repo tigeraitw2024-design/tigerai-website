@@ -18,6 +18,9 @@ import { consultants as DATA } from '../../data/consultants';
 const fullName = (c: { zh: string; en: string }) => c.zh + (c.en ? (c.zh ? ' ' : '') + c.en : '');
 const EASE = 'cubic-bezier(.22,.61,.36,1)';
 
+/** assets/consultants/c01p.png → c01p.png 或 c01p@2x.png */
+const cutoutName = (src: string, suffix = '') => src.split('/').pop()!.replace('.png', `${suffix}.png`);
+
 export default function ConsultantStrip() {
   const [i, setI] = useState(0);
   const [open, setOpen] = useState(false);
@@ -124,9 +127,19 @@ export default function ConsultantStrip() {
           }}
         >
           <a href="/courses" style={{ display: 'block', pointerEvents: 'auto' }}>
+            {/*
+              原型的去背人像只有 280×394，卻用 width:390px 顯示，一般螢幕放大
+              1.39 倍、高解析螢幕放大 2.8 倍，糊得很明顯（Robin 一眼就看出來）。
+              改用從原始高解析檔重做的版本：390 寬給一般螢幕剛好 1:1，
+              780 寬給高解析螢幕剛好 2:1，瀏覽器自己挑。
+              重做的裁切是從原本的小圖反解出來的，不是重新構圖，
+              所以取景跟原型一致。見 tools/regen-cutouts.mjs。
+            */}
             <img
               loading="lazy"
-              src={`/${sel.img}`}
+              src={`/gen/consultants/${cutoutName(sel.img)}`}
+              srcSet={`/gen/consultants/${cutoutName(sel.img)} 390w, /gen/consultants/${cutoutName(sel.img, '@2x')} 780w`}
+              sizes="390px"
               alt={fullName(sel)}
               style={{
                 width: 390,

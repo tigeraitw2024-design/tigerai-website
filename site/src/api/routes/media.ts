@@ -15,6 +15,19 @@ const app = new Hono<Ctx>();
 
 app.post('/upload', async (ctx) => {
   const admin = ctx.get('admin')!;
+
+  // 沒有綁 R2 的話直接說清楚，不要讓它「看起來成功」。
+  // 沒有 R2 時 getStorage 會退回記憶體版，那在本機測試很好用，
+  // 但在正式站上意思是「檔案存在這一台機器的記憶體裡」——下一個請求
+  // 可能換一台機器，檔案就不見了。使用者會以為上傳好了，過幾分鐘圖破掉，
+  // 而且完全查不出原因。寧可現在就擋下來。
+  if (!ctx.env.MEDIA) {
+    return ctx.json({
+      error: '還沒開啟圖片儲存，所以上傳的檔案存不住。',
+      how: '到 Cloudflare 主控台左邊選單點 R2 啟用，建一個叫 tigerai-media 的 bucket，再把 wrangler.jsonc 裡 r2_buckets 那段的註解拿掉重新部署。在那之前，要換圖請把圖檔給工程端放進程式裡一起發。',
+    }, 503);
+  }
+
   const form = await ctx.req.formData();
   const file = form.get('file');
   if (!(file instanceof File)) return ctx.json({ error: '沒有收到檔案' }, 400);

@@ -3,7 +3,7 @@
 -- 要改資料表結構，去改對應的 src/api/modules/*.ts，再重新產生一次。
 --
 -- 正常安裝流程不需要跑這個檔：/api/auth/bootstrap 會自己照 schema 建表。
--- 產生時間：2026-09-30T18:17:46.174Z
+-- 產生時間：2026-10-01T12:51:31.958Z
 
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
@@ -69,6 +69,19 @@ CREATE TABLE IF NOT EXISTS home (
 );
 
 CREATE INDEX IF NOT EXISTS ix_home_sort ON home(sort);
+
+CREATE TABLE IF NOT EXISTS page_blocks (
+  id TEXT PRIMARY KEY,
+  sort INTEGER NOT NULL DEFAULT 0,
+  data TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  f_page TEXT
+);
+
+CREATE INDEX IF NOT EXISTS ix_page_blocks_sort ON page_blocks(sort);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_page_blocks_page ON page_blocks(f_page);
 
 CREATE TABLE IF NOT EXISTS courses (
   id TEXT PRIMARY KEY,
@@ -177,6 +190,16 @@ CREATE TABLE IF NOT EXISTS resources (
 CREATE INDEX IF NOT EXISTS ix_resources_sort ON resources(sort);
 
 CREATE UNIQUE INDEX IF NOT EXISTS ux_resources_slug ON resources(f_slug);
+
+CREATE TABLE IF NOT EXISTS videos (
+  id TEXT PRIMARY KEY,
+  sort INTEGER NOT NULL DEFAULT 0,
+  data TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_videos_sort ON videos(sort);
 
 CREATE TABLE IF NOT EXISTS partners (
   id TEXT PRIMARY KEY,

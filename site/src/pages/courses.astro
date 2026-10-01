@@ -15,17 +15,21 @@ import TopBar from '../components/TopBar.tsx';
 import BannerCarousel from '../components/BannerCarousel.tsx';
 import FooterSlim from '../components/FooterSlim.astro';
 import AddToCart from '../components/shop/AddToCart.tsx';
-import { getCourses } from '../content';
+import { getCourses, getBanners } from '../content';
 
 // 後台有課程就用後台的，沒有就用下面那份原型的示意資料。
 // 有價格的課才會長出「加入購物車」——沒接後台的時候一顆都不會出現，
 // 所以跟原型的像素比對不受影響。
 const cmsCourses = await getCourses();
 
-const banners = [
-  { src: '/uploads/製造業BANNER_2.png', alt: '主打課程主視覺' },
-  { src: '/uploads/製造業BANNER_1.png', alt: '課程主視覺' },
-];
+// Banner。後台「Banner」有啟用中的就用後台的，沒有就用下面這兩張。
+const cmsBanners = await getBanners('courses');
+const banners = cmsBanners.length
+  ? cmsBanners
+  : [
+      { src: '/uploads/製造業BANNER_2.png', alt: '主打課程主視覺' },
+      { src: '/uploads/製造業BANNER_1.png', alt: '課程主視覺' },
+    ];
 
 // 最新課程的三張圖卡
 const latest = [

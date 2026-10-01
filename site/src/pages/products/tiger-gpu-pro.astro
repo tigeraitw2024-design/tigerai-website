@@ -11,6 +11,10 @@
 import Page from '../../layouts/Page.astro';
 import TopBarSimple from '../../components/TopBarSimple.astro';
 import GpuHeroRotator, { type Story } from '../../components/GpuHeroRotator.tsx';
+import { getPage, list } from '../../content';
+
+// 這一頁的文案在後台「頁面文案 → Tiger GPU Pro」那一筆。沒填就用下面寫死的。
+const page = await getPage('tiger-gpu-pro');
 
 // Hero 輪播的五個情境。Agent 和 Skill 刻意分開講（交付說明的要求）。
 const stories: Story[] = [
@@ -52,7 +56,7 @@ const stories: Story[] = [
 ];
 
 // TG-03 平台三件套
-const modules = [
+const modules = list<{ n: string; title: string; body: string; tag: string }>(page, 'modules', [
   {
     n: '模組 1',
     title: 'TG 地端平台',
@@ -71,15 +75,15 @@ const modules = [
     body: 'Key 發給誰、誰用了多少，一張報表講完。員工實名領 Key、超標可斷，機房排定維護就照表關機。',
     tag: '實名 API Key・計畫性關機',
   },
-];
+]);
 
 // TG-04 本月用量條。數字為示意，接後台後由管理中心來。
-const usage = [
+const usage = list<{ who: string; pct: number; n: string; warn: boolean }>(page, 'usage', [
   { who: '法務・陳', pct: 82, n: '412K', warn: false },
   { who: '客服・林', pct: 64, n: '318K', warn: false },
   { who: '業務・張', pct: 41, n: '204K', warn: false },
   { who: '研發・吳', pct: 28, n: '139K', warn: true },
-];
+]);
 
 const MONO = "font-family:'JetBrains Mono',monospace";
 const EYEBROW = `${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`;

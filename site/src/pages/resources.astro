@@ -11,6 +11,7 @@ import Page from '../layouts/Page.astro';
 import TopBar from '../components/TopBar.tsx';
 import VideoWall from '../components/VideoWall.tsx';
 import FooterSlim from '../components/FooterSlim.astro';
+import { getVideos } from '../content';
 
 const cards = [
   {
@@ -29,8 +30,11 @@ const cards = [
   },
 ];
 
-// 示意資料，接後台後換成 Videos collection
-const videos = [
+// 影片牆。後台「影片」有已發布的就用後台的（順序可以在後台拖），
+// 沒有就用下面這六格示意。
+const cmsVideos = await getVideos();
+
+const fallbackVideos = [
   { id: 'qh3NGpYRG3I', title: 'n8n 自動化入門・示意影片' },
   { id: 'qh3NGpYRG3I', title: '把文件變成知識庫（RAG）・示意影片' },
   { id: 'qh3NGpYRG3I', title: '地端模型安裝實錄・示意影片' },
@@ -38,6 +42,7 @@ const videos = [
   { id: 'qh3NGpYRG3I', title: '合約審閱 Workflow 實戰・示意影片' },
   { id: 'qh3NGpYRG3I', title: 'GPU 管理中心導覽・示意影片' },
 ];
+const videos = cmsVideos.length ? cmsVideos : fallbackVideos;
 ---
 
 <Page
@@ -84,7 +89,9 @@ const videos = [
         <div>
           <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 24px">免費影片牆</h2>
           <VideoWall videos={videos} client:load />
-          <p style="margin:16px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">影片與縮圖為示意・影片牆＝Payload「Videos」collection：貼 YouTube 連結即自動抓縮圖、點了原地開播</p>
+          {!cmsVideos.length && (
+            <p style="margin:16px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fg-tertiary)">影片與縮圖為示意・影片牆＝Payload「Videos」collection：貼 YouTube 連結即自動抓縮圖、點了原地開播</p>
+          )}
         </div>
       </div>
     </section>

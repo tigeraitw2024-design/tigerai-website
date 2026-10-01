@@ -139,3 +139,22 @@
     padding-block: 6px;
   }
 }
+
+/* ────────────────────────────────────────────────────────────────
+   影片牆
+   ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  /* 彈出播放時的關閉鈕。
+     桌機版把它放在影片框外側上方 40px，窄螢幕那裡常常已經超出畫面，
+     而且 32×32 手指按不準。改成疊在影片右上角內側，放大到 44×44。 */
+  .tg-vclose {
+    top: 8px !important;
+    right: 8px !important;
+    width: 44px !important;
+    height: 44px !important;
+    background: rgba(14, 14, 13, .55) !important;
+    backdrop-filter: blur(4px);
+    font-size: 18px !important;
+    z-index: 2;
+  }
+}

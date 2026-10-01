@@ -186,3 +186,108 @@ export async function getCourses(): Promise<CourseCard[]> {
     students: Number(r.students) || 0,
   }));
 }
+
+/** 產品線。後台沒資料就回空陣列，由頁面決定要不要用自己寫死的那份。 */
+export type ProductCard = {
+  id: string; eyebrow: string; title: string; slug: string; body: string;
+  audience: string; price: number; buyable: boolean;
+};
+export async function getProducts(): Promise<ProductCard[]> {
+  const all = await fetchAll();
+  return (all.products || []).map((r: any) => ({
+    id: String(r.id), eyebrow: r.eyebrow || '', title: r.title || '', slug: r.slug || '',
+    body: r.body || '', audience: r.audience || 'all',
+    price: Number(r.price) || 0, buyable: !!r.buyable,
+  }));
+}
+
+/** 案例成效卡。內部備註在 /api/content 那一層就被濾掉了，拿不到。 */
+export type CaseCard = { id: string; n: string; industry: string; mode: string; detail: string };
+export async function getCases(): Promise<CaseCard[]> {
+  const all = await fetchAll();
+  return (all.cases || []).map((r: any) => ({
+    id: String(r.id), n: r.n || '', industry: r.industry || '', mode: r.mode || '', detail: r.detail || '',
+  }));
+}
+
+/** 課程頁最上面的滿版 Banner。只回啟用中、而且是放這一頁的。 */
+export type BannerItem = { id: string; src: string; alt: string; href: string };
+export async function getBanners(page: 'courses' | 'home' = 'courses'): Promise<BannerItem[]> {
+  const all = await fetchAll();
+  return (all.banners || [])
+    .filter((r: any) => r.active !== false && (r.page || 'courses') === page)
+    .map((r: any) => ({ id: String(r.id), src: r.src || '', alt: r.alt || '', href: r.href || '' }));
+}
+
+/** 文章。 */
+export type PostCard = {
+  id: string; title: string; slug: string; excerpt: string; cover: string;
+  category: string; publishedAt: string;
+};
+export async function getPosts(): Promise<PostCard[]> {
+  const all = await fetchAll();
+  return (all.posts || [])
+    .map((r: any) => ({
+      id: String(r.id), title: r.title || '', slug: r.slug || '', excerpt: r.excerpt || '',
+      cover: r.cover || '', category: r.category || 'note', publishedAt: r.publishedAt || '',
+    }))
+    .sort((a, b) => (b.publishedAt || '').localeCompare(a.publishedAt || ''));
+}
+
+/** 下載資源。 */
+export type ResourceCard = {
+  id: string; title: string; slug: string; summary: string; cover: string;
+  kind: string; gated: boolean;
+};
+export async function getResources(): Promise<ResourceCard[]> {
+  const all = await fetchAll();
+  return (all.resources || []).map((r: any) => ({
+    id: String(r.id), title: r.title || '', slug: r.slug || '', summary: r.summary || '',
+    cover: r.cover || '', kind: r.kind || 'other', gated: r.gated !== false,
+  }));
+}
+
+/**
+ * 純文字的清單。
+ *
+ * 後台的陣列欄位每一列都是物件（例如 {text:'收到提問'}），但前台這幾個地方
+ * 要的是單純的字串陣列。這個函式負責轉換，順便處理「後台沒填就用原本那份」。
+ */
+export function strings(rec: Record<string, any> | null, key: string, fallback: string[]): string[] {
+  const v = rec?.[key];
+  if (!Array.isArray(v) || !v.length) return fallback;
+  const out = v.map((x) => (typeof x === 'string' ? x : String(x?.text ?? ''))).filter(Boolean);
+  return out.length ? out : fallback;
+}
+
+/**
+ * 某一頁的文案那一筆。
+ *
+ * 後台的「頁面文案」是一個集合、每頁一筆，所以這裡要先依 page 挑出來。
+ * 找不到就回 null，呼叫端的 text()／list() 會自動退回寫死的預設值。
+ */
+export async function getPage(page: string): Promise<Record<string, any> | null> {
+  const all = await fetchAll();
+  return (all.page_blocks || []).find((r: any) => r.page === page) ?? null;
+}
+
+/**
+ * 免費資源頁的影片牆。
+ *
+ * id 這個欄位對兩種來源的意思不一樣：YouTube 是影片代號（由 VideoWall 從
+ * 後台貼的網址解析出來），檔案則直接就是那個網址。這樣前台只要看 kind
+ * 決定用 iframe 還是 video，不用再分兩套資料結構。
+ */
+export type VideoItem = {
+  id: string; title: string; kind: 'youtube' | 'file'; poster: string; note: string;
+};
+export async function getVideos(): Promise<VideoItem[]> {
+  const all = await fetchAll();
+  return (all.videos || []).map((r: any) => ({
+    id: String(r.url || ''),
+    title: r.title || '',
+    kind: r.kind === 'file' ? 'file' : 'youtube',
+    poster: r.poster || '',
+    note: r.note || '',
+  }));
+}

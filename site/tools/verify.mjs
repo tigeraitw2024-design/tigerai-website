@@ -309,9 +309,27 @@ async function settle(page, quietRounds = 3, maxMs = 8000) {
   while (Date.now() - t0 < maxMs) {
     const now = await page.evaluate(() => {
       const d = document.documentElement;
-      return `${document.body.innerText.length}|${d.scrollHeight}|${document.querySelectorAll('*').length}`;
+      // 還在跑的 CSS 轉場與一次性動畫也要算進來。
+      //
+      // 只看 DOM 有沒有變不夠：頂欄有一個跟著捲動變形的膠囊，那是 CSS transition，
+      // 跑的時候 DOM 一個字都沒變，但畫面每一幀都不一樣。兩邊剛好停在轉場的不同
+      // 進度就會差出 0.07%，同一份程式碼跑兩次得到兩個答案。
+      //
+      // 無限循環的動畫不算（那些等一輩子也不會停，後面會被 freezeLoopingAnimations
+      // 凍住），所以把 iterations 是 Infinity 的排除掉。
+      let moving = 0;
+      try {
+        moving = document.getAnimations()
+          .filter((a) => a.playState === 'running' && a.effect
+            && (a.effect.getComputedTiming().iterations !== Infinity))
+          .length;
+      } catch {
+        // 舊瀏覽器沒有 getAnimations，就退回只看 DOM
+      }
+      return `${document.body.innerText.length}|${d.scrollHeight}|${document.querySelectorAll('*').length}|${moving}`;
     });
-    if (now === last) {
+    const stillMoving = now.endsWith('|0') === false;
+    if (now === last && !stillMoving) {
       if (++same >= quietRounds) return true;
     } else {
       same = 0;

@@ -62,6 +62,15 @@ const mod: Module = {
         },
 
         { name: 'productsTitle', label: '④ 產品入口 - 標題', type: 'text', maxLength: 30 },
+        {
+          name: 'entries', label: '④ 產品入口 - 三張卡', type: 'array',
+          help: '原型是「給老闆／給主管／給工程師」三張。留空就用現在站上那三張。',
+          of: [
+            { name: 'eyebrow', label: '小標', type: 'text', required: true, maxLength: 12, width: 'third' },
+            { name: 'title', label: '標題', type: 'text', required: true, maxLength: 20 },
+            { name: 'body', label: '說明', type: 'textarea', required: true, maxLength: 80 },
+          ],
+        },
         { name: 'productsBody', label: '④ 產品入口 - 內文', type: 'textarea', maxLength: 160 },
 
         { name: 'gpuTitle', label: '④b Tiger GPU Pro - 標題', type: 'text', maxLength: 30 },
@@ -69,6 +78,19 @@ const mod: Module = {
         { name: 'gpuCta', label: '④b Tiger GPU Pro - 按鈕文字', type: 'text', maxLength: 20 },
 
         { name: 'workflowTitle', label: '⑤ Workflow 展示櫃 - 標題', type: 'text', maxLength: 40 },
+        {
+          name: 'chain', label: '⑤ Workflow 展示櫃 - 節點鏈', type: 'array',
+          help: '標題下面那排會依序亮起來的節點名稱。原型是「收到提問 → 檢索合約庫 → 條款比對 → 附出處回覆」。',
+          of: [{ name: 'text', label: '節點名稱', type: 'text', required: true, maxLength: 12 }],
+        },
+        {
+          name: 'wfCards', label: '⑤ Workflow 展示櫃 - 三張卡', type: 'array',
+          of: [
+            { name: 'eyebrow', label: '部門', type: 'text', required: true, maxLength: 8, width: 'third' },
+            { name: 'title', label: '標題', type: 'text', required: true, maxLength: 20 },
+            { name: 'body', label: '說明', type: 'textarea', required: true, maxLength: 60 },
+          ],
+        },
         { name: 'deptTitle', label: '⑤b 企業首選 - 標題', type: 'text', maxLength: 30 },
         { name: 'deptBody', label: '⑤b 企業首選 - 內文', type: 'textarea', maxLength: 160 },
 
@@ -79,10 +101,43 @@ const mod: Module = {
           help: 'AX Academy 的測評頁。這是中立第三方，文案上不要寫成虎智自家測驗。',
         },
 
+        {
+          name: 'ladder', label: '⑥ 測評入口 - L1–L5 階梯', type: 'array',
+          help: '五根由短到長的長條。「目前這一階」打勾的那根會用虎金標示。',
+          of: [
+            { name: 'l', label: '等級', type: 'text', required: true, maxLength: 4, width: 'third' },
+            { name: 'w', label: '長度', type: 'text', required: true, maxLength: 6, width: 'third', help: '百分比，例如 52%' },
+            { name: 'on', label: '目前這一階', type: 'boolean', width: 'third' },
+          ],
+        },
         { name: 'coursesTitle', label: '⑦ 課程區 - 標題', type: 'text', maxLength: 30 },
+        {
+          name: 'courseCards', label: '⑦ 課程區 - 三張卡', type: 'array',
+          help: '這一區是首頁的課程摘要，跟「課程」那個功能是分開的——首頁只放三張代表作。',
+          of: [
+            { name: 'eyebrow', label: '等級與時數', type: 'text', required: true, maxLength: 20, width: 'half' },
+            { name: 'title', label: '課程名稱', type: 'text', required: true, maxLength: 30, width: 'half' },
+            { name: 'body', label: '說明', type: 'textarea', required: true, maxLength: 80 },
+          ],
+        },
         { name: 'methodTitle', label: '⑧ 顧問與方法論 - 標題', type: 'text', maxLength: 30 },
         { name: 'methodBody', label: '⑧ 顧問與方法論 - 內文', type: 'textarea', maxLength: 200 },
+        {
+          name: 'methodChips', label: '⑧ 顧問與方法論 - 三個標籤', type: 'array',
+          of: [{ name: 'text', label: '標籤文字', type: 'text', required: true, maxLength: 16 }],
+        },
         { name: 'casesTitle', label: '⑨ 案例 - 標題', type: 'text', maxLength: 30 },
+        {
+          name: 'resultCards', label: '⑨ 案例 - 三張成效卡', type: 'array',
+          help: '數字會從 0 滾上來。前綴、數字、後綴分開填，例如「半天 → 」「3」「 秒」。',
+          of: [
+            { name: 'pre', label: '數字前面', type: 'text', maxLength: 10, width: 'third' },
+            { name: 'count', label: '數字', type: 'number', required: true, width: 'third' },
+            { name: 'post', label: '數字後面', type: 'text', maxLength: 10, width: 'third' },
+            { name: 'line1', label: '第一行', type: 'text', required: true, maxLength: 30, width: 'half' },
+            { name: 'line2', label: '第二行', type: 'text', required: true, maxLength: 40, width: 'half' },
+          ],
+        },
 
         { name: 'ctaTitle', label: '⑩ 預約區 - 標題', type: 'text', maxLength: 30 },
         { name: 'ctaBody', label: '⑩ 預約區 - 內文', type: 'textarea', maxLength: 200 },

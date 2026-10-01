@@ -10,6 +10,7 @@ import leads from '../modules/leads';
 import media from '../modules/media';
 import members from '../modules/members';
 import orders from '../modules/orders';
+import pages from '../modules/pages';
 import partners from '../modules/partners';
 import posts from '../modules/posts';
 import products from '../modules/products';
@@ -32,6 +33,7 @@ import workflows from '../modules/workflows';
  */
 export const MODULES: Module[] = [
   home,
+  pages,
   courses,
   products,
   consultants,

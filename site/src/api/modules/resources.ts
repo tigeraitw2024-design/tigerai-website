@@ -12,7 +12,7 @@ import type { Module } from '../schema/types';
 const mod: Module = {
   id: 'resources',
   label: '資源',
-  about: '可下載的檔案。可以設定要不要留 Email 才給下載。',
+  about: '可下載的檔案，以及免費資源頁的影片牆。',
   collections: [
     {
       name: 'resources',
@@ -49,6 +49,49 @@ const mod: Module = {
         {
           name: 'status', label: '狀態', type: 'select', listed: true, default: 'published', options: [
             { value: 'draft', label: '草稿' },
+            { value: 'published', label: '已發布' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'videos',
+      label: '影片',
+      group: '內容',
+      icon: 'play',
+      kind: 'content',
+      intro:
+        '免費資源頁的影片牆。拖曳可以調整順序，順序就是牆上的順序。' +
+        '一筆就是一格，要幾支放幾支，不用找工程端改程式。',
+      titleField: 'title',
+      sortable: true,
+      canCreate: true,
+      canDelete: true,
+      read: 'viewer',
+      write: 'editor',
+      fields: [
+        { name: 'title', label: '影片標題', type: 'text', required: true, listed: true, maxLength: 60 },
+        {
+          name: 'kind', label: '影片來源', type: 'select', required: true, listed: true, default: 'youtube',
+          options: [
+            { value: 'youtube', label: 'YouTube（貼網址就好）' },
+            { value: 'file', label: '影片網址（.mp4 之類的直接連結）' },
+          ],
+        },
+        {
+          name: 'url', label: '網址', type: 'url', required: true,
+          help:
+            'YouTube 貼整串網址就好（youtube.com/watch?v=… 或 youtu.be/… 都可以），' +
+            '系統會自己抓出影片代號與縮圖。選「影片網址」的話貼可以直接播放的檔案連結。',
+        },
+        {
+          name: 'poster', label: '縮圖', type: 'image',
+          help: 'YouTube 不用填，系統會自動抓。選「影片網址」的話建議填一張，不然牆上那一格會是黑的。',
+        },
+        { name: 'note', label: '說明', type: 'textarea', maxLength: 100, help: '標題下面的那行小字，可以不填。' },
+        {
+          name: 'status', label: '狀態', type: 'select', listed: true, default: 'published', options: [
+            { value: 'draft', label: '草稿（前台看不到）' },
             { value: 'published', label: '已發布' },
           ],
         },

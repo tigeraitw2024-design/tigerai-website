@@ -55,6 +55,22 @@ const mod: Module = {
         },
 
         {
+          name: 'footerLinks', label: '頁尾連結', type: 'array',
+          help:
+            '一列就是一個連結。「分欄」填一樣的會排在同一欄，欄的順序與欄裡的順序，' +
+            '就是你在這裡排的順序。全部留空的話用內建那三欄。',
+          of: [
+            { name: 'column', label: '分欄', type: 'text', required: true, width: 'third', help: '例如「站內導覽」' },
+            { name: 'label', label: '連結文字', type: 'text', required: true, width: 'third' },
+            { name: 'href', label: '連到哪', type: 'text', required: true, width: 'third', help: '站內寫 /courses，站外寫完整網址' },
+          ],
+        },
+        {
+          name: 'footerCopyright', label: '頁尾版權文字', type: 'text', maxLength: 80,
+          help: '留空就用「© 2026 虎智科技股份有限公司 TigerAI · 開源地端 AI」',
+        },
+
+        {
           name: 'analyticsId', label: '網站分析代碼', type: 'text',
           help: 'Google Analytics 的 G-XXXXXXX。留空就不載入任何追蹤程式。',
         },

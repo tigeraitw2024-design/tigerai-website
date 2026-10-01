@@ -6,7 +6,22 @@
 // 內容存在後台的「全站設定」，後台沒填就用依本站實際資料流程寫的初稿。
 // 這裡刻意維持兩個連結（沒有多加「退費規則」），因為多一個連結版面就跟原型不一樣了；
 // 退費規則從服務條款內文連過去。
-const columns = [
+import { getSettings, text, list } from '../../content';
+
+const settings = await getSettings();
+
+// 頁尾連結在後台是攤平的一列一列（分欄／文字／連到哪），這裡依「分欄」收攏回欄位。
+// 欄的順序與欄裡的順序就是後台排的順序。後台沒填就用下面寫死的那三欄。
+type FootLink = { column: string; label: string; href: string };
+const cmsLinks = list<FootLink>(settings, 'footerLinks', []);
+const cmsColumns = cmsLinks.reduce((acc: { title: string; links: { label: string; href: string }[] }[], l) => {
+  let col = acc.find((c) => c.title === l.column);
+  if (!col) { col = { title: l.column, links: [] }; acc.push(col); }
+  col.links.push({ label: l.label, href: l.href });
+  return acc;
+}, []);
+
+const fallbackColumns = [
   {
     title: '站內導覽',
     links: [
@@ -36,6 +51,8 @@ const columns = [
   },
 ];
 
+const columns = cmsColumns.length ? cmsColumns : fallbackColumns;
+
 const H5 = "font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#878480;margin:0 0 16px";
 const LINK = 'color:#D7D5D1;text-decoration:none';
 ---
@@ -45,7 +62,7 @@ const LINK = 'color:#D7D5D1;text-decoration:none';
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px">
       <div>
         <img src="/assets/logo/color-horizontal-white-text.svg" alt="TigerAI 虎智科技" style="height:32px;display:block" />
-        <p style="max-width:32ch;margin:16px 0 0;color:#878480;font-size:13px;line-height:1.7">開源地端 AI × 可驗證的能力養成。從校內創業比賽第一名出發，臺科大傑出校友聯誼會與創新育成中心投資成立。</p>
+        <p style="max-width:32ch;margin:16px 0 0;color:#878480;font-size:13px;line-height:1.7">{text(settings, 'siteDescription', '開源地端 AI × 可驗證的能力養成。從校內創業比賽第一名出發，臺科大傑出校友聯誼會與創新育成中心投資成立。')}</p>
       </div>
       {columns.map((c) => (
         <div>
@@ -59,7 +76,7 @@ const LINK = 'color:#D7D5D1;text-decoration:none';
       ))}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#878480">
-      <span>© 2026 虎智科技股份有限公司 TigerAI · 開源地端 AI</span>
+      <span>{text(settings, 'footerCopyright', '© 2026 虎智科技股份有限公司 TigerAI · 開源地端 AI')}</span>
       <span style="display:flex;gap:16px">
         <a href="/legal/privacy" style="color:#B5B2AC;text-decoration:none">隱私權政策</a>
         <a href="/legal/terms" style="color:#B5B2AC;text-decoration:none">服務條款</a>

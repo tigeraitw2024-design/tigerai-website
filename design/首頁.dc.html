@@ -593,8 +593,10 @@
   _closeGate(p) {
     if (this.state.gateLeaving) return;
     this.setState({ gateLeaving: true, bootGo: true });
+    setTimeout(() => this.setState({ gateGone: true }), 650);
   }
   componentDidMount() {
+    if (/[?&]nogate/.test(location.search)) this.setState({ gateLeaving: true, gateGone: true, bootGo: true });
     this._esc = e => { if (e.key === 'Escape' && this.state.fs) this.setState({ fs: false }); };
     window.addEventListener('keydown', this._esc);
     this._rm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1222,7 +1224,7 @@
       pslots,
       hasPartners: pall.length > 0,
       partnerCount: (window.TG_PARTNERS || []).length,
-      gateOut: (this.props.showGate ?? true) === false ? ';display:none' : (this.state.gateLeaving ? ';animation:tg-sp-out .6s cubic-bezier(.22,.61,.36,1) both;pointer-events:none' : ''),
+      gateOut: ((this.props.showGate ?? true) === false || this.state.gateGone || /[?&]nogate/.test(location.search)) ? ';display:none' : (this.state.gateLeaving ? ';animation:tg-sp-out .6s cubic-bezier(.22,.61,.36,1) both;pointer-events:none' : ''),
       skipGate: e => { e.preventDefault(); this._closeGate(); },
       pickBoss: () => this._closeGate('boss'),
       pickHeir: () => this._closeGate('heir'),

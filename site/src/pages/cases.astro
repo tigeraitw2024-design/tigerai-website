@@ -14,12 +14,18 @@ import { getPartners } from '../content';
 
 const partners = await getPartners();
 
-// 成效卡。接上後台之後換成 Cases collection，客戶名稱一律不出現。
-const cards = [
+import { getCases } from '../content';
+
+// 成效卡。後台「案例」有資料就用後台的，沒有就用下面這份。
+// 客戶名稱一律不出現：後台那邊的「內部備註」在輸出給前台時就被濾掉了，拿不到。
+const cmsCases = await getCases();
+
+const fallbackCards = [
   { n: '半天 → 3 秒', industry: '製造業・報價單比對', mode: '模式：RAG 檢索＋Workflow 比對' },
   { n: '月省 96 小時', industry: '法務・合約審閱', mode: '模式：13 部門 AI 同事＋出處回覆' },
   { n: '首回 −72%', industry: '服務業・客服草擬', mode: '模式：知識庫＋首回流程' },
 ];
+const cards = cmsCases.length ? cmsCases : fallbackCards;
 const PLACEHOLDERS = 3;
 ---
 
@@ -49,7 +55,7 @@ const PLACEHOLDERS = 3;
               </p>
             </div>
           ))}
-          {Array.from({ length: PLACEHOLDERS }).map(() => (
+          {!cmsCases.length && Array.from({ length: PLACEHOLDERS }).map(() => (
             <span style="border:1px dashed var(--border-default);min-height:140px"></span>
           ))}
         </div>

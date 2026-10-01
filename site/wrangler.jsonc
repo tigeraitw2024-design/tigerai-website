@@ -33,18 +33,24 @@
     {
       "binding": "DB",
       "database_name": "tigerai",
-      "database_id": "PLACEHOLDER-執行-wrangler-d1-create-之後把-id-貼到這裡"
+      "database_id": "2f2616c9-22d9-4eee-a447-7064a84e3560"
     }
   ],
 
-  // 圖片與檔案。建立方式：
+  // 圖片與檔案（R2）。
+  //
+  // 這個 Cloudflare 帳號還沒開通 R2，所以先關著。沒有它的影響只有一個：
+  // 後台的「上傳新圖片」不能用；站上現有的圖（顧問照、夥伴 logo、Banner）
+  // 都是跟程式一起發的檔案，照常顯示。
+  //
+  // 要開的時候：到 Cloudflare 主控台左邊選單點 R2 啟用（免費方案 10 GB，
+  // 但帳號要先綁一張卡才開得起來），然後：
   //   npx wrangler r2 bucket create tigerai-media
-  "r2_buckets": [
-    {
-      "binding": "MEDIA",
-      "bucket_name": "tigerai-media"
-    }
-  ],
+  // 再把下面這段的註解拿掉、重新部署就好，後台的程式一行都不用改。
+  //
+  // "r2_buckets": [
+  //   { "binding": "MEDIA", "bucket_name": "tigerai-media" }
+  // ],
 
   // 排程：寄佇列裡的信、逾時預約自動取消、清過期資料。
   // 每小時一次就夠，設太密只是白白消耗額度。
@@ -67,7 +73,7 @@
     "MAIL_FROM": "TigerAI 虎智科技 <noreply@tigerai.com.tw>",
     "MAIL_INTERNAL_TO": "",
     "PAYMENT_PROVIDER": "none",
-    "SITE_URL": ""
+    "SITE_URL": "https://tigerai-website.tiger-ai-tw2024.workers.dev"
   },
 
   "observability": { "enabled": true }

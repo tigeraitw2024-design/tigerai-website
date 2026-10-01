@@ -23,7 +23,7 @@ import Page from '../layouts/Page.astro';
 import '../styles/home.css';
 import TopBar from '../components/TopBar.tsx';
 import PartnerWall from '../components/PartnerWall.astro';
-import { getPartners, getFlows, getDepts, getConsultants, getHome, text, num, list } from '../content';
+import { getPartners, getFlows, getDepts, getConsultants, getHome, text, num, list, strings } from '../content';
 import IntroSplash from '../components/home/IntroSplash.astro';
 import IdentityGate from '../components/home/IdentityGate.tsx';
 import HeroLaptop from '../components/home/HeroLaptop.tsx';
@@ -72,46 +72,49 @@ const compareFallback: [string, string][] = [
 const compare = compareFromCms.length ? compareFromCms : compareFallback;
 
 // 04 產品入口三卡
-const entries = [
+const entries = list<{ eyebrow: string; title: string; body: string }>(home, 'entries', [
   { eyebrow: '給老闆', title: '看得到錢與風險', body: '每個部門的 AI 花費與上限、資料留在機房的稽核證據、導入前後的工時對照。' },
   { eyebrow: '給主管', title: '看得到部門產出', body: '13 部門 AI 同事範本、知識庫問答有出處可回溯、流程改了誰都看得見。' },
   { eyebrow: '給工程師', title: '看得到底層，改得動', body: 'Ollama 模型隨裝隨換、n8n 流程節點自己改、LiteLLM 額度與熔斷設定。' },
-];
+]);
 
 // 05 Workflow 展示櫃的節點鏈與三張卡
-const chain = ['收到提問', '檢索合約庫', '條款比對', '附出處回覆'];
-const wfCards = [
+const chain = strings(home, 'chain', ['收到提問', '檢索合約庫', '條款比對', '附出處回覆']);
+const wfCards = list<{ eyebrow: string; title: string; body: string }>(home, 'wfCards', [
   { eyebrow: '法務', title: '合約審閱流程', body: '五個節點，條款比對附出處，月省 96 小時。' },
   { eyebrow: '客服', title: '首回自動草擬', body: '知識庫檢索＋草稿生成，首回時間 −72%。' },
   { eyebrow: '業務', title: '報價單自動比對', body: '歷史報價檢索＋差異標示，半天縮成 3 秒。' },
-];
+]);
 
 // 06 L1–L5 階梯
-const ladder = [
+const ladder = list<{ l: string; w: string; on: boolean }>(home, 'ladder', [
   { l: 'L1', w: '20%', on: false },
   { l: 'L2', w: '36%', on: false },
   { l: 'L3', w: '52%', on: true },
   { l: 'L4', w: '68%', on: false },
   { l: 'L5', w: '84%', on: false },
-];
+]);
 
 // 07 課程三卡
-const courseCards = [
+const courseCards = list<{ eyebrow: string; title: string; body: string }>(home, 'courseCards', [
   { eyebrow: 'L2・16 小時', title: 'n8n 自動化實戰', body: 'n8n Taiwan Ambassador 授課・學員 1,240+・政府補助適用（數字為版型示意）。' },
   { eyebrow: 'L3・12 小時', title: 'Advanced RAG 知識庫實作', body: '把文件變成問得到答案的知識庫・學員 680+（示意）。' },
   { eyebrow: 'L4・24 小時', title: '地端 LLM 導入與治理', body: 'Ollama＋LiteLLM 實機演練・學員 320+（示意）。' },
-];
+]);
 
 // 02 信任帶的兩個數字。Robin 說過這些是真的資料，所以後台要能改。
+const methodChips = strings(home, 'methodChips', ['C1–C5 思考力', '九維拆解', 'L.A.O.S. 拆題']);
+
 const trustCompanies = num(home, 'trustCompanies', 166);
 const trustStudents = num(home, 'trustStudents', 4085);
+const trustTags = strings(home, 'trustTags', ['n8n Taiwan Ambassador', 'AMD 合作夥伴', '臺科大育成投資']);
 
 // 09 三張成效卡。data-count 由 ScrollReveal 滾動上來。
-const resultCards = [
+const resultCards = list<{ pre: string; count: number; post: string; line1: string; line2: string }>(home, 'resultCards', [
   { pre: '半天 → ', count: 3, post: ' 秒', line1: '報價單比對・製造業', line2: '模式：RAG 檢索＋Workflow 比對' },
   { pre: '月省 ', count: 96, post: ' 小時', line1: '合約審閱・法務部門', line2: '模式：13 部門 AI 同事＋出處回覆' },
   { pre: '首回 −', count: 72, post: '%', line1: '客服草擬・服務業', line2: '模式：知識庫＋首回流程' },
-];
+]);
 ---
 
 <Page
@@ -120,10 +123,18 @@ const resultCards = [
 >
   <Fragment slot="head">
     <!-- 「看過一次就不再播」：在繪製前就判斷完，避免開場動畫閃一下才消失。
-         Robin 指定的行為。清掉 localStorage 的 tg-intro-seen 就會再播一次。 -->
+         Robin 指定的行為。
+
+         兩個網址參數，給檢查畫面的時候用：
+           ?intro   無視「看過了」的記號，強制從頭播一次開場與身分閘門
+           ?nogate  相反，直接跳過開場看首頁內容
+
+         判斷寫在這支最早執行的腳本裡，後面的 CSS 規則與 React 元件都是看
+         它掛上去的 data 屬性，所以改這裡一處就夠，不用每個地方各判斷一次。 -->
     <script is:inline>
       try {
-        if (localStorage.getItem('tg-intro-seen') === '1') {
+        var forceIntro = /[?&]intro\b/.test(location.search);
+        if (!forceIntro && localStorage.getItem('tg-intro-seen') === '1') {
           document.documentElement.dataset.tgIntroSeen = '1';
           document.documentElement.dataset.tgBoot = '1';
         }
@@ -132,8 +143,9 @@ const resultCards = [
       }
     </script>
     <style>
-      /* 看過就不播開場動畫 */
-      [data-tg-intro-seen] [data-intro-splash] { display: none }
+      /* 「看過一次就不再播」的兩條規則搬到 src/styles/home.css 了。
+         寫在這裡會被 Astro 加上元件範圍限定（[data-astro-cid-...]），
+         而開場層與閘門都不是這一頁自己的元素，規則會對不到。見那邊的說明。 */
       /* 原型用 support.js 的 style-hover，這裡換成真 CSS */
       .tg-hovercard:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg) }
       .tg-skipgate:hover { color: #0E0E0D }
@@ -173,9 +185,9 @@ const resultCards = [
         </span>
         <span style="width:1px;height:28px;background:var(--border-subtle)"></span>
         <span style="display:flex;gap:12px;flex-wrap:wrap">
-          <span class="t-badge t-badge--brand">n8n Taiwan Ambassador</span>
-          <span class="t-badge t-badge--brand">AMD 合作夥伴</span>
-          <span class="t-badge t-badge--brand">臺科大育成投資</span>
+          {trustTags.map((t) => (
+            <span class="t-badge t-badge--brand">{t}</span>
+          ))}
         </span>
       </div>
     </section>
@@ -333,7 +345,7 @@ const resultCards = [
           <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'methodTitle', "顧問的腦，怎麼驗證？")}</h2>
           <p style="font-size:16px;line-height:1.7;color:#B5B2AC;max-width:52ch;margin:0 0 24px">{text(home, 'methodBody', "C1–C5 是顧問思考能力的尺，搭配九維拆解與 L.A.O.S. 拆題框架：方法公開，過程可驗，不靠形容詞。")}</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px">
-            {['C1–C5 思考力', '九維拆解', 'L.A.O.S. 拆題'].map((t) => (
+            {methodChips.map((t) => (
               <span style={`${MONO};font-size:12px;border:1px solid rgba(255,255,255,.22);padding:6px 12px`}>{t}</span>
             ))}
           </div>

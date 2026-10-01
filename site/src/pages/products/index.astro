@@ -15,8 +15,13 @@ import Page from '../../layouts/Page.astro';
 import TopBar from '../../components/TopBar.tsx';
 import FooterSlim from '../../components/FooterSlim.astro';
 
-// 六條產品線，對應主控台六站
-const lines = [
+import { getProducts } from '../../content';
+
+// 六條產品線，對應主控台六站。
+// 後台「產品線」有資料就用後台的（順序可以在後台拖曳），沒有就用下面這份。
+const cmsLines = await getProducts();
+
+const fallbackLines = [
   { eyebrow: '站 1・對話', title: 'Local GPT', body: '地端 AI 硬體導入，13 部門 AI 同事，資料不出企業。' },
   { eyebrow: '站 2・知識庫', title: 'Advanced RAG', body: '文件變成問得到答案的知識庫，答了有出處。' },
   { eyebrow: '站 3・Workflow', title: 'n8n 自動化', body: '看得見、改得動、過得了稽核的 SOP。' },
@@ -24,6 +29,7 @@ const lines = [
   { eyebrow: '站 5・治理', title: 'LiteLLM 治理', body: '部門額度、即時花費、超標熔斷。' },
   { eyebrow: '站 6・儀表板', title: 'GPU 管理中心', body: '叢集排程、用量監控、成本控管：你的 GPU、你的機房。' },
 ];
+const lines = cmsLines.length ? cmsLines : fallbackLines;
 
 const MONO = "font-family:'JetBrains Mono',monospace";
 const EYEBROW = `${MONO};font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-700)`;
@@ -99,9 +105,12 @@ const STEP_BOX = 'position:absolute;top:52%;transform:translateY(-50%);width:cla
             </div>
           ))}
         </div>
-        <div style="border:1px dashed var(--border-default);padding:48px;text-align:center">
-          <p style={`margin:0;${MONO};font-size:12px;color:var(--fg-tertiary)`}>各產品詳情（受眾、賣點、功能區塊、FAQ）＝ Payload「Products」collection・填完發布即上線</p>
-        </div>
+        {/* 這塊提示是給還沒接後台時看的。接上之後就不需要了。 */}
+        {!cmsLines.length && (
+          <div style="border:1px dashed var(--border-default);padding:48px;text-align:center">
+            <p style={`margin:0;${MONO};font-size:12px;color:var(--fg-tertiary)`}>各產品詳情（受眾、賣點、功能區塊、FAQ）＝ Payload「Products」collection・填完發布即上線</p>
+          </div>
+        )}
       </div>
     </section>
 

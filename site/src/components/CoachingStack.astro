@@ -12,20 +12,42 @@
 //
 // prefers-reduced-motion 下整段不掛捲動監聽，照片直接停在初始狀態。
 
-const stages = [
+import { getPage, list } from '../content';
+
+// 四個階段與四張照片都在後台「頁面文案 → 顧問與方法論」那一筆。沒填就用下面寫死的。
+// top 是每一階 sticky 時停住的位置，跟動畫公式綁在一起，所以不開放後台改。
+const page = await getPage('consultants');
+
+const cmsStages = list<{ n: string; title: string; tag: string; text: string }>(page, 'stages', []);
+const fallbackStages = [
   { n: '01', title: '接觸 AI', tag: '平均發掘 20+ 個痛點場景', text: '顧問團隊進駐，深度訪談把部門的真實流程與痛點攤開。', top: 120 },
   { n: '02', title: '使用 AI', tag: '四週內交付首批成果', text: '建立第一批 AI Agent、接進既有流程，讓團隊習慣與 AI 協作。', top: 190 },
   { n: '03', title: '擁有 AI', tag: '培養自主開發能力', text: '實戰工作坊把 Agent 的操作與設計能力，整套轉移給你的團隊。', top: 260 },
   { n: '04', title: '持續 AI', tag: 'AI 能力內化', text: '顧問逐步退場，團隊自己建置、使用、維護，AI 變成公司日常。', top: 330 },
 ];
+const TOPS = [120, 190, 260, 330];
+const stages = cmsStages.length
+  ? cmsStages.map((x, i) => ({ ...x, top: TOPS[i] ?? 120 + i * 70 }))
+  : fallbackStages;
 
-// 照片與它們散落的位置、角度。接後台後變成可換的圖片欄位。
-const photos = [
+// 照片與它們散落的位置、角度。位置與角度是版面的一部分（刻意錯落），
+// 所以後台只換圖，不改位置。
+const cmsPhotos = list<{ src: string; alt: string }>(page, 'stagePhotos', []);
+const SPOTS = [
+  { left: '6%', top: '3%', rot: -3 },
+  { left: '19%', top: '9%', rot: 11 },
+  { left: '3%', top: '14%', rot: -13 },
+  { left: '16%', top: '6%', rot: 8 },
+];
+const fallbackPhotos = [
   { src: '/uploads/6_11大豐內訊.jpg', left: '6%', top: '3%', rot: -3, alt: '顧問進駐訪談' },
   { src: '/uploads/S__30138385_0.jpg', left: '19%', top: '9%', rot: 11, alt: '實作工作坊' },
   { src: '/uploads/S__30138378_0.jpg', left: '3%', top: '14%', rot: -13, alt: '企業授課' },
   { src: '/uploads/750522_0.jpg', left: '16%', top: '6%', rot: 8, alt: '成果發表' },
 ];
+const photos = cmsPhotos.length
+  ? cmsPhotos.map((p, i) => ({ ...p, ...(SPOTS[i] ?? SPOTS[0]) }))
+  : fallbackPhotos;
 
 const MONO = "font-family:'JetBrains Mono',monospace";
 ---

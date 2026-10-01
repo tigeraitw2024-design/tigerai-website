@@ -76,3 +76,26 @@
   [data-logocol] { animation: none !important }
   * { animation-duration: .001ms !important; animation-delay: 0ms !important }
 }
+
+/* ────────────────────────────────────────────────────────────────
+   「看過一次就不再播」：開場 logo 與身分閘門
+   ────────────────────────────────────────────────────────────────
+
+   這兩條規則本來寫在 index.astro 的 <style> 裡，但 Astro 會自動幫元件內的
+   樣式加上範圍限定（[data-astro-cid-xxx]），而開場層出自 IntroSplash.astro、
+   閘門出自 React island，兩個都沒有那個標記，所以規則一條都對不到。
+   搬到這個檔案（一般 CSS 匯入，不受範圍限定）才真的生效。
+
+   閘門這一條是必要的，不是保險。閘門是 React island，建置時會先把 HTML
+   畫進檔案（為了 SEO 與第一眼就有內容）。看過一次的人，元件在瀏覽器端回傳
+   null——但 React 接手時發現「自己要畫的是空的、頁面上卻已經有一大塊」，
+   就把那塊留著不動。結果是一層沒有事件、點不動的死 HTML 蓋住整個首頁。
+
+   症狀：第二次之後每次進站都卡住，畫面像蒙了一層霧，字選得到但點不動，
+   而且沒有任何錯誤訊息。第一次進站不會發生——所以每次用全新的瀏覽器測
+   都測不出來，要用同一個瀏覽器進第二次才會重現。
+
+   用 CSS 擋掉最可靠：在任何 JavaScript 跑之前就生效，就算 island 整個
+   載入失敗也一樣有效。 */
+[data-tg-intro-seen] [data-intro-splash] { display: none !important }
+[data-tg-intro-seen] [data-gate='1'] { display: none !important }

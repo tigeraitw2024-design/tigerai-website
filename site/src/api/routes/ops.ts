@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import type { Ctx } from '../types';
 import type { Env } from '../types';
-import { nowISO, rowToRecord } from '../db';
+import { fullSchemaSQL, nowISO, rowToRecord } from '../db';
 import { audit } from '../auth';
 import { flushMailQueue } from '../adapters/mail';
+import { flushLeadQueue } from '../adapters/leads';
 import { stripMeta } from './public';
 
 /**
@@ -83,6 +84,10 @@ app.get('/dashboard', async (ctx) => {
     out.system = {
       mailQueued: await count('mail_queue', "WHERE state='queued'"),
       mailFailed: await count('mail_queue', "WHERE state='failed'"),
+      syncQueued: await count('sync_queue', "WHERE state='queued'"),
+      syncFailed: await count('sync_queue', "WHERE state='failed'"),
+      mailProvider: ctx.env.MAIL_PROVIDER || 'console',
+      leadSync: ctx.env.LEAD_SYNC || 'none',
       media: await count('media'),
       users: await count('users'),
     };
@@ -97,15 +102,99 @@ app.post('/flush-mail', async (ctx) => {
   return ctx.json(r);
 });
 
+/**
+ * 更新資料表結構。
+ *
+ * 後台長出新功能時常常要多一張表或多一個欄位。以前這件事只有「重跑一次安裝」
+ * 能做，但安裝要帶 BOOTSTRAP_SECRET，而那個密語用完就該從 Cloudflare 刪掉。
+ * 所以這裡給 owner 一個按鈕。
+ *
+ * 全部都是 CREATE TABLE / CREATE INDEX IF NOT EXISTS，重跑不會動到既有資料。
+ * 它只會「補上缺的」，不會刪東西，也不會改既有欄位的型別——
+ * 真要改既有欄位，還是得自己寫一支 ALTER，那種事不該讓按鈕來做。
+ */
+app.post('/migrate', async (ctx) => {
+  const admin = ctx.get('admin')!;
+  if (admin.role !== 'owner') return ctx.json({ error: '只有 owner 可以更新資料表' }, 403);
+
+  const before = await tableNames(ctx.env.DB);
+  const stmts = fullSchemaSQL();
+  let fail = 0;
+  const errors: string[] = [];
+  for (const sql of stmts) {
+    try {
+      await ctx.env.DB.prepare(sql).run();
+    } catch (e: any) {
+      fail++;
+      if (errors.length < 5) errors.push(String(e?.message || e).slice(0, 200));
+    }
+  }
+  const after = await tableNames(ctx.env.DB);
+  const added = after.filter((t) => !before.includes(t));
+
+  await audit(ctx.env.DB, admin.email, '更新資料表', '系統', { added, fail }, ctx.req.raw);
+
+  return ctx.json({
+    ok: fail === 0,
+    added,
+    total: stmts.length,
+    fail,
+    errors,
+    message: added.length
+      ? `新增了 ${added.length} 張表：${added.join('、')}`
+      : '資料表已經是最新的，沒有需要新增的東西。',
+  });
+});
+
+async function tableNames(db: D1Database): Promise<string[]> {
+  const { results } = await db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'")
+    .all<any>();
+  return (results || []).map((r: any) => String(r.name)).sort();
+}
+
+/** 手動催一次名單同步。剛設定好 Apps Script 時用這個驗，不用等一小時。 */
+app.post('/flush-sync', async (ctx) => {
+  const r = await flushLeadQueue(ctx.env as any, 8);
+  return ctx.json(r);
+});
+
+/**
+ * 測試 Apps Script 有沒有接通。
+ * 只打 ping，不寄信也不寫試算表——驗網址和密語對不對就好。
+ */
+app.post('/test-gas', async (ctx) => {
+  if (!ctx.env.GAS_URL) return ctx.json({ ok: false, error: '還沒設定 GAS_URL' });
+  try {
+    const r = await fetch(ctx.env.GAS_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret: ctx.env.GAS_SECRET, action: 'ping' }),
+      redirect: 'follow',
+    });
+    const txt = await r.text();
+    if (!r.ok) return ctx.json({ ok: false, error: `HTTP ${r.status}` });
+    let out: any = null;
+    try { out = JSON.parse(txt); } catch {
+      return ctx.json({ ok: false, error: '回傳不是 JSON，通常是部署時「具有存取權的使用者」沒選「任何人」' });
+    }
+    if (!out?.ok) return ctx.json({ ok: false, error: out?.error === 'bad secret' ? '密語不對' : String(out?.error || '未知錯誤') });
+    return ctx.json({ ok: true, at: out.at });
+  } catch (e: any) {
+    return ctx.json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
 export default app;
 
 /**
  * 排程工作。由 wrangler.jsonc 的 triggers.crons 每小時叫一次。
  *
- * 三件事：
+ * 四件事：
  *   1. 寄佇列裡的信
- *   2. 把超過 24 小時還沒確認的預約自動取消，時段放回去
- *   3. 清掉過期的 session、代幣、頻率限制紀錄
+ *   2. 把名單送到 Google 試算表（CRM 再從那裡抓）
+ *   3. 把超過 24 小時還沒確認的預約自動取消，時段放回去
+ *   4. 清掉過期的 session、代幣、頻率限制紀錄
  *
  * 第 3 點不做的話，這三張表會一直長大。D1 免費方案有 5 GB，
  * 撐得很久，但「撐得很久」不等於「不用清」。
@@ -118,6 +207,13 @@ export async function runCron(env: Env) {
     log.push(`寄信 成功 ${m.ok} 失敗 ${m.fail}`);
   } catch (e: any) {
     log.push(`寄信 出錯：${e?.message || e}`);
+  }
+
+  try {
+    const l = await flushLeadQueue(env as any, 8);
+    if (l.ok || l.fail) log.push(`名單同步 成功 ${l.ok} 失敗 ${l.fail}`);
+  } catch (e: any) {
+    log.push(`名單同步 出錯：${e?.message || e}`);
   }
 
   // 逾時預約

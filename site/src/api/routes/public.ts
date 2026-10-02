@@ -4,6 +4,7 @@ import { clientKey, consumeToken, issueToken, rateLimit } from '../auth';
 import { newId, nowISO, rowToRecord } from '../db';
 import { queueMail, templates } from '../adapters/mail';
 import { getStorage } from '../adapters/storage';
+import { queueLeadSync } from '../adapters/leads';
 
 /**
  * 前台會打的端點。全部是公開的，所以每一支都要有頻率限制，
@@ -92,6 +93,26 @@ app.post('/booking', async (ctx) => {
   await upsertLead(db, { email: data.email, name, company, phone, source: 'booking' });
 
   const when = slotRec ? formatWhen(String(slotRec.startAt)) : '（時間另行約定）';
+
+  // 送到試算表，CRM 每兩小時來抓。有選時段的話順便在行事曆開一格並邀請對方。
+  await queueLeadSync(
+    db,
+    {
+      email: data.email, name, company, jobTitle, phone,
+      source: 'booking', sourceDetail: data.source,
+      topic, headcount, bookingCode: code, bookingAt: when, state: '待確認',
+    },
+    slotRec?.startAt
+      ? {
+          startAt: String(slotRec.startAt),
+          minutes: Number(slotRec.minutes) || 30,
+          title: `TigerAI 諮詢：${name}${company ? `（${company}）` : ''}`,
+          description: [`預約編號 ${code}`, topic && `想談：${topic}`, `聯絡：${data.email} ${phone || ''}`]
+            .filter(Boolean).join('\n'),
+          guestEmail: data.email,
+        }
+      : undefined,
+  );
   const base = ctx.env.SITE_URL || new URL(ctx.req.url).origin;
   const cancelUrl = `${base}/booking/cancel?code=${code}&email=${encodeURIComponent(data.email)}`;
 
@@ -152,6 +173,11 @@ app.post('/lead', async (ctx) => {
   const db = ctx.env.DB;
   const mail = String(email).toLowerCase();
   await upsertLead(db, { email: mail, name, company, phone, source: String(source || 'unknown'), marketingConsent: !!marketingConsent });
+  await queueLeadSync(db, {
+    email: mail, name, company, phone,
+    source: String(source || 'unknown'), sourceDetail: String(source || ''),
+    note: marketingConsent ? '已同意行銷聯絡' : '未同意行銷聯絡',
+  });
 
   // 要檔案的話，發一張 7 天的下載券，連結寄過去。
   // 券是一次性的、綁這個 Email，所以轉貼給別人也沒用。

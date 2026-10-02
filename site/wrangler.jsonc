@@ -73,6 +73,7 @@
     "MAIL_FROM": "TigerAI 虎智科技 <noreply@tigerai.com.tw>",
     "MAIL_INTERNAL_TO": "",
     "PAYMENT_PROVIDER": "none",
+    "LEAD_SYNC": "none",
     "SITE_URL": "https://tigerai-website.tiger-ai-tw2024.workers.dev"
   },
 

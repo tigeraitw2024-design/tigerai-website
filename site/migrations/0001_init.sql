@@ -3,7 +3,7 @@
 -- 要改資料表結構，去改對應的 src/api/modules/*.ts，再重新產生一次。
 --
 -- 正常安裝流程不需要跑這個檔：/api/auth/bootstrap 會自己照 schema 建表。
--- 產生時間：2026-10-02T08:35:53.543Z
+-- 產生時間：2026-10-02T18:18:54.742Z
 
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
@@ -59,6 +59,19 @@ CREATE TABLE IF NOT EXISTS mail_queue (
 );
 
 CREATE INDEX IF NOT EXISTS ix_mail_state ON mail_queue(state);
+
+CREATE TABLE IF NOT EXISTS sync_queue (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,            -- lead | booking
+  payload TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'queued',
+  tries INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at TEXT NOT NULL,
+  sent_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS ix_sync_state ON sync_queue(state);
 
 CREATE TABLE IF NOT EXISTS home (
   id TEXT PRIMARY KEY,

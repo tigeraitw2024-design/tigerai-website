@@ -6,6 +6,7 @@ import {
 } from '../auth';
 import { newId, nowISO, rowToRecord } from '../db';
 import { queueMail, templates } from '../adapters/mail';
+import { queueLeadSync } from '../adapters/leads';
 import { getPayment, toDisplay } from '../adapters/payment';
 import { stripMeta, upsertLead } from './public';
 
@@ -252,6 +253,12 @@ app.post('/checkout', async (ctx) => {
     .run();
 
   await upsertLead(db, { email: data.buyerEmail, name: buyerName, phone: buyerPhone, source: 'checkout' });
+  await queueLeadSync(db, {
+    email: data.buyerEmail, name: buyerName, phone: buyerPhone,
+    source: 'order', sourceDetail: `訂單 ${code}`,
+    note: priced.lines.map((l) => `${l.title}×${l.qty}`).join('、'),
+    state: '待付款',
+  });
 
   const start = await provider.start(
     { code, total: priced.total, itemsSummary: priced.lines.map((l) => l.title).join('、'), buyerEmail: data.buyerEmail, buyerName },

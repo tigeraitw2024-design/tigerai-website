@@ -21,14 +21,27 @@ export type Env = {
   /** R2 接了自訂網域就填，沒填就由 Worker 轉檔出去 */
   MEDIA_PUBLIC_BASE?: string;
 
-  /** console | resend | smtp-relay */
+  /** console | resend | smtp-relay | gas */
   MAIL_PROVIDER?: string;
   MAIL_FROM?: string;
   /** 內部通知信要寄給誰，逗號分隔 */
   MAIL_INTERNAL_TO?: string;
+  /** 客戶按「回覆」時要回到哪個信箱。沒設就回到寄出的那個帳號。 */
+  MAIL_REPLY_TO?: string;
   RESEND_API_KEY?: string;
   SMTP_RELAY_URL?: string;
   SMTP_RELAY_TOKEN?: string;
+
+  /**
+   * 官網專用 Google 帳號上的 Apps Script 網址與密語。
+   * 寄信（MAIL_PROVIDER=gas）和名單同步（LEAD_SYNC=gsheet）共用同一支。
+   * 程式碼在 site/integrations/apps-script/Code.gs。
+   */
+  GAS_URL?: string;
+  GAS_SECRET?: string;
+
+  /** none | gsheet　名單要不要往外送。gsheet 會寫進試算表，CRM 每兩小時來抓。 */
+  LEAD_SYNC?: string;
 
   /** none | ecpay */
   PAYMENT_PROVIDER?: string;

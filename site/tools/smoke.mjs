@@ -151,6 +151,26 @@ ok('訂單進來了', r.body?.total === 1, r.body);
 r = await call('GET', '/api/admin/c/mail_queue').catch(() => ({ body: {} }));
 r = await call('GET', '/api/admin/ops/dashboard');
 ok('總覽拿得到數字', r.status === 200 && !!r.body?.content, r.body);
+ok('總覽有名單同步的數字', typeof r.body?.system?.syncQueued === 'number', r.body?.system);
+
+console.log('\n── 名單同步 ──');
+// 預約、留 Email、訂單三條路都該往同步佇列丟一筆。
+// queueLeadSync 刻意吞掉所有錯誤（同步失敗不該讓客戶的預約跟著失敗），
+// 所以上面那些測試全過也不代表名單真的入列了——一定要另外查。
+ok('三筆名單都入列了（預約／留 Email／訂單）', r.body?.system?.syncQueued === 3, r.body?.system);
+ok('同步方式預設是不往外送', r.body?.system?.leadSync === 'none', r.body?.system);
+
+r = await call('POST', '/api/admin/ops/flush-sync');
+ok('催一次同步：none 模式下三筆都算送出', r.body?.ok === 3 && r.body?.fail === 0, r.body);
+r = await call('GET', '/api/admin/ops/dashboard');
+ok('送完佇列就空了', r.body?.system?.syncQueued === 0, r.body?.system);
+
+r = await call('POST', '/api/admin/ops/test-gas');
+ok('還沒設定 Apps Script 時老實說沒設定', r.body?.ok === false && /GAS_URL/.test(r.body?.error || ''), r.body);
+
+r = await call('POST', '/api/admin/ops/migrate');
+ok('更新資料表可以重跑，不會壞', r.body?.ok === true && r.body?.fail === 0, r.body);
+ok('重跑時沒有新表要加', Array.isArray(r.body?.added) && r.body.added.length === 0, r.body?.added);
 
 console.log('\n── 權限 ──');
 r = await call('POST', '/api/admin/c/users', { email: 'editor@tigerai.test', name: '小編', role: 'editor', password: 'editor-password-123', active: true });
@@ -171,6 +191,8 @@ r = await call('GET', '/api/admin/c/leads');
 ok('editor 直接打 API 也拿不到名單', r.status === 403, r.body);
 r = await call('POST', '/api/admin/ops/publish');
 ok('editor 不能發布', r.status === 403, r.body);
+r = await call('POST', '/api/admin/ops/migrate');
+ok('editor 不能更新資料表', r.status === 403, r.body);
 
 console.log('\n── 未登入 ──');
 cookie = '';

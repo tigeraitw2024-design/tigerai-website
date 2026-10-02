@@ -25,6 +25,9 @@ export type Env = {
   RESEND_API_KEY?: string;
   SMTP_RELAY_URL?: string;
   SMTP_RELAY_TOKEN?: string;
+  GAS_URL?: string;
+  GAS_SECRET?: string;
+  MAIL_REPLY_TO?: string;
 };
 
 /** 把信排進佇列。所有想寄信的地方都只呼叫這一個。 */
@@ -80,6 +83,43 @@ const senders: Record<string, Sender> = {
       body: JSON.stringify({ from: env.MAIL_FROM, to: m.to, subject: m.subject, html: m.body }),
     });
     if (!r.ok) throw new Error(`SMTP relay ${r.status}`);
+  },
+
+  /**
+   * Google Apps Script 中繼（Robin 選的方式）。
+   *
+   * 官網專用的 Google 帳號上掛一支 Apps Script，官網打它、它用那個帳號的
+   * Gmail 寄出去。程式碼在 site/integrations/apps-script/Code.gs。
+   *
+   * 為什麼要繞這一圈：Workers 不能開 SMTP 的 TCP 連線，而 Gmail 沒有
+   * 給一般帳號用的 HTTP 寄信 API。Apps Script 是唯一不用付錢、不用架機器
+   * 就能從 HTTP 走到 Gmail 的路。
+   *
+   * 注意 Apps Script 失敗時常常還是回 200，錯誤寫在 JSON 的 ok 欄位裡，
+   * 所以不能只看 r.ok，要把內容讀出來判斷。
+   */
+  async gas(m, env) {
+    if (!env.GAS_URL) throw new Error('沒有設定 GAS_URL');
+    const r = await fetch(env.GAS_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        secret: env.GAS_SECRET,
+        action: 'mail',
+        to: m.to,
+        subject: m.subject,
+        html: m.body,
+        fromName: env.MAIL_FROM || 'TigerAI 虎智科技',
+        replyTo: env.MAIL_REPLY_TO || undefined,
+      }),
+      // Apps Script 會 302 到 googleusercontent 再回傳實際內容，必須跟著跳
+      redirect: 'follow',
+    });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(`Apps Script HTTP ${r.status}`);
+    let out: any = null;
+    try { out = JSON.parse(txt); } catch { throw new Error(`Apps Script 回傳不是 JSON：${txt.slice(0, 120)}`); }
+    if (!out?.ok) throw new Error(`Apps Script：${out?.error || '未知錯誤'}`);
   },
 };
 

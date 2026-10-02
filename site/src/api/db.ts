@@ -135,6 +135,20 @@ export const SYSTEM_TABLES = [
   sent_at TEXT
 )`,
   `CREATE INDEX IF NOT EXISTS ix_mail_state ON mail_queue(state)`,
+
+  // 名單同步佇列。跟寄信同樣的理由：送到 Google 試算表（CRM 再從那裡抓）
+  // 一筆要一到三秒，不能讓訪客等，更不能它掛掉就掉名單。
+  `CREATE TABLE IF NOT EXISTS sync_queue (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,            -- lead | booking
+  payload TEXT NOT NULL,
+  state TEXT NOT NULL DEFAULT 'queued',
+  tries INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at TEXT NOT NULL,
+  sent_at TEXT
+)`,
+  `CREATE INDEX IF NOT EXISTS ix_sync_state ON sync_queue(state)`,
 ];
 
 /** 把整個 schema 變成一份建置 SQL。bootstrap 與 migrations 都用這個。 */

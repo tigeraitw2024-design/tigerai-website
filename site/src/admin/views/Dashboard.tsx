@@ -13,6 +13,10 @@ export default function Dashboard({ schema }: { schema: SchemaResponse }) {
   const [data, setData] = useState<any>(null);
   const [pub, setPub] = useState<{ tone: 'ok' | 'err' | 'info'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [gas, setGas] = useState<{ ok: boolean; text: string } | null>(null);
+  const [gasBusy, setGasBusy] = useState(false);
+  const [mig, setMig] = useState<{ ok: boolean; text: string } | null>(null);
+  const [migBusy, setMigBusy] = useState(false);
 
   useEffect(() => {
     api.get('/api/admin/ops/dashboard').then(setData).catch(() => setData({}));
@@ -28,6 +32,55 @@ export default function Dashboard({ schema }: { schema: SchemaResponse }) {
       setPub({ tone: 'err', text: e.message + (e.how ? `\n${e.how}` : '') });
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** 測 Apps Script 通不通。只打 ping，不會寄信也不會寫試算表。 */
+  async function testGas() {
+    setGasBusy(true);
+    setGas(null);
+    try {
+      const r = await api.post<{ ok: boolean; error?: string }>('/api/admin/ops/test-gas');
+      setGas(r.ok ? { ok: true, text: 'Google 那邊接通了。' } : { ok: false, text: r.error || '連不上' });
+    } catch (e: any) {
+      setGas({ ok: false, text: e.message });
+    } finally {
+      setGasBusy(false);
+    }
+  }
+
+  /** 不等 Cron，現在就把卡住的名單送出去。 */
+  async function flushSync() {
+    setGasBusy(true);
+    setGas(null);
+    try {
+      const r = await api.post<{ ok: number; fail: number }>('/api/admin/ops/flush-sync');
+      setGas({ ok: r.fail === 0, text: `送出 ${r.ok} 筆，失敗 ${r.fail} 筆。` });
+      api.get('/api/admin/ops/dashboard').then(setData).catch(() => {});
+    } catch (e: any) {
+      setGas({ ok: false, text: e.message });
+    } finally {
+      setGasBusy(false);
+    }
+  }
+
+  /** 補上新版本多出來的資料表。只會新增，不會刪或改既有資料。 */
+  async function migrate() {
+    setMigBusy(true);
+    setMig(null);
+    try {
+      const r = await api.post<{ ok: boolean; message: string; fail: number; errors: string[] }>(
+        '/api/admin/ops/migrate',
+      );
+      setMig({
+        ok: r.ok,
+        text: r.ok ? r.message : `${r.message}\n有 ${r.fail} 條沒跑過：${(r.errors || []).join('；')}`,
+      });
+      api.get('/api/admin/ops/dashboard').then(setData).catch(() => {});
+    } catch (e: any) {
+      setMig({ ok: false, text: e.message });
+    } finally {
+      setMigBusy(false);
     }
   }
 
@@ -103,6 +156,8 @@ export default function Dashboard({ schema }: { schema: SchemaResponse }) {
           <div className="a-stats">
             <div className="a-stat"><b>{s.mailQueued}</b><span>待寄出的信</span></div>
             <div className="a-stat" data-alert={s.mailFailed ? '1' : '0'}><b>{s.mailFailed}</b><span>寄不出去的信</span></div>
+            <div className="a-stat"><b>{s.syncQueued}</b><span>待送出的名單</span></div>
+            <div className="a-stat" data-alert={s.syncFailed ? '1' : '0'}><b>{s.syncFailed}</b><span>送不出去的名單</span></div>
             <a className="a-stat" href="#/media" style={{ textDecoration: 'none', color: 'inherit' }}><b>{s.media}</b><span>檔案</span></a>
             <a className="a-stat" href="#/users" style={{ textDecoration: 'none', color: 'inherit' }}><b>{s.users}</b><span>後台帳號</span></a>
           </div>
@@ -111,6 +166,57 @@ export default function Dashboard({ schema }: { schema: SchemaResponse }) {
               有信寄不出去，通常是寄信設定還沒接上。目前的寄信方式如果是 console，
               那是正常的——信會留在佇列裡不會真的寄出。
             </p>
+          )}
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--a-line)' }}>
+            <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--a-fg-2)', lineHeight: 1.7 }}>
+              後台長出新功能時，有時候要多一張資料表。按這個會把缺的補上，
+              既有的資料一筆都不會動。平常不用按，叫你按的時候再按。
+            </p>
+            <button className="a-btn" onClick={migrate} disabled={migBusy}>
+              <Icon name="history" size={16} /> {migBusy ? '更新中…' : '更新資料表'}
+            </button>
+            {mig && (
+              <div
+                className={`a-msg a-msg--${mig.ok ? 'ok' : 'err'}`}
+                style={{ marginTop: 12, marginBottom: 0, whiteSpace: 'pre-line' }}
+              >
+                {mig.text}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {s && (
+        <div className="a-panel">
+          <div className="a-panel__h">Google 中繼站</div>
+          <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--a-fg-2)', lineHeight: 1.7 }}>
+            官網的信是透過官網專用 Google 帳號上的一支小程式寄出去的，名單也是由它寫進
+            「官網名單」試算表，CRM 每兩小時會去那份表抓一次。
+            <br />
+            寄信方式：<b className="a-mono">{s.mailProvider}</b>
+            　名單同步：<b className="a-mono">{s.leadSync}</b>
+            {s.mailProvider === 'console' && (
+              <>
+                <br />
+                <span style={{ color: 'var(--a-warn, #B8860B)' }}>
+                  現在是 console：信只會留在佇列裡，不會真的寄出去。接好 Google 之後要改成 gas。
+                </span>
+              </>
+            )}
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="a-btn" onClick={testGas} disabled={gasBusy}>
+              <Icon name="plug" size={16} /> {gasBusy ? '測試中…' : '測試連線'}
+            </button>
+            <button className="a-btn" onClick={flushSync} disabled={gasBusy || !s.syncQueued}>
+              <Icon name="send" size={16} /> 現在送出名單（{s.syncQueued}）
+            </button>
+          </div>
+          {gas && (
+            <div className={`a-msg a-msg--${gas.ok ? 'ok' : 'err'}`} style={{ marginTop: 12, marginBottom: 0 }}>
+              {gas.text}
+            </div>
           )}
         </div>
       )}

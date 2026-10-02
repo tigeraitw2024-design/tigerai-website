@@ -4,7 +4,8 @@ import { clientKey, consumeToken, issueToken, rateLimit } from '../auth';
 import { newId, nowISO, rowToRecord } from '../db';
 import { queueMail, templates } from '../adapters/mail';
 import { getStorage } from '../adapters/storage';
-import { queueLeadSync } from '../adapters/leads';
+import { queueLeadSync, type LeadRow } from '../adapters/leads';
+import { cancelBookingEvent, createBookingEvent, gasReady, releaseSlot } from '../adapters/calendar';
 
 /**
  * 前台會打的端點。全部是公開的，所以每一支都要有頻率限制，
@@ -79,40 +80,80 @@ app.post('/booking', async (ctx) => {
 
   const code = 'B' + Date.now().toString(36).toUpperCase().slice(-6) + Math.floor(Math.random() * 900 + 100);
   const at = nowISO();
+  const when = slotRec ? formatWhen(String(slotRec.startAt)) : '（時間另行約定）';
+
+  const lead: LeadRow = {
+    email: String(email).toLowerCase(), name, company, jobTitle, phone,
+    source: 'booking', sourceDetail: String(source || '').slice(0, 200),
+    topic, headcount, bookingCode: code, bookingAt: when, state: '待確認',
+  };
+
+  const eventTitle = `TigerAI 諮詢：${name}${company ? `（${company}）` : ''}`;
+  const eventDesc = [`預約編號 ${code}`, topic && `想談：${topic}`, `聯絡：${lead.email} ${phone || ''}`]
+    .filter(Boolean).join('\n');
+
+  /**
+   * 有選時段、而且 Google 接好了的話，**當場**開行事曆活動並寄邀請。
+   *
+   * 刻意同步等一到三秒，因為要在回應客戶之前知道這個時間還在不在：
+   * 前台看到的時段是每小時重算的快取，這一小時裡 Robin 可能自己排了別的事。
+   * 等到佇列才發現撞期的話，客戶已經看到「預約成功」了。
+   *
+   * Google 連不上不算失敗：預約照樣存下來，改走佇列補開活動（會把活動編號寫回來）。
+   */
+  let eventId = '';
+  let syncedNow = false;
+  if (slotRec?.startAt && gasReady(ctx.env)) {
+    const r = await createBookingEvent(ctx.env, {
+      startAt: String(slotRec.startAt),
+      minutes: Number(slotRec.minutes) || 30,
+      title: eventTitle,
+      description: eventDesc,
+      guestEmail: lead.email,
+      lead,
+    });
+    if (!r.ok && r.taken) {
+      // 時段其實已經沒了。把剛剛加上去的已約數退回來，不然這一格會永遠卡著。
+      await releaseSlot(db, String(slot.id));
+      return bad(ctx, '這個時間剛剛被佔走了，請重新選一個時段。', 409);
+    }
+    if (r.ok) {
+      eventId = r.eventId;
+      syncedNow = true;   // 同一次呼叫已經寫進試算表了，不要再排一次
+    }
+  }
+
   const data = {
     code, slot: slotId || '', name, company: company || '', jobTitle: jobTitle || '',
-    email: String(email).toLowerCase(), phone: phone || '', headcount: headcount || '',
-    topic: topic || '', source: String(source || '').slice(0, 200), state: 'pending', internalNote: '',
+    email: lead.email, phone: phone || '', headcount: headcount || '',
+    topic: topic || '', source: String(source || '').slice(0, 200), state: 'pending',
+    eventId, guestStatus: eventId ? 'invited' : '', internalNote: '',
   };
+  const bookingId = newId();
   await db
     .prepare('INSERT INTO bookings (id,sort,data,created_at,updated_at,f_code,f_slot,f_email) VALUES (?,0,?,?,?,?,?,?)')
-    .bind(newId(), JSON.stringify(data), at, at, code, slotId || '', data.email)
+    .bind(bookingId, JSON.stringify(data), at, at, code, slotId || '', data.email)
     .run();
 
   // 名單也留一筆。約過諮詢的人是最值錢的名單，不該只存在預約表裡。
   await upsertLead(db, { email: data.email, name, company, phone, source: 'booking' });
 
-  const when = slotRec ? formatWhen(String(slotRec.startAt)) : '（時間另行約定）';
-
-  // 送到試算表，CRM 每兩小時來抓。有選時段的話順便在行事曆開一格並邀請對方。
-  await queueLeadSync(
-    db,
-    {
-      email: data.email, name, company, jobTitle, phone,
-      source: 'booking', sourceDetail: data.source,
-      topic, headcount, bookingCode: code, bookingAt: when, state: '待確認',
-    },
-    slotRec?.startAt
-      ? {
-          startAt: String(slotRec.startAt),
-          minutes: Number(slotRec.minutes) || 30,
-          title: `TigerAI 諮詢：${name}${company ? `（${company}）` : ''}`,
-          description: [`預約編號 ${code}`, topic && `想談：${topic}`, `聯絡：${data.email} ${phone || ''}`]
-            .filter(Boolean).join('\n'),
-          guestEmail: data.email,
-        }
-      : undefined,
-  );
+  if (!syncedNow) {
+    await queueLeadSync(
+      db,
+      lead,
+      slotRec?.startAt
+        ? {
+            startAt: String(slotRec.startAt),
+            minutes: Number(slotRec.minutes) || 30,
+            title: eventTitle,
+            description: eventDesc,
+            guestEmail: lead.email,
+          }
+        : undefined,
+      bookingId,
+    );
+  }
   const base = ctx.env.SITE_URL || new URL(ctx.req.url).origin;
   const cancelUrl = `${base}/booking/cancel?code=${code}&email=${encodeURIComponent(data.email)}`;
 
@@ -151,6 +192,9 @@ app.post('/booking/cancel', async (ctx) => {
   await db.prepare('UPDATE bookings SET data=?, updated_at=? WHERE id=?')
     .bind(JSON.stringify(stripMeta(rec)), nowISO(), row.id).run();
   await releaseSlot(db, String(rec.slot || ''));
+  // 行事曆上那一場也要刪掉。Google 會通知與會者，客戶那邊的行事曆會自己消失。
+  // 不刪的話你的行事曆上會留一場客戶已經取消的會議，然後那個時間也不會再開放。
+  await cancelBookingEvent(ctx.env, String(rec.eventId || ''));
   return ctx.json({ ok: true });
 });
 
@@ -234,15 +278,8 @@ function stripMeta(rec: Record<string, unknown>) {
   return rest;
 }
 
-async function releaseSlot(db: D1Database, slotId: string) {
-  if (!slotId) return;
-  const row = await db.prepare('SELECT * FROM booking_slots WHERE id=?').bind(slotId).first<any>();
-  if (!row) return;
-  const rec = rowToRecord(row) as any;
-  rec.booked = Math.max(0, (Number(rec.booked) || 0) - 1);
-  await db.prepare('UPDATE booking_slots SET data=?, updated_at=? WHERE id=?')
-    .bind(JSON.stringify(stripMeta(rec)), nowISO(), slotId).run();
-}
+// releaseSlot 搬到 adapters/calendar.ts 了：行事曆同步那邊也要用同一份，
+// 兩個檔各留一份遲早會長得不一樣。
 
 /**
  * 名單去重。同一個 Email 只有一筆，重複留會累加次數並更新最近來源。

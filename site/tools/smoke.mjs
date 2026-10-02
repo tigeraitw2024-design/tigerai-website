@@ -172,6 +172,49 @@ r = await call('POST', '/api/admin/ops/migrate');
 ok('更新資料表可以重跑，不會壞', r.body?.ok === true && r.body?.fail === 0, r.body);
 ok('重跑時沒有新表要加', Array.isArray(r.body?.added) && r.body.added.length === 0, r.body?.added);
 
+console.log('\n── 預約時段與行事曆 ──');
+r = await call('GET', '/api/admin/c/booking_rules/_');
+ok('時段規則會自動建一筆', r.status === 200 && !!r.body?.id, r.body);
+const rulesId = r.body?.id;
+ok('預設時段來源是手動', r.body?.source === 'manual', r.body?.source);
+ok('預設規則帶齊了（上班時間、一天幾場、提前幾小時）',
+  r.body?.dayStart === '10:00' && r.body?.maxPerDay === 3 && r.body?.leadHours === 24, r.body);
+
+r = await call('GET', '/api/admin/ops/dashboard');
+ok('總覽看得到時段來源', r.body?.business?.slotSource === 'manual', r.body?.business);
+ok('總覽看得到未來時段數', typeof r.body?.business?.slotsOpen === 'number', r.body?.business);
+ok('沒接 Google 時總覽說還沒接', r.body?.system?.gasReady === false, r.body?.system);
+
+// 手動模式下重算應該直接說「你設的是手動」，而不是假裝算了。
+// 這比回成功重要：他如果以為算過了，就不會發現前台其實沒時段。
+r = await call('POST', '/api/admin/ops/refresh-slots');
+ok('手動模式下重算會說是手動', r.body?.ok === false && /手動/.test(r.body?.error || ''), r.body);
+
+// 改成行事曆模式之後，沒設定 GAS_URL 還是要老實說
+r = await call(
+  'PUT',
+  `/api/admin/c/booking_rules/${rulesId}`,
+  { source: 'calendar', dayStart: '10:00', dayEnd: '18:00', slotMinutes: 30 },
+);
+ok('存時段規則', r.status === 200, r.body);
+r = await call('GET', '/api/admin/c/booking_rules/_');
+ok('時段來源可以改成行事曆', r.body?.source === 'calendar', r.body);
+r = await call('POST', '/api/admin/ops/refresh-slots');
+ok('行事曆模式但沒設 GAS_URL 時老實說', r.body?.ok === false && /GAS_URL/.test(r.body?.error || ''), r.body);
+r = await call(
+  'PUT',
+  `/api/admin/c/booking_rules/${rulesId}`,
+  { source: 'manual', dayStart: '10:00', dayEnd: '18:00', slotMinutes: 30 },
+);
+r = await call('GET', '/api/admin/c/booking_rules/_');
+ok('改回手動', r.body?.source === 'manual', r.body);
+
+// 沒接 Google 的時候預約不該有活動編號，而且不能因此失敗
+r = await call('GET', '/api/admin/c/bookings');
+ok('沒接 Google 時預約照樣存下來', r.body?.total === 1, r.body);
+ok('沒接 Google 時沒有行事曆活動編號', !r.body?.items?.[0]?.eventId, r.body?.items?.[0]);
+ok('沒接 Google 時沒有邀請狀態', !r.body?.items?.[0]?.guestStatus, r.body?.items?.[0]);
+
 console.log('\n── 權限 ──');
 r = await call('POST', '/api/admin/c/users', { email: 'editor@tigerai.test', name: '小編', role: 'editor', password: 'editor-password-123', active: true });
 ok('開一個 editor 帳號', r.status === 200, r.body);
@@ -193,6 +236,10 @@ r = await call('POST', '/api/admin/ops/publish');
 ok('editor 不能發布', r.status === 403, r.body);
 r = await call('POST', '/api/admin/ops/migrate');
 ok('editor 不能更新資料表', r.status === 403, r.body);
+r = await call('POST', '/api/admin/ops/refresh-slots');
+ok('editor 不能重算時段', r.status === 403, r.body);
+r = await call('GET', '/api/admin/c/booking_rules/_');
+ok('editor 看不到時段規則', r.status === 403, r.body);
 
 console.log('\n── 未登入 ──');
 cookie = '';

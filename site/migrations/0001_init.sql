@@ -3,7 +3,7 @@
 -- 要改資料表結構，去改對應的 src/api/modules/*.ts，再重新產生一次。
 --
 -- 正常安裝流程不需要跑這個檔：/api/auth/bootstrap 會自己照 schema 建表。
--- 產生時間：2026-10-02T18:18:54.742Z
+-- 產生時間：2026-10-02T18:53:49.441Z
 
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
@@ -246,6 +246,16 @@ CREATE TABLE IF NOT EXISTS booking_slots (
 CREATE INDEX IF NOT EXISTS ix_booking_slots_sort ON booking_slots(sort);
 
 CREATE INDEX IF NOT EXISTS ix_booking_slots_startAt ON booking_slots(f_start_at);
+
+CREATE TABLE IF NOT EXISTS booking_rules (
+  id TEXT PRIMARY KEY,
+  sort INTEGER NOT NULL DEFAULT 0,
+  data TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_booking_rules_sort ON booking_rules(sort);
 
 CREATE TABLE IF NOT EXISTS bookings (
   id TEXT PRIMARY KEY,

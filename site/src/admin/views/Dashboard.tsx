@@ -17,6 +17,8 @@ export default function Dashboard({ schema }: { schema: SchemaResponse }) {
   const [gasBusy, setGasBusy] = useState(false);
   const [mig, setMig] = useState<{ ok: boolean; text: string } | null>(null);
   const [migBusy, setMigBusy] = useState(false);
+  const [slot, setSlot] = useState<{ ok: boolean; text: string } | null>(null);
+  const [slotBusy, setSlotBusy] = useState(false);
 
   useEffect(() => {
     api.get('/api/admin/ops/dashboard').then(setData).catch(() => setData({}));
@@ -61,6 +63,33 @@ export default function Dashboard({ schema }: { schema: SchemaResponse }) {
       setGas({ ok: false, text: e.message });
     } finally {
       setGasBusy(false);
+    }
+  }
+
+  /** 立刻去讀行事曆重算可約時段，不等下一個整點。 */
+  async function refreshSlots() {
+    setSlotBusy(true);
+    setSlot(null);
+    try {
+      const r = await api.post<{ ok: boolean; error?: string; added: number; removed: number; kept: number; tz?: string }>(
+        '/api/admin/ops/refresh-slots',
+      );
+      setSlot(
+        r.ok
+          ? {
+              ok: true,
+              text: `重算完成：新增 ${r.added} 個時段、移除 ${r.removed} 個、沿用 ${r.kept} 個。`
+                + (r.tz && r.tz !== 'Asia/Taipei'
+                  ? `\n⚠ 行事曆時區是 ${r.tz}，不是 Asia/Taipei。算出來的時間會歪，請到 Apps Script 的「專案設定」改時區。`
+                  : ''),
+            }
+          : { ok: false, text: r.error || '重算失敗' },
+      );
+      api.get('/api/admin/ops/dashboard').then(setData).catch(() => {});
+    } catch (e: any) {
+      setSlot({ ok: false, text: e.message });
+    } finally {
+      setSlotBusy(false);
     }
   }
 
@@ -216,6 +245,37 @@ export default function Dashboard({ schema }: { schema: SchemaResponse }) {
           {gas && (
             <div className={`a-msg a-msg--${gas.ok ? 'ok' : 'err'}`} style={{ marginTop: 12, marginBottom: 0 }}>
               {gas.text}
+            </div>
+          )}
+
+          {b && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--a-line)' }}>
+              <p style={{ margin: '0 0 10px', fontSize: 14, color: 'var(--a-fg-2)', lineHeight: 1.7 }}>
+                可約時段：<b>{b.slotSource === 'calendar' ? '從 Google 行事曆的空檔自動算' : '你自己在後台開'}</b>
+                　目前有 <b>{b.slotsOpen}</b> 個未來的時段。
+                <br />
+                <a href="#/booking_rules">去改時段規則</a>（上班時間、一天幾場、要提前幾小時）
+                　<a href="#/booking_slots">看時段清單</a>
+                {b.slotSource === 'calendar' && (
+                  <>
+                    <br />
+                    在行事曆上挪了行程，按右邊這顆就會馬上反映到前台，不用等整點。
+                  </>
+                )}
+              </p>
+              {b.slotSource === 'calendar' && (
+                <button className="a-btn" onClick={refreshSlots} disabled={slotBusy}>
+                  <Icon name="calendar-clock" size={16} /> {slotBusy ? '重算中…' : '現在重算時段'}
+                </button>
+              )}
+              {slot && (
+                <div
+                  className={`a-msg a-msg--${slot.ok ? 'ok' : 'err'}`}
+                  style={{ marginTop: 12, marginBottom: 0, whiteSpace: 'pre-line' }}
+                >
+                  {slot.text}
+                </div>
+              )}
             </div>
           )}
         </div>

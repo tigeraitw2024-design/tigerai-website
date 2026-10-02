@@ -13,7 +13,8 @@
     "verify": "node tools/verify.mjs",
     "mobile": "node tools/mobile.mjs",
     "smoke": "node tools/smoke.mjs",
-    "admin-shots": "node tools/admin-shots.mjs"
+    "admin-shots": "node tools/admin-shots.mjs",
+    "gas-test": "node tools/gas-test.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4",

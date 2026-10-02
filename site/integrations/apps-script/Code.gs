@@ -3,12 +3,15 @@
  *
  * Cloudflare Workers 的網路只允許 HTTP，不能開 SMTP 連線，所以沒辦法直接登入
  * Gmail 寄信。這支小程式跑在 Google 自己的機器上，收到官網的 HTTP 請求之後
- * 代為執行三件事：
+ * 代為執行這些事：
  *
- *   action: 'mail'     用這個帳號的 Gmail 寄一封信
- *   action: 'lead'     把一列資料寫進 Google 試算表（CRM 每 2 小時來抓）
- *   action: 'booking'  同上，另外在 Google 行事曆開一個時段並邀請對方
+ *   action: 'mail'         用這個帳號的 Gmail 寄一封信
+ *   action: 'lead'         把一列資料寫進 Google 試算表（CRM 每 2 小時來抓）
+ *   action: 'slots'        讀行事曆的空檔，算出哪些時段可以約
+ *   action: 'booking'      寫試算表 ＋ 在行事曆開一格 ＋ 寄邀請給對方
+ *   action: 'eventStatus'  查對方按了「是」還是「否」
  *   action: 'cancelEvent'  取消行事曆上的那一場
+ *   action: 'ping'         只確認網址和密語對不對
  *
  * ── 這支程式用哪個帳號跑很重要 ────────────────────────────────
  * Apps Script 是以「擁有者的身分」執行，所以它有權限讀寫這個帳號的所有信件、
@@ -17,18 +20,24 @@
  *
  * 要讓自己看得到資料，用「分享」而不是「共用帳號」：
  *   試算表 → 分享給你的公司信箱
- *   行事曆 → 設定 → 與特定使用者共用 → 加你的公司信箱
+ *   行事曆 → 設定 → 與特定使用者共用 → 加你的公司信箱（權限給「變更活動」）
  * 這樣你在自己的 Google 日曆裡就看得到所有預約，但腳本碰不到你的帳號。
+ *
+ * ⚠ 可約時段是讀「這個帳號看得到的行事曆」算出來的。你主帳號上的私人行程
+ *   它看不到，所以不會自動避開。想讓它避開，就把你的行事曆分享給這個專用帳號，
+ *   再把那個行事曆 ID 填進後台的「要避開哪些行事曆」。
  *
  * ── 部署步驟 ──────────────────────────────────────────────────
  * 1. 用官網專用帳號登入 https://script.google.com ，新增專案
  * 2. 把編輯區內容全部刪掉，貼上這整份
  * 3. 改下面三個設定：SECRET、SHEET_ID、CALENDAR_ID
- * 4. 右上「部署」→「新增部署作業」→ 類型選「網頁應用程式」
+ * 4. 左邊齒輪「專案設定」→ 時區改成 (GMT+08:00) Taipei
+ *    ← 這一步不做，算出來的可約時段會整個時區歪掉
+ * 5. 右上「部署」→「新增部署作業」→ 類型選「網頁應用程式」
  *      執行身分：我自己
  *      具有存取權的使用者：任何人        ← 一定要選這個，Cloudflare 才打得到
- * 5. 第一次會要求授權，按「允許」
- * 6. 複製產生的網址（.../exec 結尾），連同 SECRET 一起給工程端
+ * 6. 第一次會要求授權，按「允許」
+ * 7. 複製產生的網址（.../exec 結尾），連同 SECRET 一起給工程端
  *
  * ⚠ 每次改完程式都要重新「部署 → 管理部署作業 → 編輯 → 版本改成新版本」，
  *   否則線上跑的還是舊版。這是 Apps Script 最常見的坑。
@@ -44,7 +53,7 @@ const SECRET = '請換成一串夠長的亂碼';
  *  從網址中間那段抄過來：docs.google.com/spreadsheets/d/【這一段】/edit */
 const SHEET_ID = '';
 
-/** 要把預約寫進哪個行事曆。留空就用這個帳號的主行事曆。 */
+/** 預約要寫進哪個行事曆。留空就用這個帳號的主行事曆。 */
 const CALENDAR_ID = '';
 
 /** 試算表裡的分頁名稱。不存在會自動建立。 */
@@ -68,9 +77,11 @@ function doPost(e) {
     switch (body.action) {
       case 'mail': return json(sendMail_(body));
       case 'lead': return json(appendLead_(body));
+      case 'slots': return json(freeSlots_(body));
       case 'booking': return json(handleBooking_(body));
+      case 'eventStatus': return json(eventStatus_(body));
       case 'cancelEvent': return json(cancelEvent_(body));
-      case 'ping': return json({ ok: true, at: new Date().toISOString() });
+      case 'ping': return json({ ok: true, at: new Date().toISOString(), tz: Session.getScriptTimeZone() });
       default: return json({ ok: false, error: '不認得的 action：' + body.action });
     }
   } catch (err) {
@@ -183,25 +194,201 @@ function appendLead_(body) {
   }
 }
 
+// ── 行事曆：算出哪些時段可以約 ──────────────────────────────────
+
+/** 寫預約用的行事曆（只有一個）。 */
+function writeCalendar_() {
+  const cal = CALENDAR_ID ? CalendarApp.getCalendarById(CALENDAR_ID) : CalendarApp.getDefaultCalendar();
+  if (!cal) throw new Error('找不到行事曆，請確認 CALENDAR_ID');
+  return cal;
+}
+
+/**
+ * 算空檔時要避開哪些行事曆。
+ *
+ * 一定包含寫入用的那一個，不然已經排好的預約會被當成空檔再賣一次。
+ * extra 是後台填的，用逗號分隔——通常是 Robin 把自己的主行事曆分享給這個
+ * 專用帳號之後，把那個行事曆 ID 填進來，這樣他的私人行程也會被避開。
+ *
+ * 讀不到的行事曆直接跳過，不要讓整支掛掉：ID 打錯的下場不該是「前台約不到」。
+ */
+function busyCalendars_(extra) {
+  const out = [writeCalendar_()];
+  const seen = {};
+  seen[out[0].getId()] = true;
+  String(extra || '')
+    .split(',')
+    .map(function (s) { return s.trim(); })
+    .filter(Boolean)
+    .forEach(function (id) {
+      if (seen[id]) return;
+      try {
+        const c = CalendarApp.getCalendarById(id);
+        if (c) { out.push(c); seen[id] = true; }
+      } catch (e) {
+        // ID 錯、或沒分享給這個帳號，跳過
+      }
+    });
+  return out;
+}
+
+/** 這個活動算不算佔用時間。 */
+function blocksTime_(ev, ignoreAllDay) {
+  try {
+    // 自己已經按「不參加」的會議不算佔用
+    if (ev.getMyStatus && ev.getMyStatus() === CalendarApp.GuestStatus.NO) return false;
+  } catch (e) {
+    // 有些活動（例如別人的生日）問不到狀態，當成佔用比較安全
+  }
+  if (ev.isAllDayEvent()) return !ignoreAllDay;
+  return true;
+}
+
+/**
+ * body: { rules: {...} }
+ *
+ * 規則都從官網後台傳進來，這裡不寫死——Robin 要能自己改上班時間、
+ * 一天最多幾場、要提前幾小時，不用找人改程式。
+ *
+ * 回傳的是 ISO 時間字串，時區換算在這邊做完。所以**專案設定的時區一定要是
+ * Taipei**，不然 new Date(年, 月, 日) 這種「當地時間」會算在錯的時區上。
+ */
+function freeSlots_(body) {
+  const r = body.rules || {};
+  // 一場至少 5 分鐘：0 或負數會讓下面的 for 迴圈永遠跑不完，
+  // 在 Apps Script 上就是整支卡住然後吃掉今天的執行額度。
+  const slotMin = clamp_(num_(r.slotMinutes, 30), 5, 480);
+  const gapMin = clamp_(num_(r.gapMinutes, 0), 0, 480);
+  const daysAhead = clamp_(num_(r.daysAhead, 14), 0, 90);
+  const leadMs = clamp_(num_(r.leadHours, 0), 0, 8760) * 3600000;
+  const maxPerDay = clamp_(num_(r.maxPerDay, 0), 0, 100);
+  const ignoreAllDay = !!r.ignoreAllDay;
+
+  // 1=週一 … 7=週日。沒填就週一到週五。
+  const weekdays = (r.weekdays && r.weekdays.length ? r.weekdays : [1, 2, 3, 4, 5]).map(Number);
+
+  const from = parseHM_(r.dayStart, 9, 0);
+  const to = parseHM_(r.dayEnd, 18, 0);
+
+  const cals = busyCalendars_(r.calendarIds);
+  const now = new Date();
+  const earliest = now.getTime() + leadMs;
+  const slots = [];
+
+  for (let d = 0; d <= daysAhead; d++) {
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
+    const dow = day.getDay() === 0 ? 7 : day.getDay();   // getDay() 是 0=週日
+    if (weekdays.indexOf(dow) < 0) continue;
+
+    const dayFrom = new Date(day.getFullYear(), day.getMonth(), day.getDate(), from.h, from.m, 0, 0);
+    const dayTo = new Date(day.getFullYear(), day.getMonth(), day.getDate(), to.h, to.m, 0, 0);
+    if (dayTo.getTime() <= dayFrom.getTime()) continue;
+    if (dayTo.getTime() < earliest) continue;
+
+    // 這一天的活動一次抓完。每個候選時段都去問一次行事曆的話，
+    // 兩週 × 一天 16 格 × 2 個行事曆 = 幾百次呼叫，一定超時。
+    const busy = [];
+    cals.forEach(function (c) {
+      let evs = [];
+      try { evs = c.getEvents(dayFrom, dayTo); } catch (e) { return; }
+      evs.forEach(function (ev) {
+        if (!blocksTime_(ev, ignoreAllDay)) return;
+        if (ev.isAllDayEvent()) {
+          busy.push({ s: dayFrom.getTime(), e: dayTo.getTime() });
+          return;
+        }
+        busy.push({ s: ev.getStartTime().getTime(), e: ev.getEndTime().getTime() });
+      });
+    });
+
+    let added = 0;
+    const step = Math.max(1, slotMin + gapMin) * 60000;
+    for (let t = dayFrom.getTime(); t + slotMin * 60000 <= dayTo.getTime(); t += step) {
+      if (maxPerDay && added >= maxPerDay) break;
+      const s = t;
+      const e = t + slotMin * 60000;
+      if (s < earliest) continue;
+      let clash = false;
+      for (let i = 0; i < busy.length; i++) {
+        if (s < busy[i].e && e > busy[i].s) { clash = true; break; }
+      }
+      if (clash) continue;
+      slots.push({ startAt: new Date(s).toISOString(), minutes: slotMin });
+      added++;
+    }
+  }
+
+  return { ok: true, slots: slots, tz: Session.getScriptTimeZone(), count: slots.length };
+}
+
+/**
+ * 數字參數。
+ *
+ * 不要用 `parseInt(x) || 預設值`：那樣寫的話，合法的 0 會被當成「沒填」
+ * 而換成預設值。「可以約到幾天後 = 0」的意思是「只開今天」，不是「開兩週」。
+ */
+function num_(v, def) {
+  const n = Number(v);
+  return isNaN(n) || !isFinite(n) ? def : n;
+}
+
+function clamp_(n, lo, hi) {
+  return Math.min(hi, Math.max(lo, Math.floor(n)));
+}
+
+/** 'HH:MM' → {h, m}。壞掉就用預設值，不要讓前台整個約不到。 */
+function parseHM_(s, dh, dm) {
+  const parts = String(s || '').split(':');
+  if (parts.length !== 2) return { h: dh, m: dm };
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  if (isNaN(h) || isNaN(m)) return { h: dh, m: dm };
+  return { h: Math.min(23, Math.max(0, h)), m: Math.min(59, Math.max(0, m)) };
+}
+
 // ── 預約：寫試算表 ＋ 開行事曆 ──────────────────────────────────
 
 /**
- * body: { row: {...}, calendar: { startAt, minutes, title, description, guestEmail } }
+ * body: { row: {...}, calendar: { startAt, minutes, title, description, guestEmail }, rules? }
+ *
+ * 開活動之前會**再檢查一次這個時間還空著**。官網前台看到的可約時段是快取的
+ * （最久一小時前算的），這段時間裡 Robin 可能自己在行事曆上排了別的事。
+ * 行事曆是真相，所以最後一刻以這裡的檢查為準，撞期就回 taken，
+ * 讓官網告訴客戶「這個時間剛剛被佔走了，請選別的」。
  *
  * 把對方加成與會者，Google 會自動寄一封行事曆邀請給他。
  * 他按「是」就等於確認了這場會議，而且這場會直接進他的手機行事曆。
  *
- * 回傳 eventId，官網存起來，之後要改時間或取消才找得到這場活動。
+ * 回傳 eventId，官網存起來，之後要查他按了什麼、或要取消才找得到這場活動。
  */
 function handleBooking_(body) {
+  const c = body.calendar;
+  const r = body.rules || {};
+
+  // 先檢查時間，再寫試算表。順序反過來的話，撞期的人也會留在名單上，
+  // 而他其實沒約到——那份表就不能直接拿去跟進了。
+  if (c && c.startAt) {
+    const s0 = new Date(c.startAt);
+    const e0 = new Date(s0.getTime() + (parseInt(c.minutes, 10) || 30) * 60000);
+    const cals = busyCalendars_(r.calendarIds);
+    let taken = false;
+    cals.forEach(function (cal) {
+      if (taken) return;
+      let evs = [];
+      try { evs = cal.getEvents(s0, e0); } catch (e) { return; }
+      evs.forEach(function (ev) {
+        if (!blocksTime_(ev, !!r.ignoreAllDay)) return;
+        taken = true;
+      });
+    });
+    if (taken) return { ok: false, error: 'taken' };
+  }
+
   const sheetResult = appendLead_(body);
 
-  const c = body.calendar;
   if (!c || !c.startAt) return { ok: true, sheet: sheetResult, calendar: null };
 
-  const cal = CALENDAR_ID ? CalendarApp.getCalendarById(CALENDAR_ID) : CalendarApp.getDefaultCalendar();
-  if (!cal) return { ok: true, sheet: sheetResult, calendar: { ok: false, error: '找不到行事曆' } };
-
+  const cal = writeCalendar_();
   const start = new Date(c.startAt);
   const end = new Date(start.getTime() + (parseInt(c.minutes, 10) || 30) * 60000);
 
@@ -215,13 +402,52 @@ function handleBooking_(body) {
 }
 
 /**
+ * 查對方按了「是」還是「否」。
+ * body: { items: [{ eventId, email }] }
+ *
+ * 回 yes / no / maybe / invited（還沒按）/ gone（活動被刪了）/ error。
+ * 官網的 Cron 每小時來問一次，把 yes 的預約標成已確認、no 的標成已取消。
+ *
+ * 為什麼是官網來問、不是這邊主動通知官網：主動通知要在官網開一支對外的
+ * 寫入端點，又多一把鑰匙要管。官網的 Cron 本來就在跑，順便問一下最省事，
+ * 而且逾時自動取消是 24 小時，每小時問一次綽綽有餘。
+ */
+function eventStatus_(body) {
+  const items = body.items || [];
+  if (!items.length) return { ok: true, results: [] };
+
+  const cal = writeCalendar_();
+  const results = items.map(function (it) {
+    try {
+      const ev = cal.getEventById(it.eventId);
+      if (!ev) return { eventId: it.eventId, status: 'gone' };
+      const g = ev.getGuestByEmail(String(it.email || ''));
+      if (!g) return { eventId: it.eventId, status: 'invited' };
+      const st = g.getGuestStatus();
+      if (st === CalendarApp.GuestStatus.YES) return { eventId: it.eventId, status: 'yes' };
+      if (st === CalendarApp.GuestStatus.NO) return { eventId: it.eventId, status: 'no' };
+      if (st === CalendarApp.GuestStatus.MAYBE) return { eventId: it.eventId, status: 'maybe' };
+      return { eventId: it.eventId, status: 'invited' };
+    } catch (e) {
+      return { eventId: it.eventId, status: 'error', error: String(e).slice(0, 120) };
+    }
+  });
+  return { ok: true, results: results };
+}
+
+/**
  * 取消一場預約的行事曆活動。
- * body: { action:'cancelEvent', eventId }
+ * body: { eventId }
+ *
+ * deleteEvent() 會通知與會者，所以客戶那邊的行事曆也會自己消失。
  */
 function cancelEvent_(body) {
-  const cal = CALENDAR_ID ? CalendarApp.getCalendarById(CALENDAR_ID) : CalendarApp.getDefaultCalendar();
-  const ev = cal.getEventById(body.eventId);
-  if (!ev) return { ok: false, error: '找不到這場活動' };
-  ev.deleteEvent();
-  return { ok: true };
+  try {
+    const ev = writeCalendar_().getEventById(body.eventId);
+    if (!ev) return { ok: true, note: '活動已經不在了' };
+    ev.deleteEvent();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
 }

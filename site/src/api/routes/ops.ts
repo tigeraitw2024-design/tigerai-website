@@ -5,6 +5,7 @@ import { fullSchemaSQL, nowISO, rowToRecord } from '../db';
 import { audit } from '../auth';
 import { flushMailQueue } from '../adapters/mail';
 import { flushLeadQueue } from '../adapters/leads';
+import { cancelBookingEvent, gasReady, getRules, pollGuestStatus, refreshSlots } from '../adapters/calendar';
 import { stripMeta } from './public';
 
 /**
@@ -77,6 +78,8 @@ app.get('/dashboard', async (ctx) => {
       members: await count('members'),
       ordersPending: await count('orders', "WHERE data LIKE '%\"state\":\"pending\"%'"),
       ordersWeek: await count('orders', 'WHERE created_at > ?', [since]),
+      slotsOpen: await count('booking_slots', 'WHERE f_start_at > ?', [nowISO()]),
+      slotSource: (await getRules(ctx.env.DB)).source,
     };
   }
 
@@ -88,6 +91,7 @@ app.get('/dashboard', async (ctx) => {
       syncFailed: await count('sync_queue', "WHERE state='failed'"),
       mailProvider: ctx.env.MAIL_PROVIDER || 'console',
       leadSync: ctx.env.LEAD_SYNC || 'none',
+      gasReady: gasReady(ctx.env as any),
       media: await count('media'),
       users: await count('users'),
     };
@@ -153,6 +157,24 @@ async function tableNames(db: D1Database): Promise<string[]> {
   return (results || []).map((r: any) => String(r.name)).sort();
 }
 
+/**
+ * 手動重算可約時段。
+ *
+ * 他在行事曆上挪了行程、想馬上讓前台反映，不用等下一個整點。
+ * 也是剛設定好規則時用來驗「算出來的時段對不對」的那顆按鈕。
+ */
+app.post('/refresh-slots', async (ctx) => {
+  const admin = ctx.get('admin')!;
+  if (admin.role !== 'owner' && admin.role !== 'sales') return ctx.json({ error: '權限不足' }, 403);
+  try {
+    const r = await refreshSlots(ctx.env as any);
+    if ('skipped' in r) return ctx.json({ ok: false, error: r.skipped });
+    return ctx.json({ ok: true, ...r });
+  } catch (e: any) {
+    return ctx.json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
 /** 手動催一次名單同步。剛設定好 Apps Script 時用這個驗，不用等一小時。 */
 app.post('/flush-sync', async (ctx) => {
   const r = await flushLeadQueue(ctx.env as any, 8);
@@ -190,11 +212,13 @@ export default app;
 /**
  * 排程工作。由 wrangler.jsonc 的 triggers.crons 每小時叫一次。
  *
- * 四件事：
+ * 六件事：
  *   1. 寄佇列裡的信
  *   2. 把名單送到 Google 試算表（CRM 再從那裡抓）
- *   3. 把超過 24 小時還沒確認的預約自動取消，時段放回去
- *   4. 清掉過期的 session、代幣、頻率限制紀錄
+ *   3. 重算可約時段（時段來源設成行事曆時才做）
+ *   4. 問客戶在行事曆邀請上按了是還是否
+ *   5. 把超過 24 小時還沒按的預約自動取消，時段放回去
+ *   6. 清掉過期的 session、代幣、頻率限制紀錄
  *
  * 第 3 點不做的話，這三張表會一直長大。D1 免費方案有 5 GB，
  * 撐得很久，但「撐得很久」不等於「不用清」。
@@ -216,6 +240,23 @@ export async function runCron(env: Env) {
     log.push(`名單同步 出錯：${e?.message || e}`);
   }
 
+  // 可約時段重算。放在問狀態之前：剛放回去的時段這一輪就能重新開放。
+  try {
+    const r = await refreshSlots(env as any);
+    if ('skipped' in r) { if (gasReady(env as any)) log.push(`時段重算 跳過（${r.skipped}）`); }
+    else log.push(`時段重算 ${r.note}`);
+  } catch (e: any) {
+    log.push(`時段重算 出錯：${e?.message || e}`);
+  }
+
+  // 客戶在行事曆邀請上回應了沒
+  try {
+    const r = await pollGuestStatus(env as any);
+    if (!('skipped' in r) && r.checked) log.push(`邀請狀態 查 ${r.checked} 筆 改 ${r.changed} 筆`);
+  } catch (e: any) {
+    log.push(`邀請狀態 出錯：${e?.message || e}`);
+  }
+
   // 逾時預約
   try {
     const cutoff = new Date(Date.now() - 24 * 3600e3).toISOString();
@@ -230,6 +271,9 @@ export async function runCron(env: Env) {
       rec.state = 'expired';
       await env.DB.prepare('UPDATE bookings SET data=?, updated_at=? WHERE id=?')
         .bind(JSON.stringify(stripMeta(rec)), nowISO(), row.id).run();
+      // 客戶一直沒按「是」，行事曆上那一場也要撤掉，不然你會照著去開一個
+      // 客戶根本沒確認的會。刪除會通知與會者，等於再提醒他一次。
+      await cancelBookingEvent(env as any, String(rec.eventId || ''));
       // 時段放回去，不然位子會被一直佔著
       if (rec.slot) {
         const s = await env.DB.prepare('SELECT * FROM booking_slots WHERE id=?').bind(rec.slot).first<any>();

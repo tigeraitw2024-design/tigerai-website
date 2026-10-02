@@ -59,6 +59,12 @@ export async function queueLeadSync(
   db: D1Database,
   row: LeadRow,
   calendar?: LeadCalendar,
+  /**
+   * 這一筆是哪一個預約。帶了的話，送出成功、而且 Apps Script 回了活動編號時，
+   * 會把編號寫回那筆預約——沒有編號就查不到客戶在邀請上按了什麼，
+   * 「按是就算確認」那條路會整個斷掉。
+   */
+  bookingId?: string,
 ) {
   if (!row?.email) return;
   try {
@@ -69,7 +75,7 @@ export async function queueLeadSync(
       .bind(
         newId(),
         calendar ? 'booking' : 'lead',
-        JSON.stringify({ row: toSheetRow(row), calendar: calendar || null }),
+        JSON.stringify({ row: toSheetRow(row), calendar: calendar || null, bookingId: bookingId || '' }),
         'queued',
         nowISO(),
       )
@@ -85,8 +91,11 @@ export async function queueLeadSync(
  * 為什麼要換：Robin 會自己打開那份表看、自己改。英文欄名他要對照才知道是什麼。
  * 欄名也刻意跟 CRM 的進料欄位一致，CRM 抓進去不用再做對應。
  * 這個對照表改動的時候，Code.gs 的 HEADERS 要一起改。
+ *
+ * calendar.ts 開行事曆活動時也會順便寫一列進試算表（同一次呼叫做兩件事），
+ * 所以這支要開放出去——兩邊各自維護一份對照表，遲早會長得不一樣。
  */
-function toSheetRow(x: LeadRow): Record<string, string> {
+export function toSheetRow(x: LeadRow): Record<string, string> {
   return {
     姓名: x.name || '',
     公司: x.company || '',
@@ -120,12 +129,14 @@ function sourceLabel(s?: string) {
 
 // ── 送出去 ──────────────────────────────────────────────────────
 
-type Target = (payload: any, env: Env) => Promise<void>;
+/** 回傳 Apps Script 給的活動編號（有開行事曆活動的話），沒有就回空字串。 */
+type Target = (payload: any, env: Env) => Promise<string>;
 
 const targets: Record<string, Target> = {
   /** 不往外送，只把佇列清掉。還沒設定 Google 帳號前的預設值。 */
   async none(payload) {
     console.log(`[leads] （未設定同步）${payload?.row?.Email}`);
+    return '';
   },
 
   /**
@@ -152,7 +163,13 @@ const targets: Record<string, Target> = {
     if (!r.ok) throw new Error(`Apps Script HTTP ${r.status}`);
     let out: any = null;
     try { out = JSON.parse(txt); } catch { throw new Error(`回傳不是 JSON：${txt.slice(0, 120)}`); }
+    if (out?.error === 'taken') {
+      // 時段在排隊這段時間裡被佔走了。再試也不會成功，所以不要重試——
+      // 試算表那一列已經有了，預約也存著，你在後台看得到，自己跟客戶改時間。
+      throw new Error('時段已被佔用，沒有建立行事曆活動（請在後台跟客戶改時間）');
+    }
     if (!out?.ok) throw new Error(`Apps Script：${out?.error || '未知錯誤'}`);
+    return String(out?.calendar?.eventId || '');
   },
 };
 
@@ -175,11 +192,13 @@ export async function flushLeadQueue(env: Env, batch = 8) {
   let fail = 0;
   for (const row of results || []) {
     try {
-      await target(JSON.parse(row.payload || '{}'), env);
+      const payload = JSON.parse(row.payload || '{}');
+      const eventId = await target(payload, env);
       await env.DB
         .prepare("UPDATE sync_queue SET state='sent', sent_at=? WHERE id=?")
         .bind(nowISO(), row.id)
         .run();
+      if (eventId && payload.bookingId) await writeBackEventId(env.DB, payload.bookingId, eventId);
       ok++;
     } catch (e: any) {
       // 試滿 5 次就停，留在表裡等人看。無限重試會在設定錯的時候吃光寫入額度。
@@ -192,4 +211,28 @@ export async function flushLeadQueue(env: Env, batch = 8) {
     }
   }
   return { ok, fail };
+}
+
+/**
+ * 把行事曆活動編號寫回那筆預約。
+ *
+ * 走到這裡表示當初送出預約的時候 Google 連不上（當場開活動失敗），
+ * 改由佇列補開。補開成功才有編號，有編號之後「客戶按了是沒有」才查得到。
+ *
+ * 寫回失敗只記 log：佇列那一列已經標成送出了，重試只會重複寄一次邀請。
+ */
+async function writeBackEventId(db: D1Database, bookingId: string, eventId: string) {
+  try {
+    const row = await db.prepare('SELECT * FROM bookings WHERE id=?').bind(bookingId).first<any>();
+    if (!row) return;
+    const data = JSON.parse(row.data || '{}');
+    if (data.eventId) return;
+    data.eventId = eventId;
+    await db
+      .prepare('UPDATE bookings SET data=?, updated_at=? WHERE id=?')
+      .bind(JSON.stringify(data), nowISO(), bookingId)
+      .run();
+  } catch (e) {
+    console.error('[leads] 寫回活動編號失敗', e);
+  }
 }

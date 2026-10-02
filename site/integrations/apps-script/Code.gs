@@ -8,6 +8,7 @@
  *   action: 'mail'     用這個帳號的 Gmail 寄一封信
  *   action: 'lead'     把一列資料寫進 Google 試算表（CRM 每 2 小時來抓）
  *   action: 'booking'  同上，另外在 Google 行事曆開一個時段並邀請對方
+ *   action: 'cancelEvent'  取消行事曆上的那一場
  *
  * ── 這支程式用哪個帳號跑很重要 ────────────────────────────────
  * Apps Script 是以「擁有者的身分」執行，所以它有權限讀寫這個帳號的所有信件、
@@ -68,6 +69,7 @@ function doPost(e) {
       case 'mail': return json(sendMail_(body));
       case 'lead': return json(appendLead_(body));
       case 'booking': return json(handleBooking_(body));
+      case 'cancelEvent': return json(cancelEvent_(body));
       case 'ping': return json({ ok: true, at: new Date().toISOString() });
       default: return json({ ok: false, error: '不認得的 action：' + body.action });
     }

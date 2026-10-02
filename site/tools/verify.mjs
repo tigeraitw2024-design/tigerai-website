@@ -60,10 +60,17 @@ const PAGES = [
     name: 'home',
     proto: '首頁.dc.html',
     route: '/',
-    // 13 部門模式的圖框，原型是拖圖框、正式站是後台圖片欄位，兩邊都遮掉。
-    // 預設是流程模式，所以這個遮罩平常不會生效，留著是為了之後測 13 部門。
-    maskProto: '#dept-media-host',
-    maskBuilt: '[data-cms-image="dept-media"]',
+    // 兩個遮罩：
+    //
+    // 1. 13 部門模式的圖框。原型是拖圖框、正式站是後台圖片欄位，兩邊都遮掉。
+    //    預設是流程模式，所以這個遮罩平常不會生效，留著是為了之後測 13 部門。
+    //
+    // 2. Tiger GPU Pro 那一條（#tg-pro）。Robin 要求在那片黑底後面加一層
+    //    斜 45 度流動的 App 圖示，原型沒有這個東西，所以那一區本來就不會一樣。
+    //    遮掉整個區塊而不是放寬整頁的門檻——放寬門檻等於讓首頁其他地方的
+    //    真錯誤也躲得過去。遮罩只放棄這一塊，其餘仍然是 0.00% 的嚴格標準。
+    maskProto: '#dept-media-host, #tg-pro',
+    maskBuilt: '[data-cms-image="dept-media"], #tg-pro',
   },
   {
     name: 'products',
@@ -326,7 +333,26 @@ async function settle(page, quietRounds = 3, maxMs = 8000) {
       } catch {
         // 舊瀏覽器沒有 getAnimations，就退回只看 DOM
       }
-      return `${document.body.innerText.length}|${d.scrollHeight}|${document.querySelectorAll('*').length}|${moving}`;
+      // 連「有沒有東西在動」都要看，不只是 DOM 有沒有變。
+      //
+      // 頂欄那個跟著捲動變形的膠囊，還有筆電的傾斜角度，都是 JavaScript 每一幀
+      // 直接寫 element.style 算出來的。那種東西不是 CSS 動畫，getAnimations()
+      // 抓不到，但畫面每一幀都在變。所以這裡把「所有帶 inline transform 的元素
+      // 現在的值」也收進指紋裡——值不再變動，才算真的停了。
+      let moving2 = '';
+      for (const el of document.querySelectorAll('[style*="transform"],[style*="opacity"]')) {
+        const st = el.getAttribute('style') || '';
+        const t = /transform:[^;]*/.exec(st)?.[0] || '';
+        const o = /opacity:[^;]*/.exec(st)?.[0] || '';
+        moving2 += t + o;
+      }
+      return `${document.body.innerText.length}|${d.scrollHeight}|${document.querySelectorAll('*').length}|${moving}|${moving2.length}|${hash(moving2)}`;
+
+      function hash(str) {
+        let h = 0;
+        for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+        return h;
+      }
     });
     const stillMoving = now.endsWith('|0') === false;
     if (now === last && !stillMoving) {

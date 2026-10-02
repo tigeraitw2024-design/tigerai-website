@@ -1,0 +1,144 @@
+---
+// 斜 45 度流動的 App 圖示背景。
+//
+// Robin 要的效果：黑底後面有一片 App 圖示，10% 透明度，斜 45 度，像流水一樣
+// 不停地跑。
+//
+// ── 怎麼做到的 ────────────────────────────────────────────────
+// 外層 overflow:hidden 當窗口，裡面放一塊「比窗口大很多」的方形，整塊旋轉 -45 度。
+// 方形裡是幾排水平跑的圖示列，每一列把內容接兩份再用 translateX(-50%) 無縫循環
+// （跟夥伴 logo 牆同一招）。列轉了 45 度之後，水平跑看起來就是斜著流。
+//
+// 為什麼不是每個圖示各自旋轉：那樣圖示會是歪的，不好看。旋轉的是整塊畫布，
+// 所以圖示本身保持正的，只有「流動的方向」是斜的。
+//
+// 相鄰的列速度與起始位置都不一樣（而且方向交替），不然會變成整齊的斜線陣列，
+// 看起來像壁紙不像流水。
+//
+// ── 為什麼用 CSS 不用 JavaScript ─────────────────────────────
+// 這是純裝飾，不該為了它載入任何 JS。而且 transform 的動畫跑在合成層上，
+// 不吃主執行緒，手機上也不會卡。
+//
+// ── 開了「減少動態」的人 ──────────────────────────────────────
+// 動畫整個停住，圖示靜止不動。前庭敏感的人看到大面積的持續移動會不舒服，
+// 而這只是裝飾，停掉沒有任何損失。
+import { appIcons, type AppIcon } from '../../data/app-icons';
+
+interface Props {
+  /** 要顯示哪些圖示（slug）。沒給就用全部。 */
+  slugs?: string[];
+  /** 幾排。短的區塊用 5 排就夠，排太多只是浪費。 */
+  rows?: number;
+  /** 透明度。Robin 指定 10%。 */
+  opacity?: number;
+  /** 一列跑完一圈的秒數，排與排之間會各自加減。 */
+  seconds?: number;
+}
+
+const { slugs, rows = 5, opacity = 0.1, seconds = 60 } = Astro.props;
+
+const pool: AppIcon[] = slugs?.length
+  ? slugs.map((s) => appIcons.find((i) => i.slug === s)).filter((x): x is AppIcon => !!x)
+  : appIcons;
+
+// 每一列抓一段，起點各自錯開，所以相鄰兩列不會出現同一個圖示並排。
+// 一列放 14 個，接兩份剛好夠寬，再多只是增加 DOM。
+const PER_ROW = 14;
+const lines = Array.from({ length: rows }, (_, r) => {
+  const items = Array.from({ length: PER_ROW }, (_, i) => pool[(r * 5 + i * 3) % pool.length]);
+  return {
+    items: [...items, ...items],       // 接兩份，配合 translateX(-50%) 無縫
+    duration: seconds + r * 7,          // 每列速度不同
+    reverse: r % 2 === 1,               // 方向交替
+    delay: -(r * 11),                   // 起始位置錯開
+  };
+});
+---
+
+<div
+  class="tg-river"
+  aria-hidden="true"
+  style={`--tg-river-op:${opacity}`}
+>
+  <div class="tg-river__canvas">
+    {lines.map((ln) => (
+      <div
+        class="tg-river__row"
+        style={`animation-duration:${ln.duration}s;animation-delay:${ln.delay}s;animation-direction:${ln.reverse ? 'reverse' : 'normal'}`}
+      >
+        {ln.items.map((ic) => (
+          <svg viewBox="0 0 24 24" class="tg-river__icon" role="presentation">
+            <path d={ic.path} />
+          </svg>
+        ))}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style is:global>
+  /* 窗口。蓋滿整個區塊，不接受點擊，壓在內容下面。 */
+  .tg-river {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /*
+    旋轉的畫布。
+    轉 45 度之後，原本的方形不足以蓋滿窗口的四個角，所以要放大並往外推：
+    寬高各開到 190%，再用 translate(-50%,-50%) 從中心對齊。
+  */
+  .tg-river__canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 190%;
+    height: 190%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(28px, 4vw, 56px);
+  }
+
+  .tg-river__row {
+    display: flex;
+    gap: clamp(28px, 4vw, 56px);
+    width: max-content;
+    animation-name: tg-river-run;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform;
+  }
+
+  /* 接了兩份，所以跑完一半就回到起點，看起來是無縫的 */
+  @keyframes tg-river-run {
+    to { transform: translateX(-50%); }
+  }
+
+  .tg-river__icon {
+    width: clamp(28px, 3.2vw, 44px);
+    height: clamp(28px, 3.2vw, 44px);
+    flex: none;
+    fill: #FFFFFF;
+    opacity: var(--tg-river-op, .1);
+  }
+
+  /* 手機：圖示小一點、排少一點、跑慢一點。
+     小螢幕上同樣的尺寸會顯得很擠，而且一直動很吵。 */
+  @media (max-width: 600px) {
+    .tg-river__canvas { gap: 22px; }
+    .tg-river__row { gap: 22px; animation-duration: 90s !important; }
+    .tg-river__icon { width: 24px; height: 24px; }
+    /* 超過 4 排在手機上看不出層次，只是多畫 DOM */
+    .tg-river__row:nth-child(n + 5) { display: none; }
+  }
+
+  /* 開了「減少動態」就整個停住。這只是裝飾，停掉沒有損失。 */
+  @media (prefers-reduced-motion: reduce) {
+    .tg-river__row { animation: none !important; }
+  }
+</style>

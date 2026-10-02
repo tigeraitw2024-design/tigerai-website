@@ -3,7 +3,7 @@
 -- 要改資料表結構，去改對應的 src/api/modules/*.ts，再重新產生一次。
 --
 -- 正常安裝流程不需要跑這個檔：/api/auth/bootstrap 會自己照 schema 建表。
--- 產生時間：2026-10-01T12:51:31.958Z
+-- 產生時間：2026-10-02T05:08:24.783Z
 
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,

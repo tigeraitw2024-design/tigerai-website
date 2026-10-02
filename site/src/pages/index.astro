@@ -176,16 +176,16 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
     <section data-trust-band style="background:#fff;border-bottom:1px solid var(--border-subtle)">
       <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:24px 64px;display:flex;flex-wrap:wrap;align-items:center;gap:16px 64px">
         <span style="display:flex;align-items:baseline;gap:8px">
-          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count={String(trustCompanies)}>{trustCompanies}</span>+</b>
+          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count={String(trustCompanies)} data-tg-field="trustCompanies">{trustCompanies}</span>+</b>
           <span style="font-size:13px;color:var(--fg-secondary)">企業導入</span>
         </span>
         <span style="width:1px;height:28px;background:var(--border-subtle)"></span>
         <span style="display:flex;align-items:baseline;gap:8px">
-          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count={String(trustStudents)} data-comma="1">{trustStudents.toLocaleString('en-US')}</span>+</b>
+          <b style="font-family:'Manrope',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em"><span data-count={String(trustStudents)} data-comma="1" data-tg-field="trustStudents">{trustStudents.toLocaleString('en-US')}</span>+</b>
           <span style="font-size:13px;color:var(--fg-secondary)">學員結業</span>
         </span>
         <span style="width:1px;height:28px;background:var(--border-subtle)"></span>
-        <span style="display:flex;gap:12px;flex-wrap:wrap">
+        <span style="display:flex;gap:12px;flex-wrap:wrap" data-tg-field="trustTags">
           {trustTags.map((t) => (
             <span class="t-badge t-badge--brand">{t}</span>
           ))}
@@ -198,8 +198,8 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
       <div style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:start`}>
         <div style="position:sticky;top:120px">
           <span style={EYEBROW}>Shadow AI Spend</span>
-          <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'shadowTitle', "錢和資料，正在一起流出去。")}</h2>
-          <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:40ch;margin:0">{text(home, 'shadowBody', "員工自己刷卡訂 ChatGPT、Claude、Gemini：財務看到的是零碎小額，資安看不到貼進雲端的機密。這不是「導入好難」，是 Shadow AI Spend。")}</p>
+          <h2 data-tg-field="shadowTitle" style={`${H2};margin:12px 0 16px`}>{text(home, 'shadowTitle', "錢和資料，正在一起流出去。")}</h2>
+          <p data-tg-field="shadowBody" style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:40ch;margin:0">{text(home, 'shadowBody', "員工自己刷卡訂 ChatGPT、Claude、Gemini：財務看到的是零碎小額，資安看不到貼進雲端的機密。這不是「導入好難」，是 Shadow AI Spend。")}</p>
         </div>
         <div style="display:grid;gap:24px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -231,8 +231,8 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
     <section id="products" style={`${SECTION};background:#fff;border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)`}>
       <div style={WRAP}>
         <span style={EYEBROW}>產品入口</span>
-        <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'productsTitle', "同一套系統，三個入口。")}</h2>
-        <p style="font-size:18px;line-height:1.7;color:var(--fg-secondary);max-width:62ch;margin:0 0 32px">{text(home, 'productsBody', "Local GPT 硬體、AI 服務啟動、GPU 資源管理，三條產品線其實是同一套系統。你從哪個角色進來，看到的就是你關心的那一面。")}</p>
+        <h2 data-tg-field="productsTitle" style={`${H2};margin:12px 0 16px`}>{text(home, 'productsTitle', "同一套系統，三個入口。")}</h2>
+        <p data-tg-field="productsBody" style="font-size:18px;line-height:1.7;color:var(--fg-secondary);max-width:62ch;margin:0 0 32px">{text(home, 'productsBody', "Local GPT 硬體、AI 服務啟動、GPU 資源管理，三條產品線其實是同一套系統。你從哪個角色進來，看到的就是你關心的那一面。")}</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
           {entries.map((e) => (
             <div class="t-card">
@@ -253,7 +253,7 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
     <section id="workflows" style={SECTION}>
       <div style={WRAP}>
         <span style={EYEBROW}>Workflow 展示櫃</span>
-        <h2 style={`${H2};margin:12px 0 32px`}>{text(home, 'workflowTitle', "看得見、改得動、過得了稽核的 SOP。")}</h2>
+        <h2 data-tg-field="workflowTitle" style={`${H2};margin:12px 0 32px`}>{text(home, 'workflowTitle', "看得見、改得動、過得了稽核的 SOP。")}</h2>
         <div data-chain="1" style={`display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:32px;${MONO};font-size:13px`}>
           {chain.map((c) => (
             <>
@@ -291,7 +291,7 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
       <div data-m="stack" style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center`}>
         <div>
           <span style={EYEBROW}>L1–L5 成熟度</span>
-          <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'assessTitle', "5 分鐘，測你在 L 幾。")}</h2>
+          <h2 data-tg-field="assessTitle" style={`${H2};margin:12px 0 16px`}>{text(home, 'assessTitle', "5 分鐘，測你在 L 幾。")}</h2>
           <p style="font-size:16px;line-height:1.7;color:var(--fg-secondary);max-width:44ch;margin:0 0 32px">題目和計分都是 AX Academy 的：中立的診斷方，不是虎智自家測驗。測完直接對應：該上哪門課、該導哪一階產品。</p>
           <a href="https://tigeraiax-academy.pages.dev/assessment.html" target="_blank" rel="noopener" style="text-decoration:none"><button class="t-btn t-btn--outline t-btn--lg">去 AX Academy 測評 →</button></a>
         </div>
@@ -311,7 +311,7 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
     <section id="courses" style={SECTION}>
       <div style={WRAP}>
         <span style={EYEBROW}>課程 L1–L5</span>
-        <h2 style={`${H2};margin:12px 0 32px`}>{text(home, 'coursesTitle', "從會用，到自己跑得動。")}</h2>
+        <h2 data-tg-field="coursesTitle" style={`${H2};margin:12px 0 32px`}>{text(home, 'coursesTitle', "從會用，到自己跑得動。")}</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:32px">
           {courseCards.map((c) => (
             <div class="t-card">
@@ -333,8 +333,8 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
       <div style={`${WRAP};position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:center`}>
         <div>
           <span style={EYEBROW_DARK}>顧問與方法論</span>
-          <h2 style={`${H2};margin:12px 0 16px`}>{text(home, 'methodTitle', "顧問的腦，怎麼驗證？")}</h2>
-          <p style="font-size:16px;line-height:1.7;color:#B5B2AC;max-width:52ch;margin:0 0 24px">{text(home, 'methodBody', "C1–C5 是顧問思考能力的尺，搭配九維拆解與 L.A.O.S. 拆題框架：方法公開，過程可驗，不靠形容詞。")}</p>
+          <h2 data-tg-field="methodTitle" style={`${H2};margin:12px 0 16px`}>{text(home, 'methodTitle', "顧問的腦，怎麼驗證？")}</h2>
+          <p data-tg-field="methodBody" style="font-size:16px;line-height:1.7;color:#B5B2AC;max-width:52ch;margin:0 0 24px">{text(home, 'methodBody', "C1–C5 是顧問思考能力的尺，搭配九維拆解與 L.A.O.S. 拆題框架：方法公開，過程可驗，不靠形容詞。")}</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px">
             {methodChips.map((t) => (
               <span style={`${MONO};font-size:12px;border:1px solid rgba(255,255,255,.22);padding:6px 12px`}>{t}</span>
@@ -350,7 +350,7 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
     <section id="cases" style={`${SECTION};background:#fff;border-bottom:1px solid var(--border-subtle)`}>
       <div style={WRAP}>
         <span style={EYEBROW}>案例</span>
-        <h2 style={`${H2};margin:12px 0 32px`}>{text(home, 'casesTitle', "只講模式，不講客戶機密。")}</h2>
+        <h2 data-tg-field="casesTitle" style={`${H2};margin:12px 0 32px`}>{text(home, 'casesTitle', "只講模式，不講客戶機密。")}</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;margin-bottom:48px">
           {resultCards.map((c) => (
             <div class="tg-hovercard" style={`border:1px solid var(--border-subtle);padding:32px 24px;${HOVER_CARD}`}>
@@ -373,8 +373,8 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
     <section id="contact" data-m="cta" style="background:linear-gradient(90deg,var(--tiger-500) 50%,#FFFFFF 50%);color:#0E0E0D;padding:0">
       <div style={`${WRAP};display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));column-gap:0;row-gap:32px;align-items:center`}>
         <div style="padding-right:clamp(24px,5vw,64px)">
-          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(34px,5vw,60px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px">{text(home, 'ctaTitle', "預約 30 分鐘諮詢。")}</h2>
-          <p style="font-size:18px;line-height:1.7;color:#1A1918;max-width:52ch;margin:0">{text(home, 'ctaBody', "帶著你最痛的那個部門來。我們會告訴你這件事該用哪一階、要多少算力、資料怎麼留在機房。")}</p>
+          <h2 data-tg-field="ctaTitle" style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(34px,5vw,60px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px">{text(home, 'ctaTitle', "預約 30 分鐘諮詢。")}</h2>
+          <p data-tg-field="ctaBody" style="font-size:18px;line-height:1.7;color:#1A1918;max-width:52ch;margin:0">{text(home, 'ctaBody', "帶著你最痛的那個部門來。我們會告訴你這件事該用哪一階、要多少算力、資料怎麼留在機房。")}</p>
         </div>
         <BookingCard client:load />
       </div>

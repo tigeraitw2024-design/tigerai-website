@@ -101,16 +101,16 @@ const wallOpacity = (Number(home?.gpuWallOpacity) > 0 ? Number(home!.gpuWallOpac
 
     <div class="tg-pro__content">
       <div class="tg-pro__text">
-        <span class="tg-pro__eyebrow">{eyebrow}</span>
+        <span class="tg-pro__eyebrow" data-tg-field="gpuEyebrow">{eyebrow}</span>
         {/* 打字機的詞在前、固定的標題在後。沒有 JavaScript 時第一個詞就是靜態內容，
             所以搜尋引擎與關掉 JS 的人看到的是完整的一句話。 */}
         <h2 class="tg-pro__title" id="tg-pro-title">
-          <span class="tg-pro__word" data-tgpro-word>{words[0]}</span>
-          <span class="tg-pro__caret" aria-hidden="true"></span>{title}
+          <span class="tg-pro__word" data-tgpro-word data-tg-field="gpuWords">{words[0]}</span>
+          <span class="tg-pro__caret" aria-hidden="true"></span><span data-tg-field="gpuTitle">{title}</span>
         </h2>
-        <p class="tg-pro__desc">{desc}</p>
+        <p class="tg-pro__desc" data-tg-field="gpuBody">{desc}</p>
       </div>
-      <a class="tg-pro__btn" href="/products/tiger-gpu-pro">{cta}</a>
+      <a class="tg-pro__btn" href="/products/tiger-gpu-pro" data-tg-field="gpuCta">{cta}</a>
     </div>
   </div>
 </section>

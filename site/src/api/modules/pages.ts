@@ -32,6 +32,7 @@ const mod: Module = {
           name: 'page', label: '哪一頁', type: 'select', required: true, listed: true, indexed: true, unique: true,
           options: [
             { value: 'consultants', label: '顧問與方法論' },
+            { value: 'courses', label: '課程' },
             { value: 'tiger-gpu-pro', label: 'Tiger GPU Pro' },
             { value: 'resources', label: '免費資源' },
             { value: 'blog', label: '部落格' },
@@ -104,6 +105,14 @@ const mod: Module = {
             { name: 'n', label: '用量數字', type: 'text', required: true, maxLength: 10, width: 'third' },
             { name: 'warn', label: '標成警示', type: 'boolean' },
           ],
+        },
+        {
+          name: 'bannerMinH', label: '課程頁 - Banner 最矮', type: 'number', default: 520, min: 200, max: 1200, width: 'half',
+          help: '單位是像素。Banner 高度是「螢幕高度減掉頂欄」，但不會低於這個值。螢幕很扁的筆電用得到。',
+        },
+        {
+          name: 'bannerMaxH', label: '課程頁 - Banner 最高', type: 'number', default: 1100, min: 400, max: 2000, width: 'half',
+          help: '不會超過這個值。大螢幕上不會被拉成一面牆。',
         },
         {
           name: 'blocks', label: '其他文字區塊', type: 'array',

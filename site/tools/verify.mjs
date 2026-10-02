@@ -60,10 +60,20 @@ const PAGES = [
     name: 'home',
     proto: '首頁.dc.html',
     route: '/',
-    // 13 部門模式的圖框，原型是拖圖框、正式站是後台圖片欄位，兩邊都遮掉。
-    // 預設是流程模式，所以這個遮罩平常不會生效，留著是為了之後測 13 部門。
-    maskProto: '#dept-media-host',
-    maskBuilt: '[data-cms-image="dept-media"]',
+    // 兩個遮罩：
+    //
+    // 1. 13 部門模式的圖框。原型是拖圖框、正式站是後台圖片欄位，兩邊都遮掉。
+    //    預設是流程模式，所以這個遮罩平常不會生效，留著是為了之後測 13 部門。
+    //
+    // 2. Tiger GPU Pro 入口帶（#tg-pro）。Robin 另外請 Claude Design 做了一版
+    //    新的（TigerGpuPro入口帶.html：背景圖塊牆 ＋ 打字機標題），已經照那份
+    //    移植。舊的 首頁.dc.html 還是舊版，所以那一區本來就不會一樣。
+    //
+    //    遮掉這一區而不是放寬整頁門檻——放寬門檻等於讓首頁其他地方的真錯誤
+    //    也躲得過去。等 Claude Design 把新的入口帶併回 首頁.dc.html，
+    //    這個遮罩就可以拿掉。
+    maskProto: '#dept-media-host, #tg-pro',
+    maskBuilt: '[data-cms-image="dept-media"], #tg-pro',
   },
   {
     name: 'products',
@@ -82,14 +92,30 @@ const PAGES = [
     proto: '課程.dc.html',
     route: '/courses',
     // 三張「新開班次」圖卡的封面，原型是空的拖圖框
-    maskProto: '#course-cover-01, #course-cover-02, #course-cover-03',
+    // 三張「新開班次」圖卡的封面，原型是空的拖圖框，兩邊塗成同色。
+    //
+    // 兩邊要遮到「同一層」。
+    //
+    // 原型的拖圖框是 <image-slot id="course-cover-01">，外面還包一層 div，
+    // 那層 div 有一條 1px 的下邊框。重建站沒有 image-slot，data-cms-image
+    // 直接下在那層 div 上。只遮 image-slot 的話，原型那條邊框線露在遮罩外、
+    // 重建站的被蓋掉，整條線（1258 個像素）就被算成差異。
+    //
+    // 用 :has() 讓原型也遮到外面那層 div，兩邊才對得起來。
+    maskProto: 'div:has(> #course-cover-01), div:has(> #course-cover-02), div:has(> #course-cover-03)',
     maskBuilt: '[data-cms-image="course-cover"]',
-    expect: 0.3,
-    why:
-      '滿版 Banner。原型的 image-slot 把圖算成 1440.359×575.844（橫向 0.726353、' +
-      '縱向 0.726159，兩軸不同比例），也就是被拉寬 0.36px，那是它自己幾何計算的' +
-      '四捨五入誤差。我的圖是 1440×575.844 正好貼合外框，比原型更正確，' +
-      '所以刻意不複製那個誤差。差異全部落在 Banner 照片的高對比邊緣。',
+    // Banner 整塊兩邊都藏起來再比。
+    //
+    // Robin 指定把 Banner 改成「螢幕高度減掉頂欄」（參考知識衛星），
+    // 夾在 520–1100px 之間、圖片置中裁切。原型還是固定比例 1983:793，
+    // 高度差 248px，下面所有內容跟著位移，整頁 29% 都是紅的。
+    //
+    // 用遮罩沒用——遮罩不改變高度。兩邊各自藏掉自己的 Banner，剩下的內容
+    // 就重新對齊，Banner 以下仍然是嚴格比對。
+    //
+    // 等 Claude Design 把新的 Banner 規格併回 課程.dc.html，這兩行就可以拿掉。
+    hideProto: '[data-screen-label="課程 Banner 輪播"]',
+    hideBuilt: '#tg-course-banner',
   },
   {
     name: 'consultants',
@@ -255,7 +281,7 @@ async function freezeLoopingAnimations(page) {
   return frozen;
 }
 
-async function shoot(ctx, url, file, { dismissGate = false, mask = null, normalizeFont = false } = {}) {
+async function shoot(ctx, url, file, { dismissGate = false, mask = null, hide = null, normalizeFont = false } = {}) {
   const page = await ctx.newPage();
   const problems = [];
   page.on('pageerror', (e) => problems.push(`js 錯誤：${e.message.split('\n')[0]}`));
@@ -275,6 +301,40 @@ async function shoot(ctx, url, file, { dismissGate = false, mask = null, normali
   }
   // 原型清 position 那一行是掛載後 300ms 跑的，所以要在捲動前、等它跑完才補回來
   if (normalizeFont) await undoPrototypeBugs(page);
+  /**
+   * 兩邊都先藏起來再比的區塊。
+   *
+   * 跟遮罩不一樣：遮罩是「塗成同一個顏色」，元素還在，高度也還在。
+   * 有些刻意的改動會改變高度（例如 Banner 從固定比例改成滿版螢幕高），
+   * 那下面所有東西都跟著位移，整頁就對不上了——遮罩救不了這種。
+   *
+   * 藏起來（display:none）會讓兩邊各自少掉自己那一塊的高度，剩下的內容
+   * 就重新對齊，可以繼續嚴格比對。代價是那一塊完全不驗，所以只在
+   * 「這一塊確定是刻意不同」的時候用，而且一定要寫理由。
+   */
+  if (hide) {
+    await page.evaluate((sel) => {
+      document.querySelectorAll(sel).forEach((el) => { el.style.display = 'none'; });
+    }, hide);
+    await sleep(300);
+  }
+
+  /**
+   * 截圖前把滑鼠移到角落。
+   *
+   * 點「直接進官網」之後游標會停在右上角（那個連結在 top:20 right:32），
+   * 而閘門關掉後「預約 30 分鐘諮詢」按鈕剛好長在同一個位置——於是按鈕被
+   * 算成 hover，底色從 #ECA42B 變成 #C08423。
+   *
+   * 兩邊連結的寬度差個幾像素，就決定了誰被滑到、誰沒有，所以首頁的差異
+   * 一整天在 0.00% 與 0.07% 之間跳，而且跳在頂欄那一條。
+   *
+   * (0,0) 是版面的左上角，兩邊都沒有任何可互動的東西（logo 從 64px 才開始），
+   * 所以移到那裡之後兩邊的 hover 狀態一定相同。
+   */
+  await page.mouse.move(0, 0);
+  await sleep(250);
+
   // 一次性動畫此時已經跑完，只凍住永遠不會停的那些
   await freezeLoopingAnimations(page);
   // 再確認畫面真的不動了才拍。見 settle() 的說明。
@@ -422,12 +482,12 @@ for (const p of targets) {
   const dFile = path.join(OUT, `${p.name}.diff.png`);
   const gate = p.name === 'home';
 
-  const protoProblems = await shoot(ctx, `http://127.0.0.1:${proto.port}/${encodeURIComponent(p.proto)}`, aFile, { dismissGate: gate, mask: p.maskProto, normalizeFont: true });
+  const protoProblems = await shoot(ctx, `http://127.0.0.1:${proto.port}/${encodeURIComponent(p.proto)}`, aFile, { dismissGate: gate, mask: p.maskProto, hide: p.hideProto, normalizeFont: true });
 
   let builtProblems = [];
   let r = null;
   try {
-    builtProblems = await shoot(ctx, `http://127.0.0.1:${built.port}${p.route}`, bFile, { dismissGate: gate, mask: p.maskBuilt });
+    builtProblems = await shoot(ctx, `http://127.0.0.1:${built.port}${p.route}`, bFile, { dismissGate: gate, mask: p.maskBuilt, hide: p.hideBuilt });
     r = await compare(aFile, bFile, dFile);
   } catch (e) {
     rows.push({ name: p.name, err: e.message.split('\n')[0] });

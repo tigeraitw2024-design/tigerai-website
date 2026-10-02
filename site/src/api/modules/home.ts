@@ -73,7 +73,24 @@ const mod: Module = {
         },
         { name: 'productsBody', label: '④ 產品入口 - 內文', type: 'textarea', maxLength: 160 },
 
-        { name: 'gpuTitle', label: '④b Tiger GPU Pro - 標題', type: 'text', maxLength: 30 },
+        { name: 'gpuEyebrow', label: '④b Tiger GPU Pro - 小標', type: 'text', maxLength: 30 },
+        {
+          name: 'gpuTitle', label: '④b Tiger GPU Pro - 標題', type: 'text', maxLength: 30,
+          help: '打字機輪播的詞會接在這句前面，例如「網站｜做出來了，放哪裡？」',
+        },
+        {
+          name: 'gpuWords', label: '④b 打字機輪播的詞', type: 'array',
+          help: '一個一個輪著打出來，打完刪掉換下一個。預設是 網站／App／Agent／Skill。',
+          of: [{ name: 'text', label: '詞', type: 'text', required: true, maxLength: 12 }],
+        },
+        {
+          name: 'gpuWall', label: '④b 背景圖塊牆', type: 'boolean', default: true,
+          help: '黑底後面那三排慢慢橫移的彩色 App 圖塊。關掉就恢復純黑底。',
+        },
+        {
+          name: 'gpuWallOpacity', label: '④b 背景圖塊濃度', type: 'number', default: 5, min: 2, max: 20, width: 'half',
+          help: '百分比。設計稿是 5，數字越大越明顯。超過 12 會開始搶走文字的注意力。',
+        },
         { name: 'gpuBody', label: '④b Tiger GPU Pro - 內文', type: 'textarea', maxLength: 160 },
         { name: 'gpuCta', label: '④b Tiger GPU Pro - 按鈕文字', type: 'text', maxLength: 20 },
         { name: 'workflowTitle', label: '⑤ Workflow 展示櫃 - 標題', type: 'text', maxLength: 40 },

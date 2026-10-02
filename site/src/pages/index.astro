@@ -33,6 +33,7 @@ import LeadForm from '../components/LeadForm.tsx';
 import BookingCard from '../components/home/BookingCard.tsx';
 import FooterFull from '../components/home/FooterFull.astro';
 import ScrollReveal from '../components/home/ScrollReveal.astro';
+import TgProBand from '../components/home/TgProBand.astro';
 
 // 內容在建置時取得：有設 CONTENT_API 就去後台拿，沒設就用 src/data 與
 // 下面寫死的預設值。兩種情況渲染出來的 HTML 一模一樣——這是刻意的，
@@ -246,17 +247,7 @@ const resultCards = list<{ pre: string; count: number; post: string; line1: stri
     </section>
 
     <!-- 04b Tiger GPU Pro 入口帶 -->
-    <section id="tg-pro" style="background:#0E0E0D;color:#fff;padding:56px 0;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-60%;right:-4%;width:380px;height:380px;background:radial-gradient(closest-side,rgba(236,164,43,.24),transparent 70%);pointer-events:none"></div>
-      <div data-m="pad" style="max-width:1440px;margin:0 auto;padding:0 64px;position:relative;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
-        <div style="flex:1;min-width:280px">
-          <span style={EYEBROW_DARK}>Tiger GPU Pro・新上線</span>
-          <h2 style="font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:10px 0 8px">{text(home, 'gpuTitle', "做出來了，放哪裡？")}</h2>
-          <p style="font-size:15px;line-height:1.7;color:#B5B2AC;margin:0;max-width:52ch">{text(home, 'gpuBody', 'AI 幫你把 Agent、網站、App 都寫完了。部署、算力、控管的最後一哩，Tiger GPU Pro 鋪好，兩端 AI 自己談部署。')}</p>
-        </div>
-        <a href="/products/tiger-gpu-pro" style="text-decoration:none"><button class="t-btn t-btn--primary t-btn--lg">{text(home, 'gpuCta', '看 Tiger GPU Pro →')}</button></a>
-      </div>
-    </section>
+    <TgProBand />
 
     <!-- 05 Workflow 展示櫃 -->
     <section id="workflows" style={SECTION}>

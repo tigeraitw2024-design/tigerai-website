@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TigerAI・Tiger GPU Pro 入口帶（獨立元件）</title>
+<!--
+  給 Claude Code：
+  這是首頁「04b Tiger GPU Pro 入口帶」的獨立版本，純 HTML + CSS + 原生 JS，不依賴任何框架。
+  重建成 React 元件時：
+    1. 背景圖塊牆 = 3 排 × 每排 10 個圖示重複 6 次（60 格），用 CSS keyframes 平移 -50%，第 1、3 排往左、第 2 排往右。
+       每排總寬遠大於螢幕，接縫看不出來；track 加 padding-right = gap，確保 -50% 剛好是整數個週期。
+    2. 打字機：網站 → App → Agent → Skill 循環；打字 140ms/字、停 1900ms、刪除 70ms/字、換詞前停 260ms。
+    3. prefers-reduced-motion：背景不動、打字機改成每 2.6s 直接換詞。
+    4. 文案規則：不用「——」破折號；n8n 永遠小寫；虎金 #ECA42B 不可改。
+  若要換成真實作品截圖：把 APPS 陣列換成圖片網址（正方形），img 改 object-fit:cover 鋪滿方塊、拿掉 invert。
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&family=Manrope:wght@800&family=Noto+Sans+TC:wght@400;600;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tiger-500:#ECA42B; --tiger-600:#C08423; --tiger-700:#90631B;
+    --ink-900:#0E0E0D;
+    --ease-out:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#FAFAF8;font-family:'Inter','Noto Sans TC',sans-serif}
+
+  .tg-pro{background:var(--ink-900);color:#fff;position:relative;overflow:hidden}
+  .tg-pro__inner{position:relative;overflow:hidden;padding:56px 0}
+
+  /* 背景 App 圖塊牆 */
+  .tg-pro__wall{position:absolute;left:-10%;right:-10%;top:50%;transform:translateY(-50%);display:grid;gap:14px;opacity:.05;pointer-events:none}
+  .tg-pro__row{overflow:hidden}
+  .tg-pro__track{display:flex;gap:14px;padding-right:14px;width:max-content;will-change:transform}
+  .tg-pro__track--l{animation:tg-appL var(--dur,174s) linear infinite}
+  .tg-pro__track--r{animation:tg-appR var(--dur,201s) linear infinite}
+  .tg-pro__tile{flex:none;width:84px;height:84px;border-radius:20px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .tg-pro__tile img{width:40px;height:40px;display:block}
+  @keyframes tg-appL{to{transform:translateX(-50%)}}
+  @keyframes tg-appR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+
+  /* 右上虎金光暈 */
+  .tg-pro__glow{position:absolute;top:-60%;right:-4%;width:380px;height:380px;background:radial-gradient(closest-side,rgba(236,164,43,.24),transparent 70%);pointer-events:none}
+
+  /* 內容 */
+  .tg-pro__content{max-width:1440px;margin:0 auto;padding:0 clamp(16px,5vw,64px);position:relative;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .tg-pro__text{flex:1;min-width:280px}
+  .tg-pro__eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--tiger-500)}
+  .tg-pro__title{font-family:'Manrope','Noto Sans TC',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:10px 0 8px}
+  .tg-pro__word{color:var(--tiger-500);white-space:nowrap}
+  .tg-pro__caret{display:inline-block;width:3px;height:.9em;background:var(--tiger-500);margin:0 6px 0 3px;vertical-align:-.08em;animation:tg-caret 1s steps(1) infinite}
+  @keyframes tg-caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+  .tg-pro__desc{font-size:15px;line-height:1.7;color:#B5B2AC;margin:0;max-width:52ch}
+
+  /* 主按鈕（設計系統 .t-btn--lg，直角） */
+  .tg-pro__btn{display:inline-flex;align-items:center;justify-content:center;flex:none;white-space:nowrap;height:48px;padding:0 24px;border:1px solid var(--tiger-500);background:var(--tiger-500);color:var(--ink-900);font-family:'Inter','Noto Sans TC',sans-serif;font-size:16px;font-weight:600;letter-spacing:.01em;text-decoration:none;transition:background .12s var(--ease-out),border-color .12s var(--ease-out)}
+  .tg-pro__btn:hover{background:var(--tiger-600);border-color:var(--tiger-600)}
+  .tg-pro__btn:active{transform:translateY(1px);background:var(--tiger-700)}
+  .tg-pro__btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(236,164,43,.35)}
+
+  @media (prefers-reduced-motion: reduce){
+    .tg-pro__track{animation:none !important}
+    .tg-pro__caret{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<section class="tg-pro" id="tg-pro" aria-labelledby="tg-pro-title">
+  <div class="tg-pro__inner">
+    <div class="tg-pro__wall" id="tg-pro-wall" aria-hidden="true"></div>
+    <div class="tg-pro__glow" aria-hidden="true"></div>
+
+    <div class="tg-pro__content">
+      <div class="tg-pro__text">
+        <span class="tg-pro__eyebrow">Tiger GPU Pro・新上線</span>
+        <h2 class="tg-pro__title" id="tg-pro-title"><span class="tg-pro__word" id="tg-pro-word"></span><span class="tg-pro__caret" aria-hidden="true"></span>做出來了，放哪裡？</h2>
+        <p class="tg-pro__desc">AI 幫你把 Agent、網站、App 都寫完了。部署、算力、控管的最後一哩，Tiger GPU Pro 鋪好，兩端 AI 自己談部署。</p>
+      </div>
+      <a class="tg-pro__btn" href="/products/tiger-gpu-pro">看 Tiger GPU Pro →</a>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 背景 App 圖塊牆 ---------- */
+  var ICON = function (n) { return 'https://unpkg.com/lucide-static@latest/icons/' + n + '.svg'; };
+  var APPS = ['wallet','dumbbell','chef-hat','list-checks','cloud-sun','languages','book-open','leaf','camera','music',
+              'map-pin','shopping-cart','calendar','message-circle','image','mic','heart-pulse','plane','gamepad-2','bot',
+              'code','palette','timer','piggy-bank','graduation-cap','receipt','scan-line','car','baby','dog'];
+  var HUES = [75, 28, 152, 230, 300, 195, 50, 345, 120, 265];
+  var wall = document.getElementById('tg-pro-wall');
+
+  for (var r = 0; r < 3; r++) {
+    var row = document.createElement('div');
+    row.className = 'tg-pro__row';
+    var track = document.createElement('div');
+    track.className = 'tg-pro__track ' + (r % 2 ? 'tg-pro__track--r' : 'tg-pro__track--l');
+    track.style.setProperty('--dur', (174 + r * 27) + 's');
+
+    var base = [];
+    for (var k = 0; k < 10; k++) {
+      var hue = HUES[(k + r * 3) % 10];
+      var light = (k + r) % 3 === 0;
+      base.push({
+        icon: ICON(APPS[r * 10 + k]),
+        bg: light ? 'oklch(0.94 0.05 ' + hue + ')'
+                  : 'linear-gradient(150deg, oklch(0.74 0.16 ' + hue + '), oklch(0.58 0.17 ' + (hue + 18) + '))',
+        light: light
+      });
+    }
+    for (var c = 0; c < 6; c++) {
+      base.forEach(function (t) {
+        var tile = document.createElement('div');
+        tile.className = 'tg-pro__tile';
+        tile.style.background = t.bg;
+        var img = document.createElement('img');
+        img.src = t.icon; img.alt = ''; img.loading = 'lazy';
+        img.style.filter = t.light ? 'none' : 'invert(1) brightness(2)';
+        if (t.light) img.style.opacity = '.85';
+        tile.appendChild(img);
+        track.appendChild(tile);
+      });
+    }
+    row.appendChild(track);
+    wall.appendChild(row);
+  }
+
+  /* ---------- 打字機 ---------- */
+  var WORDS = ['網站', 'App', 'Agent', 'Skill'];
+  var el = document.getElementById('tg-pro-word');
+  var w = 0, n = 0;
+
+  if (reduced) {
+    el.textContent = WORDS[0];
+    setInterval(function () { w = (w + 1) % WORDS.length; el.textContent = WORDS[w]; }, 2600);
+    return;
+  }
+
+  function chars(s) { return Array.from(s); }
+  function type() {
+    var word = chars(WORDS[w]);
+    if (n < word.length) { n++; el.textContent = word.slice(0, n).join(''); setTimeout(type, 140); }
+    else setTimeout(del, 1900);
+  }
+  function del() {
+    var word = chars(WORDS[w]);
+    if (n > 0) { n--; el.textContent = word.slice(0, n).join(''); setTimeout(del, 70); }
+    else { w = (w + 1) % WORDS.length; setTimeout(type, 260); }
+  }
+  type();
+})();
+</script>
+</body>
+</html>

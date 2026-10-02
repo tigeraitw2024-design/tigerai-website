@@ -15,7 +15,15 @@ import TopBar from '../components/TopBar.tsx';
 import BannerCarousel from '../components/BannerCarousel.tsx';
 import FooterSlim from '../components/FooterSlim.astro';
 import AddToCart from '../components/shop/AddToCart.tsx';
-import { getCourses, getBanners } from '../content';
+import { getCourses, getBanners, getPage, num } from '../content';
+
+// Banner 高度。後台「頁面文案 → 課程」可以調，沒填就用這組。
+const coursesPage = await getPage('courses');
+const bannerSize = {
+  minH: num(coursesPage, 'bannerMinH', 520),
+  maxH: num(coursesPage, 'bannerMaxH', 1100),
+  offset: 76,
+};
 
 // 後台有課程就用後台的，沒有就用下面那份原型的示意資料。
 // 有價格的課才會長出「加入購物車」——沒接後台的時候一顆都不會出現，
@@ -69,9 +77,10 @@ const PLACEHOLDERS = 3;
   <div style="min-height:100vh;display:flex;flex-direction:column">
     <TopBar current="courses" variant="onBanner" client:load />
 
-    <!-- 滿版 Banner 貼齊瀏覽器兩緣，上方留 76px 給頂欄 -->
-    <section style="padding:76px 0 0">
-      <BannerCarousel banners={banners} client:load />
+    {/* 滿版 Banner。上方留 76px 給頂欄，Banner 自己佔掉螢幕剩下的高度，
+        所以一打開頁面第一屏剛好是「頂欄 ＋ Banner」。尺寸可在後台調。 */}
+    <section id="tg-course-banner" style="padding:76px 0 0">
+      <BannerCarousel banners={banners} size={bannerSize} client:load />
     </section>
 
     <section style="padding:64px 0 16px">

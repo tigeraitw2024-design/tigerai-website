@@ -1,0 +1,257 @@
+---
+// 首頁「04b Tiger GPU Pro 入口帶」。
+//
+// 移植自 Robin 請 Claude Design 做的獨立元件 TigerGpuPro入口帶.html，
+// 版面、數字、動畫參數一律照抄。那份檔案裡有給實作者的說明，照著做：
+//
+//   背景圖塊牆  3 排 × 每排 10 個圖示重複 6 次（60 格）
+//               CSS keyframes 平移 -50%，第 1、3 排往左、第 2 排往右
+//               track 加 padding-right = gap，確保 -50% 剛好是整數個週期
+//   打字機      網站 → App → Agent → Skill 循環
+//               打字 140ms/字、停 1900ms、刪除 70ms/字、換詞前停 260ms
+//   減少動態    背景不動、打字機改成每 2.6 秒直接換詞
+//
+// ── 我只改了一個地方 ──────────────────────────────────────────
+// 原檔的圖示是執行時去 unpkg.com 抓 30 支 SVG。正式站不該這樣：
+// 訪客要對外連 30 次、慢、CDN 掛了整面牆就空了、而且會把訪客的瀏覽紀錄
+// 送給第三方。改成建置時從專案裡的 lucide-static 把路徑內嵌進 HTML，
+// 零次外部請求。圖案一模一樣（都是 lucide，ISC 授權）。
+import { readFileSync } from 'node:fs';
+import { getHome, text, list } from '../../content';
+
+const home = await getHome();
+
+// 圖示清單與配色全部照原檔
+const APPS = [
+  'wallet', 'dumbbell', 'chef-hat', 'list-checks', 'cloud-sun', 'languages', 'book-open', 'leaf', 'camera', 'music',
+  'map-pin', 'shopping-cart', 'calendar', 'message-circle', 'image', 'mic', 'heart-pulse', 'plane', 'gamepad-2', 'bot',
+  'code', 'palette', 'timer', 'piggy-bank', 'graduation-cap', 'receipt', 'scan-line', 'car', 'baby', 'dog',
+];
+const HUES = [75, 28, 152, 230, 300, 195, 50, 345, 120, 265];
+
+/** 從 lucide-static 取出圖示的內容（去掉外層 svg 與授權註解，只留繪圖指令） */
+function lucideInner(name: string): string {
+  try {
+    const raw = readFileSync(`node_modules/lucide-static/icons/${name}.svg`, 'utf8');
+    return raw.replace(/<!--[\s\S]*?-->/g, '').replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '').trim();
+  } catch {
+    return '';
+  }
+}
+
+// 3 排，每排 10 個圖塊，重複 6 次＝ 60 格。
+// 重複 6 次是為了讓整排遠寬於螢幕，平移 -50% 時接縫看不出來。
+const rows = Array.from({ length: 3 }, (_, r) => {
+  const base = Array.from({ length: 10 }, (_, k) => {
+    const hue = HUES[(k + r * 3) % 10];
+    const light = (k + r) % 3 === 0;
+    return {
+      inner: lucideInner(APPS[r * 10 + k]),
+      bg: light
+        ? `oklch(0.94 0.05 ${hue})`
+        : `linear-gradient(150deg, oklch(0.74 0.16 ${hue}), oklch(0.58 0.17 ${hue + 18}))`,
+      light,
+    };
+  });
+  return {
+    tiles: Array.from({ length: 6 }, () => base).flat(),
+    dir: r % 2 ? 'r' : 'l',
+    dur: 174 + r * 27,
+  };
+});
+
+// 文案。後台「首頁文案 ④b」可以改，沒填就用設計稿上的字。
+const eyebrow = text(home, 'gpuEyebrow', 'Tiger GPU Pro・新上線');
+const title = text(home, 'gpuTitle', '做出來了，放哪裡？');
+const desc = text(home, 'gpuBody', 'AI 幫你把 Agent、網站、App 都寫完了。部署、算力、控管的最後一哩，Tiger GPU Pro 鋪好，兩端 AI 自己談部署。');
+const cta = text(home, 'gpuCta', '看 Tiger GPU Pro →');
+
+// 打字機要輪播的詞
+const cmsWords = list<{ text: string }>(home, 'gpuWords', []).map((x) => x.text).filter(Boolean);
+const words = cmsWords.length ? cmsWords : ['網站', 'App', 'Agent', 'Skill'];
+
+// 背景圖塊牆的開關與濃度
+const wallOn = home?.gpuWall !== false;
+const wallOpacity = (Number(home?.gpuWallOpacity) > 0 ? Number(home!.gpuWallOpacity) : 5) / 100;
+---
+
+<section class="tg-pro" id="tg-pro" aria-labelledby="tg-pro-title">
+  <div class="tg-pro__inner">
+    {wallOn && (
+      <div class="tg-pro__wall" aria-hidden="true" style={`opacity:${wallOpacity}`}>
+        {rows.map((row) => (
+          <div class="tg-pro__row">
+            <div class={`tg-pro__track tg-pro__track--${row.dir}`} style={`--dur:${row.dur}s`}>
+              {row.tiles.map((t) => (
+                <div class="tg-pro__tile" style={`background:${t.bg}`}>
+                  <svg
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    style={t.light ? 'color:#0E0E0D;opacity:.85' : 'color:#fff'}
+                    set:html={t.inner}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+    <div class="tg-pro__glow" aria-hidden="true"></div>
+
+    <div class="tg-pro__content">
+      <div class="tg-pro__text">
+        <span class="tg-pro__eyebrow">{eyebrow}</span>
+        {/* 打字機的詞在前、固定的標題在後。沒有 JavaScript 時第一個詞就是靜態內容，
+            所以搜尋引擎與關掉 JS 的人看到的是完整的一句話。 */}
+        <h2 class="tg-pro__title" id="tg-pro-title">
+          <span class="tg-pro__word" data-tgpro-word>{words[0]}</span>
+          <span class="tg-pro__caret" aria-hidden="true"></span>{title}
+        </h2>
+        <p class="tg-pro__desc">{desc}</p>
+      </div>
+      <a class="tg-pro__btn" href="/products/tiger-gpu-pro">{cta}</a>
+    </div>
+  </div>
+</section>
+
+<script define:vars={{ words }}>
+  /**
+   * 打字機。參數照設計稿：打字 140ms/字、停 1900ms、刪除 70ms/字、換詞前停 260ms。
+   *
+   * 用 Array.from 切字而不是 split('')：中文沒差，但「App」以外之後若放了
+   * emoji 或罕用字，split('') 會把一個字切成兩半變亂碼。
+   *
+   * 開了「減少動態」就不打字，每 2.6 秒直接換詞——持續閃動的游標與逐字出現
+   * 對前庭敏感的人不舒服，而這只是視覺效果。
+   */
+  const el = document.querySelector('[data-tgpro-word]');
+  if (el && words.length) {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let w = 0;
+    let n = 0;
+
+    if (reduced) {
+      el.textContent = words[0];
+      setInterval(() => {
+        w = (w + 1) % words.length;
+        el.textContent = words[w];
+      }, 2600);
+    } else {
+      const chars = (s) => Array.from(s);
+      const type = () => {
+        const word = chars(words[w]);
+        if (n < word.length) {
+          n++;
+          el.textContent = word.slice(0, n).join('');
+          setTimeout(type, 140);
+        } else {
+          setTimeout(del, 1900);
+        }
+      };
+      const del = () => {
+        const word = chars(words[w]);
+        if (n > 0) {
+          n--;
+          el.textContent = word.slice(0, n).join('');
+          setTimeout(del, 70);
+        } else {
+          w = (w + 1) % words.length;
+          setTimeout(type, 260);
+        }
+      };
+      // 第一個詞已經在 HTML 裡了，從它的長度接著打，不要閃一下重來
+      n = chars(words[0]).length;
+      setTimeout(del, 1900);
+    }
+  }
+</script>
+
+<style is:global>
+  /* 版面與動畫參數全部照 TigerGpuPro入口帶.html，不要自己調。 */
+  .tg-pro { background: var(--ink-900); color: #fff; position: relative; overflow: hidden }
+  .tg-pro__inner { position: relative; overflow: hidden; padding: 56px 0 }
+
+  /* 背景 App 圖塊牆 */
+  .tg-pro__wall {
+    position: absolute; left: -10%; right: -10%; top: 50%;
+    transform: translateY(-50%);
+    display: grid; gap: 14px;
+    pointer-events: none;
+  }
+  .tg-pro__row { overflow: hidden }
+  .tg-pro__track {
+    display: flex; gap: 14px;
+    /* padding-right 等於 gap，這樣平移 -50% 剛好是整數個週期，接縫對得上 */
+    padding-right: 14px;
+    width: max-content;
+    will-change: transform;
+  }
+  .tg-pro__track--l { animation: tg-appL var(--dur, 174s) linear infinite }
+  .tg-pro__track--r { animation: tg-appR var(--dur, 201s) linear infinite }
+  .tg-pro__tile {
+    flex: none; width: 84px; height: 84px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .tg-pro__tile svg { width: 40px; height: 40px; display: block }
+  @keyframes tg-appL { to { transform: translateX(-50%) } }
+  @keyframes tg-appR { from { transform: translateX(-50%) } to { transform: translateX(0) } }
+
+  /* 右上虎金光暈 */
+  .tg-pro__glow {
+    position: absolute; top: -60%; right: -4%; width: 380px; height: 380px;
+    background: radial-gradient(closest-side, rgba(236, 164, 43, .24), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* 內容 */
+  .tg-pro__content {
+    max-width: 1440px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 64px);
+    position: relative; display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .tg-pro__text { flex: 1; min-width: 280px }
+  .tg-pro__eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--tiger-500);
+  }
+  .tg-pro__title {
+    font-family: 'Manrope', 'Noto Sans TC', sans-serif;
+    font-size: clamp(28px, 4vw, 44px); font-weight: 800;
+    letter-spacing: -.02em; line-height: 1.15; margin: 10px 0 8px;
+  }
+  .tg-pro__word { color: var(--tiger-500); white-space: nowrap }
+  .tg-pro__caret {
+    display: inline-block; width: 3px; height: .9em; background: var(--tiger-500);
+    margin: 0 6px 0 3px; vertical-align: -.08em;
+    animation: tg-caret 1s steps(1) infinite;
+  }
+  @keyframes tg-caret { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
+  .tg-pro__desc { font-size: 15px; line-height: 1.7; color: #B5B2AC; margin: 0; max-width: 52ch }
+
+  /* 主按鈕。設計稿把 .t-btn--lg 的樣式展開寫在這裡，照抄。 */
+  .tg-pro__btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: none; white-space: nowrap; height: 48px; padding: 0 24px;
+    border: 1px solid var(--tiger-500); background: var(--tiger-500); color: var(--ink-900);
+    font-family: 'Inter', 'Noto Sans TC', sans-serif; font-size: 16px; font-weight: 600;
+    letter-spacing: .01em; text-decoration: none;
+    transition: background .12s var(--ease-out), border-color .12s var(--ease-out);
+  }
+  .tg-pro__btn:hover { background: var(--tiger-600); border-color: var(--tiger-600) }
+  .tg-pro__btn:active { transform: translateY(1px); background: var(--tiger-700) }
+  .tg-pro__btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(236, 164, 43, .35) }
+
+  /* 手機：圖塊縮小、間距收窄，不然 84px 的方塊在 390px 寬的螢幕上
+     一排只放得下四個，看起來不像一面牆而像幾個大色塊。 */
+  @media (max-width: 600px) {
+    .tg-pro__wall { gap: 10px; left: -20%; right: -20% }
+    .tg-pro__track { gap: 10px; padding-right: 10px }
+    .tg-pro__tile { width: 56px; height: 56px; border-radius: 14px }
+    .tg-pro__tile svg { width: 26px; height: 26px }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tg-pro__track { animation: none !important }
+    .tg-pro__caret { animation: none }
+  }
+</style>

@@ -3,7 +3,7 @@
 -- 要改資料表結構，去改對應的 src/api/modules/*.ts，再重新產生一次。
 --
 -- 正常安裝流程不需要跑這個檔：/api/auth/bootstrap 會自己照 schema 建表。
--- 產生時間：2026-10-03T05:30:22.266Z
+-- 產生時間：2026-10-03T06:40:25.314Z
 
 CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
@@ -223,6 +223,16 @@ CREATE TABLE IF NOT EXISTS partners (
 );
 
 CREATE INDEX IF NOT EXISTS ix_partners_sort ON partners(sort);
+
+CREATE TABLE IF NOT EXISTS partner_wall (
+  id TEXT PRIMARY KEY,
+  sort INTEGER NOT NULL DEFAULT 0,
+  data TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_partner_wall_sort ON partner_wall(sort);
 
 CREATE TABLE IF NOT EXISTS banners (
   id TEXT PRIMARY KEY,

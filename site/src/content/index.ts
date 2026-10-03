@@ -126,6 +126,7 @@ async function single(name: string): Promise<Record<string, any> | null> {
 
 export const getHome = () => single('home');
 export const getSettings = () => single('settings');
+export const getPartnerWall = () => single('partner_wall');
 
 /**
  * 取一個欄位，後台沒填就用原本寫死的那個值。

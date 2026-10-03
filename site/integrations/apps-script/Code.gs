@@ -23,9 +23,10 @@
  *   行事曆 → 設定 → 與特定使用者共用 → 加你的公司信箱（權限給「變更活動」）
  * 這樣你在自己的 Google 日曆裡就看得到所有預約，但腳本碰不到你的帳號。
  *
- * ⚠ 可約時段是讀「這個帳號看得到的行事曆」算出來的。你主帳號上的私人行程
- *   它看不到，所以不會自動避開。想讓它避開，就把你的行事曆分享給這個專用帳號，
- *   再把那個行事曆 ID 填進後台的「要避開哪些行事曆」。
+ * ⚠ 可約時段是讀「這個帳號看得到的行事曆」算出來的。別人的行事曆它預設看不到。
+ *   要讓官網避開你、CEO、或任何同事的行程：那個人把自己的行事曆分享給這個
+ *   專用帳號（權限選「僅顯示空閒／忙碌資訊」就夠，不必讓官網看到會議內容），
+ *   再把他的行事曆 ID（通常就是他的信箱）填進後台的「要避開哪些行事曆」。
  *
  * ── 部署步驟 ──────────────────────────────────────────────────
  * 1. 用官網專用帳號登入 https://script.google.com ，新增專案
@@ -33,11 +34,13 @@
  * 3. 改下面三個設定：SECRET、SHEET_ID、CALENDAR_ID
  * 4. 左邊齒輪「專案設定」→ 時區改成 (GMT+08:00) Taipei
  *    ← 這一步不做，算出來的可約時段會整個時區歪掉
- * 5. 右上「部署」→「新增部署作業」→ 類型選「網頁應用程式」
+ * 5. 左邊「服務」按 ＋ → 選「Google Calendar API」→ 新增
+ *    ← 算空檔用的 FreeBusy 需要這個，不加會在重算時段時報錯
+ * 6. 右上「部署」→「新增部署作業」→ 類型選「網頁應用程式」
  *      執行身分：我自己
  *      具有存取權的使用者：任何人        ← 一定要選這個，Cloudflare 才打得到
- * 6. 第一次會要求授權，按「允許」
- * 7. 複製產生的網址（.../exec 結尾），連同 SECRET 一起給工程端
+ * 7. 第一次會要求授權，按「允許」
+ * 8. 複製產生的網址（.../exec 結尾），連同 SECRET 一起給工程端
  *
  * ⚠ 每次改完程式都要重新「部署 → 管理部署作業 → 編輯 → 版本改成新版本」，
  *   否則線上跑的還是舊版。這是 Apps Script 最常見的坑。
@@ -204,44 +207,87 @@ function writeCalendar_() {
 }
 
 /**
- * 算空檔時要避開哪些行事曆。
+ * 算空檔時要看哪些行事曆。
  *
  * 一定包含寫入用的那一個，不然已經排好的預約會被當成空檔再賣一次。
- * extra 是後台填的，用逗號分隔——通常是 Robin 把自己的主行事曆分享給這個
- * 專用帳號之後，把那個行事曆 ID 填進來，這樣他的私人行程也會被避開。
- *
- * 讀不到的行事曆直接跳過，不要讓整支掛掉：ID 打錯的下場不該是「前台約不到」。
+ * extra 是後台填的，用逗號分隔：CEO 的、同事的、Robin 自己的主行事曆，
+ * 只要那個人把行事曆分享給這個官網專用帳號，填進來就會一起避開。
  */
-function busyCalendars_(extra) {
-  const out = [writeCalendar_()];
+function calendarIdList_(extra) {
+  const ids = [writeCalendar_().getId()];
   const seen = {};
-  seen[out[0].getId()] = true;
+  seen[ids[0]] = true;
   String(extra || '')
-    .split(',')
+    .split(/[,\n]/)
     .map(function (s) { return s.trim(); })
     .filter(Boolean)
     .forEach(function (id) {
       if (seen[id]) return;
-      try {
-        const c = CalendarApp.getCalendarById(id);
-        if (c) { out.push(c); seen[id] = true; }
-      } catch (e) {
-        // ID 錯、或沒分享給這個帳號，跳過
-      }
+      seen[id] = true;
+      ids.push(id);
     });
-  return out;
+  // FreeBusy 一次最多問 50 個行事曆
+  return ids.slice(0, 50);
 }
 
-/** 這個活動算不算佔用時間。 */
-function blocksTime_(ev, ignoreAllDay) {
-  try {
-    // 自己已經按「不參加」的會議不算佔用
-    if (ev.getMyStatus && ev.getMyStatus() === CalendarApp.GuestStatus.NO) return false;
-  } catch (e) {
-    // 有些活動（例如別人的生日）問不到狀態，當成佔用比較安全
+/**
+ * 一次問出「這段時間裡，這些行事曆分別在什麼時候是忙的」。
+ *
+ * 用 FreeBusy，不是一個一個行事曆去讀活動。三個理由：
+ *
+ * 1. **權限門檻低很多**。FreeBusy 只要對方把行事曆分享成
+ *    「僅顯示空閒／忙碌資訊（隱藏詳細資訊）」就能用。CEO 不必讓官網這個
+ *    帳號看到他每場會議的標題和與會者，只會知道「這個時段他有事」。
+ *    要讀活動內容的話，對方得分享「查看所有活動詳細資訊」——那個比較難要到。
+ *
+ * 2. **快很多**。一次請求涵蓋所有行事曆、整個日期範圍。
+ *    逐一讀活動的話是「人數 × 天數」次呼叫，5 個人 × 14 天 = 70 次，
+ *    Apps Script 一支最多跑 6 分鐘，很容易就超時，而超時沒有部分結果。
+ *
+ * 3. **整天的行程由 Google 自己判斷**。行事曆上每個活動都有「忙碌／空閒」
+ *    這個設定，FreeBusy 照那個算。所以「出差整週」要不要擋，是在 Google 日曆
+ *    上把那個行程設成「忙碌」就好，不用在官網後台另外開一個開關
+ *    （而且可以一個行程一個行程決定，比一個全站開關準）。
+ *    提醒：Google 的整天活動預設是「空閒」，要擋就要自己改成「忙碌」。
+ *
+ * 讀不到的行事曆（ID 打錯、對方還沒分享）不會讓整支掛掉，
+ * 而是收進 problems 回傳，後台看得到——前台照樣排得出時段，
+ * 只是少避開那個人。
+ */
+function busyBlocks_(extra, timeMin, timeMax) {
+  if (typeof Calendar === 'undefined' || !Calendar.Freebusy) {
+    throw new Error(
+      '還沒啟用進階 Calendar 服務。到 Apps Script 編輯器左邊「服務」按 ＋，'
+      + '選「Google Calendar API」，識別碼保持 Calendar，按新增，再重新部署一次。'
+    );
   }
-  if (ev.isAllDayEvent()) return !ignoreAllDay;
-  return true;
+
+  const ids = calendarIdList_(extra);
+  const res = Calendar.Freebusy.query({
+    timeMin: timeMin.toISOString(),
+    timeMax: timeMax.toISOString(),
+    timeZone: Session.getScriptTimeZone(),
+    items: ids.map(function (id) { return { id: id }; }),
+  });
+
+  const busy = [];
+  const problems = [];
+  ids.forEach(function (id) {
+    const c = res.calendars ? res.calendars[id] : null;
+    if (!c) { problems.push(id + '：沒有回應'); return; }
+    if (c.errors && c.errors.length) {
+      const why = c.errors[0].reason === 'notFound' ? '找不到，或還沒分享給這個帳號'
+        : c.errors[0].reason === 'forbidden' ? '沒有權限（請對方把行事曆分享給官網帳號）'
+        : c.errors[0].reason;
+      problems.push(id + '：' + why);
+      return;
+    }
+    (c.busy || []).forEach(function (b) {
+      busy.push({ s: new Date(b.start).getTime(), e: new Date(b.end).getTime() });
+    });
+  });
+
+  return { busy: busy, problems: problems, ids: ids };
 }
 
 /**
@@ -262,7 +308,6 @@ function freeSlots_(body) {
   const daysAhead = clamp_(num_(r.daysAhead, 14), 0, 90);
   const leadMs = clamp_(num_(r.leadHours, 0), 0, 8760) * 3600000;
   const maxPerDay = clamp_(num_(r.maxPerDay, 0), 0, 100);
-  const ignoreAllDay = !!r.ignoreAllDay;
 
   // 1=週一 … 7=週日。沒填就週一到週五。
   const weekdays = (r.weekdays && r.weekdays.length ? r.weekdays : [1, 2, 3, 4, 5]).map(Number);
@@ -270,10 +315,15 @@ function freeSlots_(body) {
   const from = parseHM_(r.dayStart, 9, 0);
   const to = parseHM_(r.dayEnd, 18, 0);
 
-  const cals = busyCalendars_(r.calendarIds);
   const now = new Date();
   const earliest = now.getTime() + leadMs;
   const slots = [];
+
+  // 整個範圍只問一次。以前是「每天 × 每個行事曆」各問一次，
+  // 接上全公司的行事曆之後那個數字會爆掉。
+  const rangeFrom = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const rangeTo = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysAhead + 1);
+  const fb = busyBlocks_(r.calendarIds, rangeFrom, rangeTo);
 
   for (let d = 0; d <= daysAhead; d++) {
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
@@ -285,20 +335,9 @@ function freeSlots_(body) {
     if (dayTo.getTime() <= dayFrom.getTime()) continue;
     if (dayTo.getTime() < earliest) continue;
 
-    // 這一天的活動一次抓完。每個候選時段都去問一次行事曆的話，
-    // 兩週 × 一天 16 格 × 2 個行事曆 = 幾百次呼叫，一定超時。
-    const busy = [];
-    cals.forEach(function (c) {
-      let evs = [];
-      try { evs = c.getEvents(dayFrom, dayTo); } catch (e) { return; }
-      evs.forEach(function (ev) {
-        if (!blocksTime_(ev, ignoreAllDay)) return;
-        if (ev.isAllDayEvent()) {
-          busy.push({ s: dayFrom.getTime(), e: dayTo.getTime() });
-          return;
-        }
-        busy.push({ s: ev.getStartTime().getTime(), e: ev.getEndTime().getTime() });
-      });
+    // 從整段的忙碌清單裡挑出跟今天有關的那些
+    const busy = fb.busy.filter(function (b) {
+      return b.s < dayTo.getTime() && b.e > dayFrom.getTime();
     });
 
     let added = 0;
@@ -318,7 +357,14 @@ function freeSlots_(body) {
     }
   }
 
-  return { ok: true, slots: slots, tz: Session.getScriptTimeZone(), count: slots.length };
+  return {
+    ok: true,
+    slots: slots,
+    count: slots.length,
+    tz: Session.getScriptTimeZone(),
+    calendars: fb.ids,
+    problems: fb.problems,   // 哪些行事曆讀不到，後台要顯示出來
+  };
 }
 
 /**
@@ -370,18 +416,9 @@ function handleBooking_(body) {
   if (c && c.startAt) {
     const s0 = new Date(c.startAt);
     const e0 = new Date(s0.getTime() + (parseInt(c.minutes, 10) || 30) * 60000);
-    const cals = busyCalendars_(r.calendarIds);
-    let taken = false;
-    cals.forEach(function (cal) {
-      if (taken) return;
-      let evs = [];
-      try { evs = cal.getEvents(s0, e0); } catch (e) { return; }
-      evs.forEach(function (ev) {
-        if (!blocksTime_(ev, !!r.ignoreAllDay)) return;
-        taken = true;
-      });
-    });
-    if (taken) return { ok: false, error: 'taken' };
+    // FreeBusy 回的區段已經裁切到查詢範圍內，所以「有回東西」就等於撞期
+    const fb = busyBlocks_(r.calendarIds, s0, e0);
+    if (fb.busy.length) return { ok: false, error: 'taken' };
   }
 
   const sheetResult = appendLead_(body);

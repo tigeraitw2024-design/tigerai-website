@@ -38,7 +38,6 @@ export type BookingRules = {
   leadHours: number;
   daysAhead: number;
   maxPerDay: number;
-  ignoreAllDay: boolean;
   channel: string;
   host: string;
 };
@@ -54,7 +53,6 @@ const DEFAULTS: BookingRules = {
   leadHours: 24,
   daysAhead: 14,
   maxPerDay: 3,
-  ignoreAllDay: false,
   channel: 'online',
   host: '',
 };
@@ -75,7 +73,6 @@ export async function getRules(db: D1Database): Promise<BookingRules> {
     leadHours: num(r.leadHours, DEFAULTS.leadHours),
     daysAhead: num(r.daysAhead, DEFAULTS.daysAhead),
     maxPerDay: num(r.maxPerDay, DEFAULTS.maxPerDay),
-    ignoreAllDay: !!r.ignoreAllDay,
     channel: String(r.channel || DEFAULTS.channel),
     host: String(r.host || ''),
   };
@@ -100,7 +97,6 @@ function rulesPayload(r: BookingRules) {
     leadHours: r.leadHours,
     daysAhead: r.daysAhead,
     maxPerDay: r.maxPerDay,
-    ignoreAllDay: r.ignoreAllDay,
   };
 }
 
@@ -150,10 +146,14 @@ export async function refreshSlots(env: Env) {
   if (rules.source !== 'calendar') return { skipped: '時段來源設定是手動' };
   if (!gasReady(env)) return { skipped: '還沒設定 GAS_URL' };
 
-  const out = await gas<{ ok: boolean; slots?: { startAt: string; minutes: number }[]; error?: string; tz?: string }>(
-    env,
-    { action: 'slots', rules: rulesPayload(rules) },
-  );
+  const out = await gas<{
+    ok: boolean;
+    slots?: { startAt: string; minutes: number }[];
+    error?: string;
+    tz?: string;
+    calendars?: string[];
+    problems?: string[];
+  }>(env, { action: 'slots', rules: rulesPayload(rules) });
   if (!out.ok) throw new Error(out.error || 'Apps Script 沒有回 ok');
 
   // Apps Script 回的是 ISO 字串。對齊到整分鐘再比，不然差一秒就當成不同時段。
@@ -217,9 +217,15 @@ export async function refreshSlots(env: Env) {
   // 而且 batch 是一個交易，不會做一半。
   if (ops.length) await env.DB.batch(ops);
 
-  const note = '新增 ' + added + '　移除 ' + removed + '　沿用 ' + kept + '　（行事曆時區 ' + (out.tz || '未知') + '）';
+  // 讀不到的行事曆要講出來。沉默的後果是「某個同事的行程沒被避開」，
+  // 而那要等到撞期才會發現。
+  const problems = out.problems || [];
+  const note = '新增 ' + added + '　移除 ' + removed + '　沿用 ' + kept
+    + '　看了 ' + (out.calendars?.length || 0) + ' 本行事曆'
+    + '　（時區 ' + (out.tz || '未知') + '）'
+    + (problems.length ? '\n⚠ 讀不到：' + problems.join('；') : '');
   await stampSync(env.DB, note);
-  return { added, removed, kept, tz: out.tz, note };
+  return { added, removed, kept, tz: out.tz, note, problems, calendars: out.calendars || [] };
 }
 
 /** 把 ISO 時間對齊到整分鐘，當成時段的鍵。 */

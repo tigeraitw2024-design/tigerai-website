@@ -84,11 +84,13 @@ const mod: Module = {
           help: '選行事曆的話，下面那些規則才有作用，而且「可預約時段」那一頁會被程式接管。',
         },
         {
-          name: 'calendarIds', label: '還要避開哪些行事曆', type: 'textarea',
-          help: '官網專用帳號自己的行事曆一定會避開，不用填。'
-            + '想連你主帳號的私人行程一起避開：先把你的行事曆「與特定使用者共用」給官網專用帳號，'
-            + '再把行事曆 ID（Google 日曆設定裡那串 ...@group.calendar.google.com 或你的信箱）填在這裡，'
-            + '多個用逗號分隔。',
+          name: 'calendarIds', label: '還要避開誰的行事曆', type: 'textarea',
+          help: '一行一個，或用逗號分隔。填的是行事曆 ID——同事的通常就是他的 Google 信箱。'
+            + '官網專用帳號自己的行事曆一定會避開，不用填。'
+            + '要加別人（你自己、CEO、同事）之前，請那個人到 Google 日曆 →'
+            + '他的行事曆 →「設定和共用」→「與特定使用者共用」加上官網專用帳號，'
+            + '權限選「僅顯示空閒／忙碌資訊」就夠——官網只需要知道他哪個時段有事，'
+            + '不需要看到會議內容。沒分享的話這裡填了也讀不到，重算時會告訴你是哪一個。',
         },
         {
           name: 'weekdays', label: '哪幾天可以約', type: 'multiselect', default: ['1', '2', '3', '4', '5'], options: [
@@ -120,11 +122,10 @@ const mod: Module = {
           name: 'maxPerDay', label: '一天最多幾場', type: 'number', default: 3, min: 0, max: 20, width: 'half',
           help: '填 0 表示不限。從最早的時段開始算。',
         },
-        {
-          name: 'ignoreAllDay', label: '整天的行程不算佔用', type: 'boolean', default: false, width: 'half',
-          help: '預設關：行事曆上有整天的事（出差、休假）那天就整天約不到。'
-            + '如果你的行事曆上有很多整天的提醒（生日、節日）害時段全空，再打開這個。',
-        },
+        // 「整天的行程要不要擋」刻意不做成這裡的開關：
+        // Google 日曆每個活動本身就有「忙碌／空閒」，官網照那個算。
+        // 一個行程一個行程決定，比一個全站開關準——出差整週設成「忙碌」，
+        // 生日提醒留著「空閒」。Google 的整天活動預設是「空閒」，要擋要自己改。
         {
           name: 'channel', label: '自動產生的時段形式', type: 'select', default: 'online', options: [
             { value: 'online', label: '線上' },

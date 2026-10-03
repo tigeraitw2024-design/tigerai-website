@@ -81,9 +81,7 @@ a:not(.t-btn):hover { color: #C08423; }
   85.71%, 99.24%  { transform: translateY(-384px); }
   100%            { transform: translateY(-448px); }
 }
-/* 一圈的秒數由 PartnerWall.astro 用 --logocol-dur 傳進來（後台可調）。
-   沒有傳的話退回原型的 42 秒。 */
-[data-logocol] { animation: tg-logocol var(--logocol-dur, 42s) cubic-bezier(.22, .61, .36, 1) infinite; }
+[data-logocol] { animation: tg-logocol 42s cubic-bezier(.22, .61, .36, 1) infinite; }
 [data-logocol]:hover { animation-play-state: paused; }
 
 /* 全站規則：prefers-reduced-motion 下所有動畫直接跳終態 */

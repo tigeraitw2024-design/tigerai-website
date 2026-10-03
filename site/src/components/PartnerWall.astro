@@ -3,18 +3,13 @@
 //
 // 8 格並排，每格是一根垂直的 logo 柱，靠 CSS 動畫一階一階往上推（見 site.css
 // 的 tg-logocol）。每柱取 7 個 logo，末尾再接回第 1 個，所以繞回去不會跳。
-// 8 格各差「一圈 ÷ 8」秒，看起來就是各自隨機在翻。
+// 8 格各差 5.25 秒（42s ÷ 8），看起來就是各自隨機在翻。
 //
 // 標記 d:1 的 9 個 logo 不進牆（原型的 filter(x => !x.d)），
 // 但「N 家企業」那個數字算全部 60 個。
-//
-// 翻牌速度：原型寫死 42 秒一圈，一格 7 個 logo，等於每 6 秒翻一次。
-// 八格錯開之後整面牆平均不到一秒就有一格在翻，Robin 2026-10-03 說太忙了。
-// 現在改成後台可調（合作夥伴 → 夥伴牆翻牌速度），預設每格 18 秒翻一次。
-import { getPartners, getPartnerWall } from '../content';
+import { getPartners } from '../content';
 
 const partners = await getPartners();
-const wallCfg = await getPartnerWall();
 
 const SLOTS = 8;
 const PER_SLOT = 7;
@@ -22,27 +17,14 @@ const ROW_HEIGHT = 64;
 
 const wall = partners.filter((x) => !x.d);
 
-// 後台填的是「每一格多久翻一次」，比「一圈幾秒」好懂。一圈 = 翻 7 次。
-// 夾在 3–120 秒：太小會變閃爍，太大等於沒在動還白佔一個動畫。
-const flipSeconds = Math.min(120, Math.max(3, Number(wallCfg?.flipSeconds) || 18));
-const paused = wallCfg?.paused === true;
-const cycle = flipSeconds * PER_SLOT;
-
 const slots = Array.from({ length: SLOTS }, (_, i) => {
   const items = wall.length
     ? Array.from({ length: PER_SLOT }, (_, k) => wall[(i * PER_SLOT + k) % wall.length])
     : [];
   // 接回第一個，繞回去看不出接縫
   if (items.length) items.push(items[0]);
-  return { items, delay: -(i * (cycle / SLOTS)) };
+  return { items, delay: -(i * (42 / SLOTS)) };
 });
-
-// 停住的時候整個不要掛動畫，而不是把秒數調到很大——
-// 調很大只是變慢，分頁在背景時瀏覽器還是得一直算。
-const colStyle = (delay: number) =>
-  paused
-    ? 'animation:none'
-    : `animation-delay:${delay}s;--logocol-dur:${cycle}s`;
 ---
 
 {wall.length > 0 && (
@@ -51,7 +33,7 @@ const colStyle = (delay: number) =>
       <div
         style={`flex:1;min-width:0;height:${ROW_HEIGHT}px;overflow:hidden;border:1px solid var(--border-subtle);background:#FFFFFF`}
       >
-        <div data-logocol="1" style={colStyle(slot.delay)}>
+        <div data-logocol="1" style={`animation-delay:${slot.delay}s`}>
           {slot.items.map((lg) => (
             <span
               title={lg.a}

@@ -37,34 +37,6 @@ const mod: Module = {
       seed: () => SEED.map((p, i) => ({ ...p, d: !!p.d, sort: i })),
     },
     {
-      name: 'partner_wall',
-      label: '夥伴牆翻牌速度',
-      group: '內容',
-      icon: 'handshake',
-      kind: 'content',
-      intro:
-        '首頁和案例頁最下面那排 logo 會一格一格翻。原型設定的是每 6 秒翻一次，'
-        + '八格一起翻起來整面牆沒有停過，看久了會分心。改這裡可以放慢或乾脆停掉。'
-        + '改完要按「發布到前台」才會生效。',
-      canCreate: false,
-      canDelete: false,
-      read: 'viewer',
-      write: 'editor',
-      fields: [
-        {
-          name: 'flipSeconds', label: '每一格多久翻一次（秒）', type: 'number',
-          default: 18, min: 3, max: 120,
-          help: '數字越大翻得越慢。原型是 6 秒（很忙），18 秒大概是三分之一的頻率。'
-            + '一格有 7 個 logo，所以 18 秒的話一格要兩分鐘才輪完一圈。',
-        },
-        {
-          name: 'paused', label: '完全不要翻', type: 'boolean', default: false,
-          help: '打開的話 logo 牆就定住不動，只顯示第一排。'
-            + '（使用者的系統如果設了「減少動態效果」，本來就不會翻，這跟這個開關無關。）',
-        },
-      ],
-    },
-    {
       name: 'banners',
       label: 'Banner',
       group: '內容',

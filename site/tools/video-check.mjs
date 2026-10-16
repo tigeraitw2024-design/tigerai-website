@@ -144,6 +144,33 @@ for (let i = 0; i < Math.min(6, rows.length); i++) {
   ok('六條都有影片了，沒有一條還在「錄影準備中」', !placeholder || !(await placeholder.isVisible()));
 }
 
+/**
+ * 停在「範例影片」頁籤上直接換流程。
+ *
+ * 上面那個迴圈每次都「先點流程、再點頁籤」，剛好避開了真正會出事的順序。
+ * 使用者的實際動作是：點開範例影片看完一支，然後直接去點下一條流程——
+ * 頁籤沒有再點一次。2026-10-17 線上就是這樣全黑的：換流程時把影片收回
+ * 未載入，而「載入」只發生在點頁籤的那一刻，所以 src 停在 about:blank。
+ */
+console.log('\n── 停在影片頁籤上換流程 ──');
+{
+  // 先回到第 1 條並確實進到影片頁籤
+  await (await page.$$('.tg-echoice-row'))[0].click();
+  await page.waitForTimeout(250);
+  await page.click('text=範例影片');
+  await page.waitForTimeout(600);
+
+  for (const i of [2, 4, 0]) {
+    const row = (await page.$$('.tg-echoice-row'))[i];
+    const name = await row.$eval('b', (e) => e.textContent.trim());
+    await row.click();            // 刻意不再點頁籤
+    await page.waitForTimeout(700);
+    const src = await page.$eval('iframe[title="範例影片"]', (e) => e.getAttribute('src') || '').catch(() => '');
+    const want = idFor(name);
+    ok(`換到「${name}」之後影片沒有變空白`, src.includes('/embed/' + want), { src: src.slice(0, 60) });
+  }
+}
+
 console.log('\n── 13 部門・範例影片 ──');
 
 // 展開「13 部門案例」。展開之後右欄從流程案卷換成部門案卷，沒有頁籤，影片就是主角。

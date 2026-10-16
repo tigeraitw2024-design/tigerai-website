@@ -183,14 +183,30 @@ export default function CaseFilePane({
   const cfg = videoConfig(mode === 'dept' ? deptMedia : flow);
   /** 整支的長度，由 YouTube 回報。沒設片段時時間軸要顯示這個，不然會是 0:00／0:00。 */
   const [duration, setDuration] = useState(0);
-  // 換流程或換部門時把影片收回未載入狀態，免得還在播上一支
-  useEffect(() => { setVideoLoaded(false); setDuration(0); }, [flowIndex, deptNo, mode]);
   /**
-   * 13 部門那一側沒有「範例影片」頁籤可以點，影片就是右欄的主角。
-   * 但 13 部門是收合的，要展開才會進 dept 模式——展開本身就是使用者的動作，
-   * 所以這裡載入不算「一進首頁就自動吃流量」。
+   * 讓下面那個 effect 讀得到當下在哪個頁籤，又不用把 tab 放進相依陣列。
+   * 放進去的話，切到「看底層」就會把 iframe 卸載，切回來得重新載入、
+   * 影片從頭開始——而原本的設計是切過去只靜音、不卸載，這樣切回來能續播。
    */
-  useEffect(() => { if (mode === 'dept') setVideoLoaded(true); }, [mode, deptNo]);
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
+
+  /**
+   * 換流程或換部門：影片要換一支，所以先收回未載入狀態。
+   *
+   * 但**不能只收不放**。使用者如果已經停在「範例影片」頁籤上再去點別條流程，
+   * 收掉之後沒有人會再把它打開（打開只發生在點頁籤的那一刻），
+   * src 就一直是 about:blank —— 畫面全黑，而且頁籤看起來還是選著的，
+   * 使用者沒有任何線索知道要先切去「看底層」再切回來。
+   * 所以這裡要依當下的情境決定收完之後要不要立刻再載入。
+   *
+   * 13 部門那一側根本沒有頁籤可以點，影片就是右欄的主角，所以一律載入。
+   * （13 部門本身是收合的，展開就是使用者的動作，不算一進首頁就自動吃流量。）
+   */
+  useEffect(() => {
+    setDuration(0);
+    setVideoLoaded(mode === 'dept' || tabRef.current === 'video');
+  }, [flowIndex, deptNo, mode]);
   const clipLen = cfg?.end && cfg?.start != null && cfg.end > cfg.start ? cfg.end - cfg.start : 0;
 
   /** 以某個點為中心縮放，那個點在畫面上的位置維持不變 */

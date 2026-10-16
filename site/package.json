@@ -14,7 +14,8 @@
     "mobile": "node tools/mobile.mjs",
     "smoke": "node tools/smoke.mjs",
     "admin-shots": "node tools/admin-shots.mjs",
-    "gas-test": "node tools/gas-test.mjs"
+    "gas-test": "node tools/gas-test.mjs",
+    "video-check": "node tools/video-check.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4",

@@ -7,11 +7,17 @@ export type Flow = {
   nodes: any[];
   notes: any[];
   conns: any[];
+  /** 範例影片。後台貼整串 YouTube 網址，前台自己抓代號。空的就顯示「錄影準備中」。 */
+  video?: string;
+  /** 只播其中一段並循環。兩個都沒填就播整支。 */
+  clipStart?: number;
+  clipEnd?: number;
 };
 
 export const flows: Flow[] = [
   {
     "name": "文件格式標準化",
+    "video": "https://www.youtube.com/watch?v=2gfBtCyGVXA",
     "nodes": [
       {
         "name": "輸入草稿表單",
@@ -99,6 +105,7 @@ export const flows: Flow[] = [
   },
   {
     "name": "採購資料自動比對",
+    "video": "https://www.youtube.com/watch?v=IFmv-AO0IY4",
     "nodes": [
       {
         "name": "收到報價單 Email",
@@ -162,6 +169,7 @@ export const flows: Flow[] = [
   },
   {
     "name": "會議紀錄自動化",
+    "video": "https://www.youtube.com/watch?v=yEAHV7h8YKY",
     "nodes": [
       {
         "name": "Google Gemini Chat Model",
@@ -290,6 +298,7 @@ export const flows: Flow[] = [
   },
   {
     "name": "資料歸檔自動化",
+    "video": "https://www.youtube.com/watch?v=mEVA3EXrnoQ",
     "nodes": [
       {
         "name": "監聽 Google Drive (Inbox)",
@@ -423,6 +432,7 @@ export const flows: Flow[] = [
   },
   {
     "name": "Email 自動整理與分類",
+    "video": "https://www.youtube.com/watch?v=3VamcNzHUWI",
     "nodes": [
       {
         "name": "Google Gemini Chat Model",
@@ -498,6 +508,7 @@ export const flows: Flow[] = [
   },
   {
     "name": "Excel 行政作業自動化",
+    "video": "https://www.youtube.com/watch?v=Zb6nCUefmUk",
     "nodes": [
       {
         "name": "Google Gemini Chat Model",

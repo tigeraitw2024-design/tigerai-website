@@ -1,0 +1,384 @@
+{
+  "name": "會議紀錄自動化",
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        64
+      ],
+      "id": "f4182ed2-7e13-4f8c-ac3a-066085a1a364",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nlPh2Ux3iZHZLw9M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "audio",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "audio",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        -304
+      ],
+      "id": "f8b3b394-6788-4648-81f1-de425375dbd5",
+      "name": "提交會議記錄錄音檔",
+      "webhookId": "3aeea3ca-5818-47fe-8cad-e1a1df39d258"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 取得 binary key（通常是 'data'，你可以根據實際情況修改）\nconst binaryKey = Object.keys(items[0].binary)[0];\n\n// 取得原始副檔名（例如 'png'）\nconst originalFileName = items[0].binary[binaryKey].fileName || 'image.png';\nconst extension = originalFileName.split('.').pop();\n\n// 自訂 UUID 產生器（不使用 crypto）\nfunction generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\n// 產生新檔名\nconst newFileName = `${generateUUID()}.${extension}`;\n\n// 輸出結果\nreturn [\n  {\n    binary: items[0].binary,\n    json: {\n      fileName: newFileName,\n    },\n  },\n];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -304
+      ],
+      "id": "e41fd13d-e814-4597-a757-a32f25c2492d",
+      "name": "命名檔案"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dvudiqteahmhtangfpro.supabase.co/storage/v1/object/1234/{{ $json.fileName }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "audio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        -304
+      ],
+      "id": "409c2c66-7c76-47da-a5e1-8b85f4bc6cc2",
+      "name": "上傳至資料庫",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DlvjdIjsMxXc6xZb",
+          "name": "supabase"
+        },
+        "supabaseApi": {
+          "id": "2Bl18NxtsdEjQrB9",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c139da82-facd-443b-a937-6cf616169474",
+              "name": "audio_url",
+              "value": "=https://dvudiqteahmhtangfpro.supabase.co/storage/v1/object/public/n8n/{{ $('命名檔案').item.json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        64,
+        -304
+      ],
+      "id": "ece85dea-b7a9-40b1-b4e2-a623dc611d2f",
+      "name": "抓取網址"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.assemblyai.com/v2/transcript",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "audio_url",
+              "value": "={{ $json.audio_url }}"
+            },
+            {
+              "name": "language_code",
+              "value": "en_us"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        -304
+      ],
+      "id": "f04e0c81-8e7f-4bd4-b998-61171efb11f7",
+      "name": "轉錄音訊",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vyjVKX52Z4GBaRuF",
+          "name": "Header Auth account 60"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.assemblyai.com/v2/transcript/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -560,
+        -80
+      ],
+      "id": "36083f08-791b-48a9-87d2-2a1b393298fd",
+      "name": "等待執行",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vyjVKX52Z4GBaRuF",
+          "name": "Header Auth account 60"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "24cb33f2-fe6d-4481-8b7d-903c7d2211ce",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        -80
+      ],
+      "id": "04da1e2e-ab79-426e-a477-7e8b1ec55c1f",
+      "name": "判斷狀態"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "你是一個中文翻譯專家，將輸入翻譯為繁體中文"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -64,
+        -96
+      ],
+      "id": "93fba994-d9a4-4a6d-b536-3092db20c792",
+      "name": "AI 會議紀錄"
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ $json.text }}",
+        "name": "7533967",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "10uQ6EgaQtfH83So866qHnnNTeGzWBKYS",
+          "mode": "list",
+          "cachedResultName": "123",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/10uQ6EgaQtfH83So866qHnnNTeGzWBKYS"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        272,
+        -96
+      ],
+      "id": "8a9742c6-2b03-4f4b-8518-0356de059495",
+      "name": "紀錄上傳",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Zx7wzgTB4Ai0IGNb",
+          "name": "mygoogleteddy"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI 會議紀錄",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提交會議記錄錄音檔": {
+      "main": [
+        [
+          {
+            "node": "命名檔案",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "命名檔案": {
+      "main": [
+        [
+          {
+            "node": "上傳至資料庫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上傳至資料庫": {
+      "main": [
+        [
+          {
+            "node": "抓取網址",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "抓取網址": {
+      "main": [
+        [
+          {
+            "node": "轉錄音訊",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "轉錄音訊": {
+      "main": [
+        [
+          {
+            "node": "等待執行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待執行": {
+      "main": [
+        [
+          {
+            "node": "判斷狀態",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判斷狀態": {
+      "main": [
+        [
+          {
+            "node": "AI 會議紀錄",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "等待執行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 會議紀錄": {
+      "main": [
+        [
+          {
+            "node": "紀錄上傳",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "紀錄上傳": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9d7d785d-5928-4b5d-8042-36c411a0c44b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b17ad060fbbb8ca8b93015f624347e198e358bdd8ebfadef89df935ad63a83e0"
+  },
+  "id": "Ykf6L5e0HLgUU3nH",
+  "tags": []
+}

@@ -112,6 +112,11 @@ export const getFlows = () =>
     nodes: Array.isArray(r.nodes) ? r.nodes : [],
     notes: Array.isArray(r.notes) ? r.notes : [],
     conns: Array.isArray(r.conns) ? r.conns : [],
+    // 後台「範例影片／片段起點／片段終點」三欄。漏掉這三行的話，
+    // 後台填了網址前台還是顯示「錄影準備中」，而且不會有任何錯誤訊息。
+    video: r.video || '',
+    clipStart: Number(r.clipStart) || 0,
+    clipEnd: Number(r.clipEnd) || 0,
   }));
 
 /**

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Flow } from '../../data/flows';
+import { youtubeId } from '../VideoWall';
 
 /**
  * 企業首選右欄的案卷。移植自 design/首頁.dc.html 的 05b。
@@ -12,21 +13,39 @@ import type { Flow } from '../../data/flows';
  *   按住拖曳平移（游標 grab → grabbing）
  *   底部工具列 −／百分比／＋
  *
- * 範例影片：YouTube 嵌入，但只播後台設定的片段並自動循環。
- *   時間軸與秒數以片段為準（例如 70–80 秒就顯示 0:00–0:10）
- *   播到 end − 0.25 秒就 seek 回 start，跳轉時 iframe 淡出 0.8 秒遮住畫面
- *   目前 6 條流程只有第 1 條有影片，其餘顯示「錄影準備中」
+ * 範例影片：YouTube 嵌入。影片網址與片段範圍都來自後台的 workflows 欄位。
+ *   有設片段就只播那一段並自動循環，時間軸也以片段為準
+ *   （例如 70–80 秒就顯示 0:00–0:10）；沒設就播整支，時間軸顯示整支長度。
+ *   播到 end − 0.25 秒就 seek 回 start，跳轉時 iframe 淡出 0.8 秒遮住畫面。
+ *   沒填網址的流程顯示「錄影準備中」。
  */
 
 const MONO = "'JetBrains Mono',monospace";
+
+/** 秒數轉 0:00。時間軸跟說明文字都用它，免得兩邊格式長得不一樣。 */
+const mmss = (s: number) => Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
 const DISPLAY = "'Manrope','Noto Sans TC',sans-serif";
 
-/** 每條流程的影片設定。接後台之後由 Workflows collection 的欄位決定。 */
-type VideoConfig = { yt: string; si?: string; start?: number; end?: number; loop?: boolean } | null;
-const FLOW_VIDEOS: VideoConfig[] = [
-  { yt: 'wkgx94TmFE4', si: '94_1aYG4OYaCLEYb', start: 70, end: 80, loop: true },
-  null, null, null, null, null,
-];
+type VideoConfig = { yt: string; start?: number; end?: number; loop?: boolean } | null;
+
+/**
+ * 從流程資料組出播放設定。
+ *
+ * 網址、片段起訖都是後台「工作流程」那一頁的欄位，這裡不寫死任何一支影片——
+ * Robin 換影片、調片段都不該要工程端改程式。
+ * 兩個片段欄位沒填（或填反了）就播整支，而不是播 0 秒。
+ */
+function videoConfig(flow: Flow): VideoConfig {
+  const raw = (flow.video || '').trim();
+  if (!raw) return null;
+  const yt = youtubeId(raw);
+  // youtubeId 解析不出來時會原樣回傳，長度不對就當作沒填，不要送一個壞代號給 YouTube
+  if (!/^[\w-]{11}$/.test(yt)) return null;
+  const start = Number(flow.clipStart) || 0;
+  const end = Number(flow.clipEnd) || 0;
+  const hasClip = end > start;
+  return hasClip ? { yt, start, end, loop: true } : { yt };
+}
 
 /* ── n8n 畫布 ─────────────────────────────────────────
    幾何與分類規則照原型的 _renderFlow()，一個數字都沒改。 */
@@ -151,11 +170,12 @@ export default function CaseFilePane({
   const maskTimer = useRef<ReturnType<typeof setTimeout>>();
   const justLooped = useRef(false);
 
-  const cfg = FLOW_VIDEOS[flowIndex] ?? null;
+  const cfg = videoConfig(flow);
+  /** 整支的長度，由 YouTube 回報。沒設片段時時間軸要顯示這個，不然會是 0:00／0:00。 */
+  const [duration, setDuration] = useState(0);
   // 換流程時把影片收回未載入狀態，免得還在播上一條的片段
-  useEffect(() => { setVideoLoaded(false); }, [flowIndex]);
-  // 換流程時重置，免得播到上一條的片段
-  useEffect(() => { setVideoLoaded(false); }, [flowIndex]);
+  // 換流程時把影片收回未載入狀態，免得還在播上一條的片段
+  useEffect(() => { setVideoLoaded(false); setDuration(0); }, [flowIndex]);
   const clipLen = cfg?.end && cfg?.start != null && cfg.end > cfg.start ? cfg.end - cfg.start : 0;
 
   /** 以某個點為中心縮放，那個點在畫面上的位置維持不變 */
@@ -258,6 +278,9 @@ export default function CaseFilePane({
       if (typeof e.data !== 'string' || e.data.indexOf('infoDelivery') < 0) return;
       let d: any;
       try { d = JSON.parse(e.data); } catch { return; }
+      // 整支長度只有 YouTube 知道，順手收下來給時間軸用
+      const dur = d?.info?.duration;
+      if (typeof dur === 'number' && dur > 0) setDuration((v) => (v === Math.round(dur) ? v : Math.round(dur)));
       const t = d?.info?.currentTime;
       if (t == null || !cfg?.loop || !clipLen) return;
       const s0 = cfg.start ?? 0;
@@ -411,7 +434,7 @@ export default function CaseFilePane({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderTop: '1px solid var(--border-subtle)', background: '#fff', minHeight: 42 }}>
               <span style={{ flex: 'none', fontFamily: MONO, fontSize: 11, color: 'var(--fg-secondary)' }}>
-                0:00 <span style={{ color: 'var(--fg-tertiary)' }}>／ {clipLen ? `0:${String(clipLen).padStart(2, '0')}` : '0:00'}</span>
+                0:00 <span style={{ color: 'var(--fg-tertiary)' }}>／ {mmss(clipLen || duration)}</span>
               </span>
               <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 11, color: 'var(--fg-tertiary)' }}>點影片可播放或暫停</span>
               <span
@@ -444,7 +467,9 @@ export default function CaseFilePane({
               </div>
             </div>
             <p style={{ margin: 0, padding: '10px 16px', fontSize: 12, color: 'var(--fg-tertiary)', borderTop: '1px solid var(--border-subtle)' }}>
-              範例影片：點影片即可播放或暫停；只播後台設定的重點片段並自動循環（此片示範 1:10 起 10 秒）。
+              {clipLen
+                ? `範例影片：點影片即可播放或暫停；只播後台設定的重點片段並自動循環（此片 ${mmss(cfg?.start ?? 0)} 起 ${clipLen} 秒）。`
+                : '範例影片：點影片即可播放或暫停。要只播重點片段的話，在後台填「片段起點／終點」。'}
             </p>
           </div>
         </div>

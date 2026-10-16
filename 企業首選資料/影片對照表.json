@@ -1,0 +1,198 @@
+{
+  "playlist": "TigerAi官網使用 (請勿公開)",
+  "playlistUrl": "https://www.youtube.com/playlist?list=PLLwcxfQguZJU",
+  "note": "影片設為「不公開」：有連結才看得到，不會出現在搜尋或頻道頁。官網嵌入沒問題。",
+  "generatedAt": "2026-10-16T10:43:06.196Z",
+  "videos": [
+    {
+      "no": 1,
+      "title": "Email 自動整理與分類",
+      "group": "船舶",
+      "youtubeId": "3VamcNzHUWI",
+      "url": "https://www.youtube.com/watch?v=3VamcNzHUWI",
+      "seconds": 390,
+      "localFile": "船舶/1.Email 自動整理與分類.mp4",
+      "localSizeMB": 88.9
+    },
+    {
+      "no": 2,
+      "title": "會議紀錄自動化",
+      "group": "船舶",
+      "youtubeId": "yEAHV7h8YKY",
+      "url": "https://www.youtube.com/watch?v=yEAHV7h8YKY",
+      "seconds": 302,
+      "localFile": "船舶/2.會議紀錄自動化.mp4",
+      "localSizeMB": 105.1
+    },
+    {
+      "no": 3,
+      "title": "採購資料自動比對",
+      "group": "船舶",
+      "youtubeId": "IFmv-AO0IY4",
+      "url": "https://www.youtube.com/watch?v=IFmv-AO0IY4",
+      "seconds": 199,
+      "localFile": "船舶/3.採購資料自動比對.mp4",
+      "localSizeMB": 79.2
+    },
+    {
+      "no": 4,
+      "title": "文件格式標準化",
+      "group": "船舶",
+      "youtubeId": "2gfBtCyGVXA",
+      "url": "https://www.youtube.com/watch?v=2gfBtCyGVXA",
+      "seconds": 366,
+      "localFile": "船舶/4.文件格式標準化.mp4",
+      "localSizeMB": 140.7
+    },
+    {
+      "no": 5,
+      "title": "資料歸檔自動化",
+      "group": "船舶",
+      "youtubeId": "mEVA3EXrnoQ",
+      "url": "https://www.youtube.com/watch?v=mEVA3EXrnoQ",
+      "seconds": 176,
+      "localFile": "船舶/5.資料歸檔自動化.mp4",
+      "localSizeMB": 50
+    },
+    {
+      "no": 6,
+      "title": "Excel 行政作業自動化",
+      "group": "船舶",
+      "youtubeId": "Zb6nCUefmUk",
+      "url": "https://www.youtube.com/watch?v=Zb6nCUefmUk",
+      "seconds": 229,
+      "localFile": "船舶/6. Excel 行政作業自動化.mp4",
+      "localSizeMB": 75.1
+    },
+    {
+      "no": 7,
+      "title": "13部門_人資",
+      "group": "13部門模型",
+      "youtubeId": "m65odb0LSVI",
+      "url": "https://www.youtube.com/watch?v=m65odb0LSVI",
+      "seconds": 167,
+      "localFile": "13部門模型/人資.mp4",
+      "localSizeMB": 125.3
+    },
+    {
+      "no": 8,
+      "title": "13部門_工程",
+      "group": "13部門模型",
+      "youtubeId": "VxGgc3kCVsI",
+      "url": "https://www.youtube.com/watch?v=VxGgc3kCVsI",
+      "seconds": 132,
+      "localFile": "13部門模型/工程.mp4",
+      "localSizeMB": 115.3
+    },
+    {
+      "no": 9,
+      "title": "13部門_行政助理",
+      "group": "13部門模型",
+      "youtubeId": "YA48ezV_-kA",
+      "url": "https://www.youtube.com/watch?v=YA48ezV_-kA",
+      "seconds": 83,
+      "localFile": "13部門模型/行政助理.mp4",
+      "localSizeMB": 61.9
+    },
+    {
+      "no": 10,
+      "title": "13部門_行銷助理",
+      "group": "13部門模型",
+      "youtubeId": "p-j51rwkmQ8",
+      "url": "https://www.youtube.com/watch?v=p-j51rwkmQ8",
+      "seconds": 94,
+      "localFile": "13部門模型/行銷助理.mp4",
+      "localSizeMB": 113.1
+    },
+    {
+      "no": 11,
+      "title": "13部門_法務",
+      "group": "13部門模型",
+      "youtubeId": "HgCuHnXk4_M",
+      "url": "https://www.youtube.com/watch?v=HgCuHnXk4_M",
+      "seconds": 82,
+      "localFile": "13部門模型/法務.mp4",
+      "localSizeMB": 99.1
+    },
+    {
+      "no": 12,
+      "title": "13部門_知識",
+      "group": "13部門模型",
+      "youtubeId": "hMlgvGn4ZM0",
+      "url": "https://www.youtube.com/watch?v=hMlgvGn4ZM0",
+      "seconds": 76,
+      "localFile": "13部門模型/知識.mp4",
+      "localSizeMB": 32
+    },
+    {
+      "no": 13,
+      "title": "13部門_客服",
+      "group": "13部門模型",
+      "youtubeId": "YYiaJD0txrw",
+      "url": "https://www.youtube.com/watch?v=YYiaJD0txrw",
+      "seconds": 109,
+      "localFile": "13部門模型/客服.mp4",
+      "localSizeMB": 76.3
+    },
+    {
+      "no": 14,
+      "title": "13部門_財務",
+      "group": "13部門模型",
+      "youtubeId": "UTHA0y9EKdw",
+      "url": "https://www.youtube.com/watch?v=UTHA0y9EKdw",
+      "seconds": 99,
+      "localFile": "13部門模型/財務.mp4",
+      "localSizeMB": 109.1
+    },
+    {
+      "no": 15,
+      "title": "13部門_產品",
+      "group": "13部門模型",
+      "youtubeId": "eKN7cVK-9CI",
+      "url": "https://www.youtube.com/watch?v=eKN7cVK-9CI",
+      "seconds": 118,
+      "localFile": "13部門模型/產品.mp4",
+      "localSizeMB": 127.1
+    },
+    {
+      "no": 16,
+      "title": "13部門_設計",
+      "group": "13部門模型",
+      "youtubeId": "RK5NKq2Uka0",
+      "url": "https://www.youtube.com/watch?v=RK5NKq2Uka0",
+      "seconds": 99,
+      "localFile": "13部門模型/設計.mp4",
+      "localSizeMB": 129.9
+    },
+    {
+      "no": 17,
+      "title": "13部門_業務",
+      "group": "13部門模型",
+      "youtubeId": "ZaCDDR1PPc0",
+      "url": "https://www.youtube.com/watch?v=ZaCDDR1PPc0",
+      "seconds": 96,
+      "localFile": "13部門模型/業務.mp4",
+      "localSizeMB": 132.6
+    },
+    {
+      "no": 18,
+      "title": "13部門_資料分析助理",
+      "group": "13部門模型",
+      "youtubeId": "8P1nNLnf0bY",
+      "url": "https://www.youtube.com/watch?v=8P1nNLnf0bY",
+      "seconds": 87,
+      "localFile": "13部門模型/資料分析助理.mp4",
+      "localSizeMB": 61.7
+    },
+    {
+      "no": 19,
+      "title": "13部門_營運",
+      "group": "13部門模型",
+      "youtubeId": "QWWWrVW8CxQ",
+      "url": "https://www.youtube.com/watch?v=QWWWrVW8CxQ",
+      "seconds": 88,
+      "localFile": "13部門模型/營運.mp4",
+      "localSizeMB": 96.7
+    }
+  ]
+}

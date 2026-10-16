@@ -1,0 +1,380 @@
+{
+  "name": "Excel 行政作業自動化",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        304,
+        224
+      ],
+      "id": "4d8aef9a-9787-48d5-861e-59ef7c5c06ba",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Pja68PTaIDw6AxLB",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        48
+      ],
+      "id": "f9b50b93-87d0-4545-8bd1-6bd60165e4f1",
+      "name": "每週自動執行"
+    },
+    {
+      "parameters": {
+        "functionCode": "// 這裡模擬 Excel 讀進來的原始資料\nreturn [\n  { json: { \"Product\": \"筆記型電腦\", \"Category\": \"電子產品\", \"Amount\": 35000, \"Date\": \"2023-10-01\" } },\n  { json: { \"Product\": \"滑鼠\", \"Category\": \"配件\", \"Amount\": 800, \"Date\": \"2023-10-02\" } },\n  { json: { \"Product\": \"鍵盤\", \"Category\": \"配件\", \"Amount\": -1500, \"Date\": \"2023-10-03\" } }, // 故意設一個異常數據\n  { json: { \"Product\": \"螢幕\", \"Category\": \"電子產品\", \"Amount\": 6000, \"Date\": \"2023-10-04\" } },\n  { json: { \"Product\": \"辦公椅\", \"Category\": \"家具\", \"Amount\": 4500, \"Date\": \"2023-10-05\" } }\n];"
+      },
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        96,
+        48
+      ],
+      "id": "079d2db3-4e13-46ed-a63f-d0cb02f57c43",
+      "name": "模擬 Excel 數據"
+    },
+    {
+      "parameters": {
+        "url": "https://quickchart.io/chart",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "c",
+              "value": "={ \"type\": \"bar\", \"data\": { \"labels\": {{ $json.chart_labels }}, \"datasets\": [{ \"label\": \"類別銷售總額\", \"data\": {{ $json.chart_values }} }] } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        432,
+        352
+      ],
+      "id": "0cdfd820-69ee-4adc-9154-e3493fa8e8a5",
+      "name": "生成統計圖表 (QuickChart)"
+    },
+    {
+      "parameters": {
+        "sendTo": "boss@company.com",
+        "subject": "每週行政數據自動分析報告",
+        "message": "=<h2>📊 本週數據分析摘要</h2>\n<p>{{ $('AI 數據分析與清洗').item.json.summary }}</p>\n\n<h3>⚠️ 數據異常檢查</h3>\n<p style=\"color:red;\">{{ $('AI 數據分析與清洗').item.json.error_log }}</p>\n\n<h3>📈 銷售統計圖表</h3>\n<img src=\"{{ $json.url }}\" alt=\"Chart\" width=\"500\" />\n\n<p><i>本報告由 n8n 自動生成</i></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        128
+      ],
+      "id": "8aa9642c-84de-49da-b36f-96b70cf02e03",
+      "name": "Email 發送報告",
+      "webhookId": "8f095abe-56d4-477d-b4d1-5f0ab9afdd79",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ocDpTUxGn12wK5Hj",
+          "name": "Tigerai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 準備一個陣列來存放「有資料」的項目\nconst validItems = [];\nlet allEmpty = true; // 預設假設全部都是空的\n\nfor (const item of items) {\n  let aiOutput = item.json.output;\n  let chartJson = {};\n\n  // 1. 嘗試解析 AI 輸出的 JSON\n  try {\n    // 清理可能存在的 Markdown 標記 (```json ... ```)\n    if (typeof aiOutput === 'string') {\n        const cleanString = aiOutput.replace(/```json/g, '').replace(/```/g, '').trim();\n        chartJson = JSON.parse(cleanString);\n    } else {\n        chartJson = aiOutput;\n    }\n  } catch (error) {\n    // 解析失敗，視為無資料，跳過\n    continue;\n  }\n\n  // 2. 檢查標題是否包含「查無資料」\n  const titleText = chartJson?.chart?.options?.title?.text;\n  const titleString = Array.isArray(titleText) ? titleText.join('') : (titleText || '');\n  \n  // 3. 邏輯判斷\n  if (titleString.includes('查無資料')) {\n    // 這一筆是沒資料的，我們不做任何事 (不加入 validItems)\n    // 但我們知道至少有一筆是無效的，不過 allEmpty 狀態取決於是否找到有效的\n  } else {\n    // 這一筆是有資料的！\n    allEmpty = false; // 只要有一筆有資料，就不是「全空」\n    \n    // 把整理好的乾淨 JSON 放進去，方便後面使用\n    item.json.finalChartConfig = chartJson;\n    item.json.hasData = true; // 標記為 True\n    validItems.push(item); // 加入有效清單\n  }\n}\n\n// 4. 最終輸出決定\nif (allEmpty) {\n  // 情況 A：兩筆都沒資料 (validItems 是空的)\n  // 回傳一個標記為 false 的項目，讓後面的 IF 走 False 路徑\n  return [{\n    json: {\n      hasData: false,\n      message: '所有查詢區間皆無資料'\n    }\n  }];\n} else {\n  // 情況 B：至少有一筆有資料 (或者是兩筆都有)\n  // 只回傳「有資料」的那幾筆，濾掉沒資料的廢文\n  // 這樣後面的節點就不會發出空白圖表\n  return validItems;\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        336
+      ],
+      "id": "5abd0fc0-3216-4822-a0e0-d071b3bafbff",
+      "name": "格式整理"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ba9bcc09-39b3-4b85-b731-67909778fd9c",
+              "leftValue": "={{ $json.hasData }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        336
+      ],
+      "id": "7bfd552a-77e1-4f19-a5f5-f20a33ab9791",
+      "name": "內容確認"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 取得輸入資料的 binary 數據\nconst binaryKey = Object.keys(items[0].binary)[0];\n\n// *** 關鍵修改：強制將副檔名設為 PNG ***\nconst extension = 'png'; \n\n// 自訂 UUID 產生器（保持不變）\nfunction generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\n// 產生新檔名\nconst newFileName = `${generateUUID()}.${extension}`; // 例如: c8d0959f-d31e-450f-90e9-b223c6f37648.png\n\n// 輸出結果\nreturn [\n  {\n    binary: items[0].binary,\n    json: {\n      fileName: newFileName, // 輸出新的檔名給 Supabase 節點使用\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        352
+      ],
+      "id": "0557c8e8-a9b7-4732-8901-98b3513c6451",
+      "name": "轉換成圖表"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=請為我製作一份財務報表。\n根據\n- **開始日期**: {{ $('Get row(s) in sheet16').item.json['起始時間'] }}\n- **結束日期**: {{ $('Get row(s) in sheet16').item.json['結束時間'] }}\n\n請嚴格按照你的指示，使用 `Get row(s) in sheet in Google Sheets` 工具讀取 Google Sheet，分析數據，並生成最終的 QuickChart JSON Request Body 作為你的唯一輸出。",
+        "options": {
+          "systemMessage": "=你是一位頂尖的財務數據分析師與圖表生成專家。\n\n# 你的能力\n你擁有一個名為 `Get row(s) in sheet in Google Sheets` 的工具，這個工具可以讀取一個 Google Sheet。該 Sheet 包含了詳細的財務流水帳。\n\n# 你的任務\n1.  接收使用者提供的「開始日期:{{ $json['起始時間'] }}」和「結束日期:{{ $json['結束時間'] }}」。\n2.  使用 `Get row(s) in sheet in Google Sheets` 工具讀取 Google Sheet 中的**所有**數據。\n3.  在你自己的運算中，根據使用者提供的日期範圍，篩選出所有符合條件的數據。\n4.  從篩選後的數據中，提取出「查詢對象」的名字。\n5.  將篩選後的數據，按「月份」進行分組，並分別計算每個月的「總收入」和「總支出」。\n6.  計算每個月的「淨利」。\n7.  計算**整個查詢區間**的「總收入」、「總支出」與「總淨利」。\n8.  最後，生成一個**完整的、可直接用於 QuickChart API 的 JSON Request Body**。\n\n# 輸出規則 (極度重要)\n-   你的回覆**必須**是一個單一、乾淨、不包含任何額外文字或 Markdown 標記的 JSON 物件。\n-   JSON 物件的結構**必須**如下：\n    {\n      \"backgroundColor\": \"white\",\n      \"width\": 800,\n      \"height\": 500,\n      \"chart\": { ... 完整的 Chart.js 設定物件 ... }\n    }\n-   `chart.options.title` 的 `text` 欄位**必須**是一個**陣列**，格式如下：\n    [\n      \"第一行：[查詢對象] - [年份]年度 收支報表\",\n      \"第二行：查詢期間: [開始日期] to [結束日期]\",\n      \"第三行：總收入: [總收入金額] | 總支出: [總支出金額] | 總淨利: [總淨利金額]\"\n    ]\n-   `chart.data.labels` 應為月份標籤陣列，例如 [\"10月\", \"11月\", ...]。\n-   `chart.data.datasets` 必須包含三個物件：一個用於「收入」(bar)，一個用於「支出」(bar)，一個用於「淨利」(line)。\n\n-   ***--- 這是最關鍵的修改 ---***\n-   `chart.options.scales` 的結構**必須**使用以下這種**包含 `yAxes` 陣列**的格式：\n    \"scales\": {\n      \"yAxes\": [\n        {\n          \"id\": \"y-axis-bar\",\n          \"position\": \"left\",\n          \"ticks\": { \"beginAtZero\": true },\n          \"scaleLabel\": { \"display\": true, \"labelString\": \"金額\" }\n        },\n        {\n          \"id\": \"y-axis-line\",\n          \"position\": \"right\",\n          \"ticks\": { \"beginAtZero\": true },\n          \"gridLines\": { \"drawOnChartArea\": false },\n          \"scaleLabel\": { \"display\": true, \"labelString\": \"淨利\" }\n        }\n      ]\n    }\n-   `datasets` 中的「收入」和「支出」物件，其 `yAxisID` 必須設為 `\"y-axis-bar\"`。\n-   `datasets` 中的「淨利」物件，其 `yAxisID` 必須設為 `\"y-axis-line\"`。\n-   在計算「支出」時，請將負數金額轉換為**正數**來顯示。\n-   如果找不到任何數據，請返回一個帶有空數據集的有效 JSON 結構，並在標題中註明「查無資料」。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        48
+      ],
+      "id": "afb60fc9-4229-41ce-a9e4-8fedef962e45",
+      "name": "AI 數據分析與清洗"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dvudiqteahmhtangfpro.supabase.co/storage/v1/object/n8n/{{ $json.fileName }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        352
+      ],
+      "id": "161e0e97-0403-4b6a-bc19-aded1e55ab6d",
+      "name": "上傳supabase資料庫",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2Bl18NxtsdEjQrB9",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c139da82-facd-443b-a937-6cf616169474",
+              "name": "imageUrl",
+              "value": "=https://dvudiqteahmhtangfpro.supabase.co/storage/v1/object/public/n8n/{{ $('轉換成圖表').item.json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        352
+      ],
+      "id": "6bf2a8f1-df70-4cc4-af42-913b26b81af5",
+      "name": "抓取圖表網址"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1008,
+        128
+      ],
+      "id": "b13b931b-1695-4511-bfc2-12c55507a7fb",
+      "name": "合併摘要報告與圖表"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI 數據分析與清洗",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "每週自動執行": {
+      "main": [
+        [
+          {
+            "node": "模擬 Excel 數據",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成統計圖表 (QuickChart)": {
+      "main": [
+        [
+          {
+            "node": "轉換成圖表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "模擬 Excel 數據": {
+      "main": [
+        [
+          {
+            "node": "AI 數據分析與清洗",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "格式整理": {
+      "main": [
+        [
+          {
+            "node": "內容確認",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "內容確認": {
+      "main": [
+        [
+          {
+            "node": "生成統計圖表 (QuickChart)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "轉換成圖表": {
+      "main": [
+        [
+          {
+            "node": "上傳supabase資料庫",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 數據分析與清洗": {
+      "main": [
+        [
+          {
+            "node": "格式整理",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "合併摘要報告與圖表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上傳supabase資料庫": {
+      "main": [
+        [
+          {
+            "node": "抓取圖表網址",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "抓取圖表網址": {
+      "main": [
+        [
+          {
+            "node": "合併摘要報告與圖表",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "合併摘要報告與圖表": {
+      "main": [
+        [
+          {
+            "node": "Email 發送報告",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3cfbe1fd-d4f2-4dbe-bc66-31fd20f1c0ef",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b17ad060fbbb8ca8b93015f624347e198e358bdd8ebfadef89df935ad63a83e0"
+  },
+  "id": "QlPcYy7k7xQEpcne",
+  "tags": []
+}

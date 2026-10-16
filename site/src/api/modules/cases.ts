@@ -77,6 +77,16 @@ const mod: Module = {
         { name: 'p', label: '痛點', type: 'textarea', required: true, maxLength: 60 },
         { name: 'f', label: '解方', type: 'textarea', required: true, maxLength: 60 },
         { name: 'r', label: '成效', type: 'textarea', required: true, maxLength: 60 },
+        {
+          name: 'video', label: '範例影片', type: 'url',
+          help: '貼整串 YouTube 網址就好，系統會自己抓影片代號。'
+            + '不填的話右邊那格會顯示「錄影準備中」。',
+        },
+        {
+          name: 'clipStart', label: '片段起點（秒）', type: 'number', width: 'half',
+          help: '兩個都不填就播整支。只想播重點那十秒才填。',
+        },
+        { name: 'clipEnd', label: '片段終點（秒）', type: 'number', width: 'half' },
       ],
       seed: () => DEPT_SEED.map((x, i) => ({ ...x, sort: i })),
     },

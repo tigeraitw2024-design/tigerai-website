@@ -152,7 +152,9 @@ export default function EnterpriseChoice({ flows: FLOWS, depts: DEPTS }: { flows
           </div>
         </div>
 
-        {/* 右欄案卷 */}
+        {/* 右欄案卷。
+            deptMedia 給的是原始資料而不是 deptRows 那一筆：deptRows 是給左欄列表用的，
+            只留了標題與成效那幾欄，影片欄位沒在裡面。 */}
         <div data-m="unstick" style={{ minWidth: 0, position: 'sticky', top: 120 }}>
           <CaseFilePane
             mode={deptOpen ? 'dept' : 'flow'}
@@ -161,6 +163,7 @@ export default function EnterpriseChoice({ flows: FLOWS, depts: DEPTS }: { flows
             deptNo={deptRows[deptSel].no}
             deptName={deptRows[deptSel].name}
             deptKpi={deptRows[deptSel].kpi}
+            deptMedia={DEPTS[deptSel]}
           />
         </div>
       </div>

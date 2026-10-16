@@ -104,6 +104,10 @@ export const getDepts = () =>
     p: r.p || '',
     f: r.f || '',
     r: r.r || '',
+    // 跟 getFlows 一樣，漏掉這三行的話後台填了網址前台還是「錄影準備中」
+    video: r.video || '',
+    clipStart: Number(r.clipStart) || 0,
+    clipEnd: Number(r.clipEnd) || 0,
   }));
 
 export const getFlows = () =>

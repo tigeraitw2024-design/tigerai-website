@@ -9,11 +9,17 @@ export type DeptCase = {
   p: string;
   f: string;
   r: string;
+  /** 範例影片。後台貼整串 YouTube 網址，前台自己抓代號。空的就顯示「錄影準備中」。 */
+  video?: string;
+  /** 只播其中一段並循環。兩個都沒填就播整支。 */
+  clipStart?: number;
+  clipEnd?: number;
 };
 
 export const depts: DeptCase[] = [
   {
     "d": "法務",
+    "video": "https://www.youtube.com/watch?v=HgCuHnXk4_M",
     "s": "合約審閱",
     "k": "月省 96 小時",
     "p": "每份合約來回看三遍，條款漏看要背鍋。",
@@ -22,6 +28,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "客服",
+    "video": "https://www.youtube.com/watch?v=YYiaJD0txrw",
     "s": "首回草擬",
     "k": "首回 −72%",
     "p": "尖峰時段排隊，新手回覆品質不穩。",
@@ -30,6 +37,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "業務",
+    "video": "https://www.youtube.com/watch?v=ZaCDDR1PPc0",
     "s": "報價比對",
     "k": "半天 → 3 秒",
     "p": "歷史報價散在信件與 Excel，比價靠記憶。",
@@ -38,6 +46,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "行銷",
+    "video": "https://www.youtube.com/watch?v=RK5NKq2Uka0",
     "s": "素材產出",
     "k": "週產 ×4",
     "p": "一檔活動要出 20 版素材文案，來不及測。",
@@ -46,6 +55,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "人資",
+    "video": "https://www.youtube.com/watch?v=m65odb0LSVI",
     "s": "履歷初篩",
     "k": "初篩 −80%",
     "p": "一個職缺 300 封履歷，初篩篩到眼花。",
@@ -54,6 +64,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "財務",
+    "video": "https://www.youtube.com/watch?v=UTHA0y9EKdw",
     "s": "請款對帳",
     "k": "月結 −3 天",
     "p": "發票、請款單、合約三方核對全靠人眼。",
@@ -62,6 +73,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "採購",
+    "video": "https://www.youtube.com/watch?v=YA48ezV_-kA",
     "s": "供應商比價",
     "k": "2 小時 → 10 分",
     "p": "詢價信一家一家寄，回來格式全不同。",
@@ -70,6 +82,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "生管",
+    "video": "https://www.youtube.com/watch?v=VxGgc3kCVsI",
     "s": "工單生成",
     "k": "3 小時 → 15 分",
     "p": "客戶臨時改單，工單、報價單全部重做。",
@@ -78,6 +91,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "品保",
+    "video": "https://www.youtube.com/watch?v=p-j51rwkmQ8",
     "s": "檢驗彙整",
     "k": "報告 −60%",
     "p": "檢驗數據散在儀器與紙本，彙整耗一天。",
@@ -86,6 +100,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "資訊",
+    "video": "https://www.youtube.com/watch?v=8P1nNLnf0bY",
     "s": "工單分流",
     "k": "誤派 −45%",
     "p": "IT 工單描述不清，來回問三次才派對人。",
@@ -94,6 +109,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "研發",
+    "video": "https://www.youtube.com/watch?v=eKN7cVK-9CI",
     "s": "文件檢索",
     "k": "4 小時 → 5 分",
     "p": "技術文件散在 wiki 與硬碟，找比寫久。",
@@ -102,6 +118,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "總務",
+    "video": "https://www.youtube.com/watch?v=hMlgvGn4ZM0",
     "s": "公文草擬",
     "k": "工時 −70%",
     "p": "公告、簽呈格式繁瑣，改格式比寫內容久。",
@@ -110,6 +127,7 @@ export const depts: DeptCase[] = [
   },
   {
     "d": "經營企劃",
+    "video": "https://www.youtube.com/watch?v=QWWWrVW8CxQ",
     "s": "週報彙整",
     "k": "8 小時 → 30 分",
     "p": "各部門週報格式不一，彙整拼到深夜。",

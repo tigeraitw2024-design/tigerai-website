@@ -28,21 +28,24 @@ const DISPLAY = "'Manrope','Noto Sans TC',sans-serif";
 
 type VideoConfig = { yt: string; start?: number; end?: number; loop?: boolean } | null;
 
+/** 六條流程與 13 部門的影片欄位長得一樣，所以用同一個形狀。 */
+export type VideoSource = { video?: string; clipStart?: number; clipEnd?: number };
+
 /**
- * 從流程資料組出播放設定。
+ * 從資料組出播放設定。
  *
- * 網址、片段起訖都是後台「工作流程」那一頁的欄位，這裡不寫死任何一支影片——
- * Robin 換影片、調片段都不該要工程端改程式。
+ * 網址、片段起訖都是後台的欄位（工作流程那頁、部門案例那頁各一組），
+ * 這裡不寫死任何一支影片——Robin 換影片、調片段都不該要工程端改程式。
  * 兩個片段欄位沒填（或填反了）就播整支，而不是播 0 秒。
  */
-function videoConfig(flow: Flow): VideoConfig {
-  const raw = (flow.video || '').trim();
+function videoConfig(src: VideoSource | null | undefined): VideoConfig {
+  const raw = (src?.video || '').trim();
   if (!raw) return null;
   const yt = youtubeId(raw);
   // youtubeId 解析不出來時會原樣回傳，長度不對就當作沒填，不要送一個壞代號給 YouTube
   if (!/^[\w-]{11}$/.test(yt)) return null;
-  const start = Number(flow.clipStart) || 0;
-  const end = Number(flow.clipEnd) || 0;
+  const start = Number(src?.clipStart) || 0;
+  const end = Number(src?.clipEnd) || 0;
   const hasClip = end > start;
   return hasClip ? { yt, start, end, loop: true } : { yt };
 }
@@ -142,6 +145,7 @@ export default function CaseFilePane({
   deptNo,
   deptName,
   deptKpi,
+  deptMedia,
 }: {
   mode: 'flow' | 'dept';
   flow: Flow;
@@ -149,6 +153,8 @@ export default function CaseFilePane({
   deptNo: string;
   deptName: string;
   deptKpi: string;
+  /** 這個部門的影片設定。來自後台「部門案例」那一頁。 */
+  deptMedia?: VideoSource;
 }) {
   const [tab, setTab] = useState<'flow' | 'video'>('flow');
   /**
@@ -170,12 +176,21 @@ export default function CaseFilePane({
   const maskTimer = useRef<ReturnType<typeof setTimeout>>();
   const justLooped = useRef(false);
 
-  const cfg = videoConfig(flow);
+  /**
+   * 現在該播哪一支。六條流程看 flow，13 部門看 deptMedia。
+   * 兩種模式互斥，所以整個元件只會有一個 iframe，共用同一組播放狀態。
+   */
+  const cfg = videoConfig(mode === 'dept' ? deptMedia : flow);
   /** 整支的長度，由 YouTube 回報。沒設片段時時間軸要顯示這個，不然會是 0:00／0:00。 */
   const [duration, setDuration] = useState(0);
-  // 換流程時把影片收回未載入狀態，免得還在播上一條的片段
-  // 換流程時把影片收回未載入狀態，免得還在播上一條的片段
-  useEffect(() => { setVideoLoaded(false); setDuration(0); }, [flowIndex]);
+  // 換流程或換部門時把影片收回未載入狀態，免得還在播上一支
+  useEffect(() => { setVideoLoaded(false); setDuration(0); }, [flowIndex, deptNo, mode]);
+  /**
+   * 13 部門那一側沒有「範例影片」頁籤可以點，影片就是右欄的主角。
+   * 但 13 部門是收合的，要展開才會進 dept 模式——展開本身就是使用者的動作，
+   * 所以這裡載入不算「一進首頁就自動吃流量」。
+   */
+  useEffect(() => { if (mode === 'dept') setVideoLoaded(true); }, [mode, deptNo]);
   const clipLen = cfg?.end && cfg?.start != null && cfg.end > cfg.start ? cfg.end - cfg.start : 0;
 
   /** 以某個點為中心縮放，那個點在畫面上的位置維持不變 */
@@ -322,9 +337,86 @@ export default function CaseFilePane({
 
   const vidSrc = cfg && videoLoaded
     ? `https://www.youtube.com/embed/${cfg.yt}?autoplay=1&mute=1&playsinline=1&rel=0&enablejsapi=1&controls=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1080` +
-      (cfg.si ? `&si=${cfg.si}` : '') +
       (cfg.start ? `&start=${cfg.start}` : '')
     : 'about:blank';
+
+  /**
+   * 影片框：畫面 ＋ 控制列 ＋ 說明。
+   *
+   * 六條流程的「範例影片」頁籤和 13 部門的右欄共用這一份。寫成函式而不是元件，
+   * 是因為在 render 裡定義的元件每次都是新的型別，React 會把整個子樹拆掉重建——
+   * iframe 跟著重載，影片每次 render 都從頭開始。直接呼叫就只是一段 JSX。
+   *
+   * 兩種模式互斥，呼叫端各自用 mode 擋住，所以同時只會有一個 iframe，
+   * 共用一個 ref 不會打架。
+   */
+  const playerBox = (title: string, emptyHint: string) => (
+    <>
+      <div style={{ position: 'relative', background: '#0E0E0D', overflow: 'hidden', ...canvasSize }}>
+        {/* 上下各裁 64px，藏掉 YouTube 的標題列與浮水印 */}
+        <iframe
+          ref={iframe}
+          src={vidSrc}
+          title="範例影片"
+          onLoad={() => {
+            // 等一下再訂閱，iframe 剛載入時還沒準備好接訊息
+            setTimeout(() => {
+              listen();
+              cmd('setPlaybackQuality', ['hd1080']);
+            }, 300);
+          }}
+          style={{ position: 'absolute', left: 0, top: -64, width: '100%', height: 'calc(100% + 128px)', border: 0, display: cfg ? 'block' : 'none' }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+        />
+        <div style={{ position: 'absolute', inset: 0, display: cfg ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, color: '#B5B2AC', textAlign: 'center', padding: 24 }}>
+          <span style={{ width: 56, height: 56, border: '1px solid rgba(255,255,255,.3)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: MONO, color: '#ECA42B' }}>播放</span>
+          <b style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{title}・範例影片</b>
+          <span style={{ fontSize: 12, lineHeight: 1.7 }}>{emptyHint}</span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderTop: '1px solid var(--border-subtle)', background: '#fff', minHeight: 42 }}>
+        <span style={{ flex: 'none', fontFamily: MONO, fontSize: 11, color: 'var(--fg-secondary)' }}>
+          0:00 <span style={{ color: 'var(--fg-tertiary)' }}>／ {mmss(clipLen || duration)}</span>
+        </span>
+        <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 11, color: 'var(--fg-tertiary)' }}>點影片可播放或暫停</span>
+        <span
+          className="tg-case-zoom"
+          onClick={() => {
+            setUnmuted((v) => {
+              cmd(v ? 'mute' : 'unMute');
+              if (!v) cmd('setVolume', [80]);
+              return !v;
+            });
+          }}
+          title={unmuted ? '點擊靜音' : '點擊開聲音'}
+          style={{ cursor: 'pointer', flex: 'none', border: '1px solid var(--border-default)', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', userSelect: 'none', color: unmuted ? 'var(--fg-primary)' : 'var(--fg-tertiary)' }}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} style={{ display: unmuted ? 'block' : 'none' }}>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+            <path d="M19 5a10 10 0 0 1 0 14" />
+          </svg>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} style={{ display: unmuted ? 'none' : 'block' }}>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="22" y1="9" x2="16" y2="15" />
+            <line x1="16" y1="9" x2="22" y2="15" />
+          </svg>
+        </span>
+        <div style={{ flex: 'none', width: 64, height: 18, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <div style={{ position: 'relative', flex: 1, height: 4, background: 'var(--slate-200)' }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: unmuted ? '80%' : '0%', background: 'var(--ink-900)' }} />
+          </div>
+        </div>
+      </div>
+      <p style={{ margin: 0, padding: '10px 16px', fontSize: 12, color: 'var(--fg-tertiary)', borderTop: '1px solid var(--border-subtle)' }}>
+        {clipLen
+          ? `範例影片：點影片即可播放或暫停；只播後台設定的重點片段並自動循環（此片 ${mmss(cfg?.start ?? 0)} 起 ${clipLen} 秒）。`
+          : '範例影片：點影片即可播放或暫停。要只播重點片段的話，在後台填「片段起點／終點」。'}
+      </p>
+    </>
+  );
 
   return (
     <>
@@ -406,71 +498,9 @@ export default function CaseFilePane({
 
           {/* 範例影片 */}
           <div style={{ display: tab === 'video' ? 'block' : 'none' }}>
-            <div style={{ position: 'relative', background: '#0E0E0D', overflow: 'hidden', ...canvasSize }}>
-              {/* 上下各裁 64px，藏掉 YouTube 的標題列與浮水印 */}
-              <iframe
-                ref={iframe}
-                src={vidSrc}
-                title="範例影片"
-                onLoad={() => {
-                  // 等一下再訂閱，iframe 剛載入時還沒準備好接訊息
-                  setTimeout(() => {
-                    listen();
-                    cmd('setPlaybackQuality', ['hd1080']);
-                  }, 300);
-                }}
-                style={{ position: 'absolute', left: 0, top: -64, width: '100%', height: 'calc(100% + 128px)', border: 0, display: cfg ? 'block' : 'none' }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-              <div style={{ position: 'absolute', inset: 0, display: cfg ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, color: '#B5B2AC', textAlign: 'center', padding: 24 }}>
-                <span style={{ width: 56, height: 56, border: '1px solid rgba(255,255,255,.3)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: MONO, color: '#ECA42B' }}>播放</span>
-                <b style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{flow.name}・範例影片</b>
-                <span style={{ fontSize: 12, lineHeight: 1.7 }}>
-                  這條的錄影準備中，影片連結給我就接上。<br />先點「看底層」看流程怎麼跑。
-                </span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderTop: '1px solid var(--border-subtle)', background: '#fff', minHeight: 42 }}>
-              <span style={{ flex: 'none', fontFamily: MONO, fontSize: 11, color: 'var(--fg-secondary)' }}>
-                0:00 <span style={{ color: 'var(--fg-tertiary)' }}>／ {mmss(clipLen || duration)}</span>
-              </span>
-              <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 11, color: 'var(--fg-tertiary)' }}>點影片可播放或暫停</span>
-              <span
-                className="tg-case-zoom"
-                onClick={() => {
-                  setUnmuted((v) => {
-                    cmd(v ? 'mute' : 'unMute');
-                    if (!v) cmd('setVolume', [80]);
-                    return !v;
-                  });
-                }}
-                title={unmuted ? '點擊靜音' : '點擊開聲音'}
-                style={{ cursor: 'pointer', flex: 'none', border: '1px solid var(--border-default)', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', userSelect: 'none', color: unmuted ? 'var(--fg-primary)' : 'var(--fg-tertiary)' }}
-              >
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} style={{ display: unmuted ? 'block' : 'none' }}>
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-                  <path d="M19 5a10 10 0 0 1 0 14" />
-                </svg>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} style={{ display: unmuted ? 'none' : 'block' }}>
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                  <line x1="22" y1="9" x2="16" y2="15" />
-                  <line x1="16" y1="9" x2="22" y2="15" />
-                </svg>
-              </span>
-              <div style={{ flex: 'none', width: 64, height: 18, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                <div style={{ position: 'relative', flex: 1, height: 4, background: 'var(--slate-200)' }}>
-                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: unmuted ? '80%' : '0%', background: 'var(--ink-900)' }} />
-                </div>
-              </div>
-            </div>
-            <p style={{ margin: 0, padding: '10px 16px', fontSize: 12, color: 'var(--fg-tertiary)', borderTop: '1px solid var(--border-subtle)' }}>
-              {clipLen
-                ? `範例影片：點影片即可播放或暫停；只播後台設定的重點片段並自動循環（此片 ${mmss(cfg?.start ?? 0)} 起 ${clipLen} 秒）。`
-                : '範例影片：點影片即可播放或暫停。要只播重點片段的話，在後台填「片段起點／終點」。'}
-            </p>
+            {/* 用 mode 擋住：13 部門模式時這一側不要也掛一個 iframe，
+                兩個同時存在的話 ref 會指到後掛的那個，控制列就操作不到正在播的那支。 */}
+            {mode === 'flow' && playerBox(flow.name, '這條的錄影準備中，影片連結給我就接上。先點「看底層」看流程怎麼跑。')}
           </div>
         </div>
 
@@ -481,11 +511,9 @@ export default function CaseFilePane({
             <b style={{ fontFamily: DISPLAY, fontSize: 14, fontWeight: 700 }}>{deptName}</b>
             <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 11, color: 'var(--fg-tertiary)' }}>{deptKpi}</span>
           </div>
-          {/* 原型這裡是拖圖框，正式站會是 DeptCases collection 的圖片欄位 */}
-          <div data-cms-image="dept-media" style={{ aspectRatio: '4/3', position: 'relative', background: 'var(--slate-50)' }} />
-          <p style={{ margin: 0, padding: '10px 16px', fontSize: 12, color: 'var(--fg-tertiary)', borderTop: '1px solid var(--border-subtle)' }}>
-            直接把圖拖進上方框即可，重新整理仍保留。
-          </p>
+          {/* 原型這裡是拖圖框。13 支部門影片上線之後改放影片，跟六條流程同一個播放器，
+              所以兩邊的操作方式一樣（點畫面播放、右下角開聲音）。 */}
+          {mode === 'dept' && playerBox(deptName, '這個部門的錄影準備中，影片連結給我就接上。')}
         </div>
       </div>
     </>

@@ -84,7 +84,17 @@ const deptIdFor = (deptName) => {
   return v ? idFor('13部門_' + v) : undefined;
 };
 
-const { server, port } = await serve(DIST);
+/**
+ * 預設驗本機建好的 dist。給 BASE 就改驗那個網址，用來確認「部署之後線上真的對」——
+ * 本機過了不代表線上過：線上的內容是建置時從後台資料庫抓的，
+ * 資料庫沒填的話建出來就是空的，而本機看的是 src/data 的預設值。
+ *   BASE=https://... node tools/video-check.mjs
+ */
+const LIVE = process.env.BASE;
+const { server, port } = LIVE ? { server: null, port: 0 } : await serve(DIST);
+const ORIGIN = LIVE || `http://127.0.0.1:${port}`;
+console.log('驗的目標：' + ORIGIN);
+
 const browser = await chromium.launch({ channel: 'chrome' });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 
@@ -94,7 +104,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 await page.addInitScript(() => {
   try { localStorage.setItem('tg-intro-seen', '1'); } catch { /* 無痕模式 */ }
 });
-await page.goto(`http://127.0.0.1:${port}/?nogate`, { waitUntil: 'networkidle' });
+await page.goto(ORIGIN + '/?nogate', { waitUntil: 'networkidle' });
 await page.addStyleTag({
   content: `
     .reveal { opacity: 1 !important; transform: none !important }
@@ -170,7 +180,7 @@ for (let i = 0; i < 13; i++) {
 }
 
 await browser.close();
-server.close();
+if (server) server.close();
 
 console.log(`\n通過 ${pass}　失敗 ${fail}\n`);
 process.exit(fail ? 1 : 0);

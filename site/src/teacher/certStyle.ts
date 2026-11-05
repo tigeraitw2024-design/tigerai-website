@@ -38,7 +38,8 @@ export const CERT_CSS = `
 .tgc__namerule{ width:calc(var(--u)*36); max-width:74%; height:calc(var(--u)*0.16); background:var(--pink);
   margin-top:calc(var(--u)*0.6); border-radius:calc(var(--u)*1); }
 .tgc__body{ font-size:calc(var(--u)*1.34); color:var(--sub); max-width:60%; line-height:1.6; margin-top:calc(var(--u)*3.4); }
-.tgc__course{ font-size:calc(var(--u)*3.15); font-weight:600; color:var(--ink); margin-top:calc(var(--u)*1.1);
+.tgc__course{ font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",sans-serif;
+  font-size:calc(var(--u)*3.15); font-weight:700; color:var(--ink); margin-top:calc(var(--u)*1.1);
   line-height:1.1; max-width:80%; overflow-wrap:anywhere; }
 .tgc__footer{ display:flex; justify-content:space-between; align-items:flex-end; width:100%; gap:calc(var(--u)*2); }
 .tgc__foot{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*0.55); min-width:0; }

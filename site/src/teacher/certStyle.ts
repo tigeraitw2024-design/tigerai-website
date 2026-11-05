@@ -25,7 +25,7 @@ export const CERT_CSS = `
 .tgc[data-style="b"]{ --pink:#ff4b8b; --card:#f3f4f6; --ink:#111827; --ink2:#1f2937; --sub:#6b7280;
   --bg:linear-gradient(135deg,#2d0a21 0%,#1a0515 100%);
   --framepad:2.6; --cardbd:0.3; --cardrad:4; --glow:0 0 0 calc(var(--u)*0.5) rgba(255,75,139,.2); --cardpy:6; --cardpx:5; --cardpb:6;
-  --notchsz:3.2; --notchbg:var(--card); --notchbw:0.5; --notchbc:var(--pink); --notchring:1; --nl:2.6; --nr:2.6;
+  --notchsz:3.2; --notchbg:var(--pink); --notchbw:0.42; --notchbc:#ffd9ea; --notchring:0; --nl:2.6; --nr:2.6;
   --stackgap:0; --logomb:4;
   --titlesz:4; --titlew:500; --titlemt:0;
   --namesz:3.5; --namew:700; --namemt:3; --nrulew:35; --nruleh:0.2;

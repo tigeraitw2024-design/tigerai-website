@@ -25,7 +25,7 @@ export const CERT_CSS = `
   padding:calc(var(--u)*4.4) calc(var(--u)*7) calc(var(--u)*3.6); text-align:center; overflow:hidden; }
 .tgc__notch{ position:absolute; top:50%; width:calc(var(--u)*3.4); height:calc(var(--u)*3.4); border-radius:50%;
   background:var(--pink); border:calc(var(--u)*0.42) solid #f0d6e0; transform:translate(-50%,-50%); z-index:3; }
-.tgc__notch.l{ left:calc(var(--u)*2.3); } .tgc__notch.r{ left:calc(100% - var(--u)*2.3); }
+.tgc__notch.l{ left:calc(var(--u)*2.3); } .tgc__notch.r{ left:calc(100% - var(--u)*2.8); }
 .tgc__stack{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*1.3); width:100%; }
 .tgc__logo{ display:flex; align-items:center; gap:calc(var(--u)*1.1); color:var(--ink); }
 .tgc__logo .tgc__mark{ height:calc(var(--u)*2.9); width:auto; display:block; }
@@ -41,12 +41,13 @@ export const CERT_CSS = `
 .tgc__course{ font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",sans-serif;
   font-size:calc(var(--u)*3.15); font-weight:700; color:var(--ink); margin-top:calc(var(--u)*1.1);
   line-height:1.1; max-width:80%; overflow-wrap:anywhere; }
-.tgc__footer{ display:flex; justify-content:space-between; align-items:flex-end; width:100%; gap:calc(var(--u)*2); }
-.tgc__foot{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*0.55); min-width:0; }
-.tgc__foot .tgc__val{ font-size:calc(var(--u)*1.42); font-weight:400; color:var(--ink); white-space:nowrap; }
-.tgc__foot .tgc__mark{ height:calc(var(--u)*1.9); color:var(--ink); display:block; }
-.tgc__foot .tgc__rule{ width:calc(var(--u)*15); height:calc(var(--u)*0.13); background:var(--pink); border-radius:calc(var(--u)*1); }
-.tgc__foot .tgc__lbl{ font-size:calc(var(--u)*1.22); color:var(--sub); }
+.tgc__footer{ display:flex; justify-content:space-between; align-items:flex-end; width:100%; gap:calc(var(--u)*2);
+  padding:0 calc(var(--u)*7); }
+.tgc__foot{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*0.65); min-width:0; }
+.tgc__foot .tgc__val{ font-size:calc(var(--u)*1.65); font-weight:400; color:var(--ink); white-space:nowrap; }
+.tgc__foot .tgc__mark{ height:calc(var(--u)*2.2); color:var(--ink); display:block; }
+.tgc__foot .tgc__rule{ width:calc(var(--u)*18); height:calc(var(--u)*0.15); background:var(--pink); border-radius:calc(var(--u)*1); }
+.tgc__foot .tgc__lbl{ font-size:calc(var(--u)*1.4); color:var(--sub); }
 .tgc__bolt img{ height:calc(var(--u)*3.9); width:auto; display:block; }
 .tgc__endorse{ position:absolute; left:var(--sx,63%); top:var(--sy,72%); transform:translate(-50%,-50%);
   display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*0.35); z-index:2; pointer-events:none; }

@@ -93,13 +93,13 @@ export function validateRecord(r: Record<string, unknown>): Record<string, strin
   const nameErr = checkCertName(g('studentName'));
   if (nameErr) e.studentName = nameErr;
   if (!g('recipientName')) e.recipientName = '必填';
-  if (!g('courseName')) e.courseName = '必填';
   if (!g('email')) e.email = '必填';
   else if (!isEmail(g('email'))) e.email = 'Email 格式不對，例：a@example.com';
   if (!g('phone')) e.phone = '必填';
   else if (!isPhoneTW(g('phone'))) e.phone = '電話格式不對（手機 09xxxxxxxx 或市話含區碼）';
   if (!g('address')) e.address = '必填';
   else if (!isAddressTW(g('address'))) e.address = '地址不完整：要有路/街＋門牌號（例：116 臺北市文山區保儀路26巷1號9樓之5）';
+  if (!g('certUrl')) e.certUrl = '必附證明：貼上他考過的 n8n 證照連結';
   return e;
 }
 

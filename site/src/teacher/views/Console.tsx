@@ -105,6 +105,8 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
           : '把你班上通過的學員用「匯入 Excel」上傳上來就好，列印與寄送由虎智統一處理。狀態（待確認 → 製作中 → 已列印 → 已寄出）你隨時看得到；虎智接單前都還能自己改。'}
       </p>
 
+      {!isOwner && <GuideSteps />}
+
       {err && <div className="t-msg t-msg--err">{err}</div>}
       {banner && <div className="t-msg t-msg--ok">{banner}</div>}
 
@@ -232,6 +234,49 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   );
 }
 
+// ── 講師使用說明（圖解五步，可收起，記在瀏覽器）──────────────────
+function GuideSteps() {
+  const [hidden, setHidden] = useState<boolean>(() => {
+    try { return localStorage.getItem('tg_guide_hidden') === '1'; } catch { return false; }
+  });
+  const set = (v: boolean) => { setHidden(v); try { localStorage.setItem('tg_guide_hidden', v ? '1' : '0'); } catch { /* 無痕視窗讀不到，略過 */ } };
+  const STEPS: [string, string, string][] = [
+    ['check', '確認考過', '先確認學員真的考過 n8n——你是第一線把關，沒考過不能發。'],
+    ['list', '備齊資料', '英文姓名（護照拼音）、收件中文名、電話、完整地址。'],
+    ['award', '附上證明', '貼上他的 n8n 證照連結當證明，沒有證明別送。'],
+    ['upload', '送出', '「匯入 Excel」整批上傳，或「新增」一位一位加。'],
+    ['truck', '等處理', '虎智接單 → 列印 → 寄送，狀態你在下面清單看得到。'],
+  ];
+  if (hidden) {
+    return (
+      <div style={{ marginBottom: 14 }}>
+        <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => set(false)}><Icon name="file-text" size={14} /> 看使用說明</button>
+      </div>
+    );
+  }
+  return (
+    <div className="t-guide">
+      <div className="t-guide__head">
+        <b>怎麼送證照（5 步）</b>
+        <span className="t-spacer" />
+        <button type="button" className="t-iconbtn" style={{ color: 'var(--t-fg)' }} onClick={() => set(true)} aria-label="收起">
+          <Icon name="x" size={16} />
+        </button>
+      </div>
+      <div className="t-guide__steps">
+        {STEPS.map(([icon, title, desc], i) => (
+          <div className="t-step" key={i}>
+            <div className="t-step__n">{i + 1}</div>
+            <div className="t-step__ic"><Icon name={icon} size={22} /></div>
+            <div className="t-step__t">{title}</div>
+            <div className="t-step__d">{desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── 新增一筆 ──────────────────────────────────────────────────────
 // 講師只填「他的資料」（學員、收件、聯絡）。證照名稱／發證日期／費用是 owner 才設的，
 // 對講師整段藏起來——他丟上來，這些由虎智決定。
@@ -271,10 +316,11 @@ function AddModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () 
         {err && <div className="t-msg t-msg--err">{err}</div>}
         {Field('studentName', '學員姓名（印在證照上的英文名）', { required: true, ph: 'LIN,YUNG-CHING' })}
         {Field('recipientName', '收件人（寄送用中文名）', { required: true, ph: '林永青' })}
-        {Field('courseName', '上課梯次／班級', { required: true, ph: '例：11 月週末班' })}
+        {Field('courseName', '上課梯次／班級（選填）', { ph: '例：11 月週末班' })}
         {Field('email', 'Email', { type: 'email', required: true, ph: 'a@example.com' })}
         {Field('phone', '電話', { type: 'tel', required: true, ph: '0912345678' })}
         {Field('address', '寄送地址（含郵遞區號）', { required: true, ph: '116 臺北市文山區…' })}
+        {Field('certUrl', 'n8n 證照連結（證明他考過）', { required: true, ph: 'https://…（Google Drive 或 n8n 原廠連結）' })}
         {Field('note', '備註（選填）')}
         {isOwner && (
           <>
@@ -332,6 +378,7 @@ function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: 
     if (!isEmail(String(r.email || ''))) bad.push('Email');
     if (!isPhoneTW(String(r.phone || ''))) bad.push('電話');
     if (!isAddressTW(String(r.address || ''))) bad.push('地址');
+    if (!String(r.certUrl || '').trim()) bad.push('證明連結');
     return bad.length ? `${r.studentName}（${bad.join('、')}）` : '';
   }).filter(Boolean), [records]);
 
@@ -450,7 +497,8 @@ function EditModal({ cert, isOwner, onClose, onDone }: { cert: Cert; isOwner: bo
   const [f, setF] = useState({
     studentName: cert.studentName || '', course: cert.course || 'n8n Quickstart', issueDate: cert.issueDate || '',
     courseName: cert.courseName || '', recipientName: cert.recipientName || '',
-    email: cert.email || '', phone: cert.phone || '', address: cert.address || '', note: cert.note || '',
+    email: cert.email || '', phone: cert.phone || '', address: cert.address || '',
+    certUrl: cert.certUrl || '', note: cert.note || '',
     fee: String(cert.fee ?? 200),
   });
   const [busy, setBusy] = useState(false);
@@ -485,10 +533,11 @@ function EditModal({ cert, isOwner, onClose, onDone }: { cert: Cert; isOwner: bo
         {err && <div className="t-msg t-msg--err">{err}</div>}
         {Field('studentName', '學員姓名（印在證照上的英文名）', { required: true })}
         {Field('recipientName', '收件人（寄送用中文名）', { required: true })}
-        {Field('courseName', '上課梯次／班級', { required: true })}
+        {Field('courseName', '上課梯次／班級（選填）')}
         {Field('email', 'Email', { type: 'email', required: true })}
         {Field('phone', '電話', { type: 'tel', required: true })}
         {Field('address', '寄送地址（含郵遞區號）', { required: true })}
+        {Field('certUrl', 'n8n 證照連結（證明他考過）', { required: true })}
         {Field('note', '備註（選填）')}
         {isOwner && (
           <>

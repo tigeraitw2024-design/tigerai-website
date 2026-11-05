@@ -30,6 +30,16 @@ function statusOf(r: Cert): { label: string; tone: string } {
   return { label: '待確認', tone: 'off' };
 }
 
+/** 把 ISO 時間戳（UTC）顯示成台北時間「YYYY-MM-DD HH:mm」。空字串就回空。 */
+function fmtStamp(iso?: string): string {
+  const s = (iso || '').trim();
+  if (!s) return '';
+  const d = new Date(new Date(s).getTime() + 8 * 3600 * 1000);
+  if (isNaN(d.getTime())) return s.slice(0, 16).replace('T', ' ');
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+}
+
 export default function Console({ user, onGenerate }: { user: TeacherUser; onGenerate: (certs: Cert[]) => void }) {
   const isOwner = user.role === 'owner';
   const [rows, setRows] = useState<Cert[] | null>(null);
@@ -126,7 +136,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     const ids = [...sel];
     if (!ids.length) return;
     setBusy('settle');
-    try { await api.post('/api/teacher/certs/settle', { ids, value }); setSel(new Set()); await load(); }
+    try { await api.post('/api/teacher/certs/settle', { ids, value }); await load(); }
     catch (e: any) { setErr(e.message); }
     finally { setBusy(''); }
   }
@@ -138,7 +148,8 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       ['證照', (r) => r.course], ['發證日期', (r) => r.issueDate], ['梯次', (r) => r.courseName],
       ['Email', (r) => r.email], ['電話', (r) => r.phone], ['地址', (r) => r.address], ['證明連結', (r) => r.certUrl],
       ['費用', (r) => r.fee], ['狀態', (r) => statusOf(r).label], ['物流單號', (r) => r.tracking],
-      ['已結算', (r) => (r.settled ? '是' : '')], ['講師', (r) => r.instructorName], ['建立', (r) => (r.createdAt || '').slice(0, 10)],
+      ['已結算', (r) => (r.settled ? '是' : '')], ['結算時間', (r) => (r.settled ? fmtStamp(r.settledAt) : '')],
+      ['講師', (r) => r.instructorName], ['建立', (r) => (r.createdAt || '').slice(0, 10)],
     ];
     const lines = [cols.map((c) => c[0]).join(',')];
     for (const r of filtered) lines.push(cols.map((c) => `"${String(c[1](r) ?? '').replace(/"/g, '""')}"`).join(','));
@@ -224,8 +235,9 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   {isOwner && <span><b>講師</b> {r.instructorName}</span>}
                   <span><b>費用</b> {r.fee} 元</span>
                   {r.accepted && !r.shipped && r.etaDate && <span><b>預計寄出</b> {r.etaDate}</span>}
-                  {r.shipped && r.tracking && <span><b>單號</b> {r.tracking}</span>}
-                  {r.settled && <span style={{ color: '#2e7d57' }}><b>已結算</b> {(r.settledAt || '').slice(0, 10)}</span>}
+                  {r.printed && <span><b>列印</b> {fmtStamp(r.printedAt) || '✓'}</span>}
+                  {r.shipped && <span><b>寄出</b> {fmtStamp(r.shippedAt) || '✓'}{r.tracking ? `　單號 ${r.tracking}` : ''}</span>}
+                  {r.settled && <span style={{ color: '#2e7d57', fontWeight: 700 }}><b>已結算</b> {fmtStamp(r.settledAt) || '✓'}</span>}
                 </div>
                 {r.address && <div className="t-card__addr">📮 {r.address}</div>}
                 {r.certUrl && <div className="t-card__meta"><a href={r.certUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--t-brand)', fontWeight: 600 }}>🔗 開啟證照證明</a></div>}
@@ -265,8 +277,10 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   <td>
                     <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
                     {r.settled && <span className="t-pill" data-tone="ok" style={{ marginLeft: 4 }}>已結算</span>}
+                    {r.settled && <div style={{ fontSize: 11, color: '#2e7d57', marginTop: 2, fontWeight: 600 }}>結算 {fmtStamp(r.settledAt)}</div>}
+                    {r.printed && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>印 {fmtStamp(r.printedAt)}</div>}
+                    {r.shipped && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>寄 {fmtStamp(r.shippedAt)}{r.tracking ? `　單號 ${r.tracking}` : ''}</div>}
                     {r.accepted && !r.shipped && r.etaDate && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>預計 {r.etaDate}</div>}
-                    {r.shipped && r.tracking && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>單號 {r.tracking}</div>}
                     {r.editRequest && <div style={{ fontSize: 11, color: 'var(--t-danger)', marginTop: 2 }}>✎ 修改申請</div>}
                     {r.returnReason && <div style={{ fontSize: 11, color: 'var(--t-danger)', marginTop: 2 }}>⤺ 已退件</div>}
                   </td>
@@ -299,15 +313,18 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
           <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => printLabels(selCerts)}>
             <Icon name="mail" size={16} /> 地址標籤
           </button>
-          <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('printed', true)}>
-            <Icon name="printer" size={16} /> 標已列印
-          </button>
-          <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('shipped', true)}>
-            <Icon name="truck" size={16} /> 標已寄送
-          </button>
-          <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => settle(true)}>
-            <Icon name="check" size={16} /> 標已結算
-          </button>
+          {([
+            { key: 'printed', label: '列印', icon: 'printer', on: () => mark('printed', true), off: () => mark('printed', false) },
+            { key: 'shipped', label: '寄送', icon: 'truck', on: () => mark('shipped', true), off: () => mark('shipped', false) },
+            { key: 'settled', label: '結算', icon: 'check', on: () => settle(true), off: () => settle(false) },
+          ] as const).map((g) => (
+            <span key={g.key} className="t-markgrp">
+              <Icon name={g.icon} size={15} />
+              <span className="t-markgrp__lbl">{g.label}</span>
+              <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={g.on}>標記</button>
+              <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={g.off} style={{ color: 'var(--t-fg-3)' }}>取消</button>
+            </span>
+          ))}
           <button className="t-btn t-btn--ghost t-btn--sm t-spacer" onClick={() => setSel(new Set())}>清除</button>
         </div>
       )}

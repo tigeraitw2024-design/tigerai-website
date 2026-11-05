@@ -253,7 +253,7 @@ export async function clearReturn(db: D1Database, id: string) {
  *   - 流水號＝「yy-序號」，序號從設定裡的 serialNext 接續（接單才給，重接不重給）
  */
 const TPE_OFFSET = 8 * 3600 * 1000; // 台北 UTC+8
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; // 證照上用簡寫月份
 function tpe(iso: string) { return new Date(new Date(iso).getTime() + TPE_OFFSET); }
 function addDays(iso: string, n: number): string {
   const d = tpe(iso);

@@ -14,7 +14,7 @@ import Icon from '../Icon';
  * 這就是原本在樣本頁（Artifact）用滑桿調的那套，包進系統、存起來。
  */
 
-const SAMPLE = { studentName: 'LIN,YUNG-CHING', issueDate: 'July 29, 2026' };
+const SAMPLE = { studentName: 'LIN,YUNG-CHING', issueDate: 'Jul 29, 2026' };
 
 function Slider({ label, value, min, max, step = 1, suffix = '', onChange }: {
   label: string; value: number; min: number; max: number; step?: number; suffix?: string; onChange: (v: number) => void;

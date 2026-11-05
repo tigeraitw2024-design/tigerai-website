@@ -17,6 +17,17 @@ import Icon from '../Icon';
 
 const safe = (s: string) => (s || 'cert').replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, 40);
 
+// 證照上的日期：沒帶就用當天（台北 UTC+8），月份一律簡寫（舊資料的全名也縮成三字母）。
+const MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fmtCertDate(raw?: string): string {
+  const s = (raw || '').trim();
+  if (!s) {
+    const d = new Date(Date.now() + 8 * 3600 * 1000);
+    return `${MON3[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  }
+  return s.replace(/^([A-Za-z]{3,9})/, (m) => m.slice(0, 3)); // November 6, 2026 → Nov 6, 2026
+}
+
 export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: () => void }) {
   const [idx, setIdx] = useState(0);
   const [format, setFormat] = useState<'png' | 'jpeg' | 'pdf'>('png');
@@ -51,7 +62,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
   }
 
   const cur = certs[Math.min(idx, certs.length - 1)];
-  const data = { studentName: cur.studentName, course: cur.course || defCourse, issueDate: cur.issueDate, serial: cur.serial };
+  const data = { studentName: cur.studentName, course: cur.course || defCourse, issueDate: fmtCertDate(cur.issueDate), serial: cur.serial };
 
   async function one() {
     setErr(''); setBusy('one');
@@ -72,7 +83,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
       if (format === 'pdf') {
         // 全部合成一份 PDF（每張一頁）
         const items = certs.map((c) => ({
-          data: { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate, serial: c.serial },
+          data: { studentName: c.studentName, course: c.course || defCourse, issueDate: fmtCertDate(c.issueDate), serial: c.serial },
           tune,
         }));
         downloadBlob(await certsToPdf(items, 2), `n8n證照_${certs.length}張.pdf`);
@@ -82,7 +93,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
           const c = certs[i];
           setBusy(`all:${i + 1}/${certs.length}`);
           const blob = await certToBlob(
-            { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate, serial: c.serial },
+            { studentName: c.studentName, course: c.course || defCourse, issueDate: fmtCertDate(c.issueDate), serial: c.serial },
             tune, { format, scale: 2 });
           files.push({ name: `${safe(c.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`, blob });
         }

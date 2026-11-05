@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type Cert as CertRec, type CertSettings } from '../api';
 import Cert, { type CertTune } from '../Cert';
-import { certToBlob, downloadBlob, zipBlobs } from '../certExport';
+import { certToBlob, certsToPdf, downloadBlob, zipBlobs } from '../certExport';
 import Icon from '../Icon';
 
 /**
@@ -19,7 +19,7 @@ const safe = (s: string) => (s || 'cert').replace(/[\\/:*?"<>|]/g, '_').trim().s
 
 export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: () => void }) {
   const [idx, setIdx] = useState(0);
-  const [format, setFormat] = useState<'png' | 'jpeg'>('png');
+  const [format, setFormat] = useState<'png' | 'jpeg' | 'pdf'>('png');
   const [tune, setTune] = useState<CertTune>({ sigColor: 'black', showSig: true, showSeal: true });
   const [defCourse, setDefCourse] = useState('n8n Quickstart');
   const [busy, setBusy] = useState('');
@@ -54,8 +54,12 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
   async function one() {
     setErr(''); setBusy('one');
     try {
-      const blob = await certToBlob(data, tune, { format, scale: 2 });
-      downloadBlob(blob, `${safe(cur.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`);
+      if (format === 'pdf') {
+        downloadBlob(await certsToPdf([{ data, tune }], 2), `${safe(cur.studentName)}-n8n證照.pdf`);
+      } else {
+        const blob = await certToBlob(data, tune, { format, scale: 2 });
+        downloadBlob(blob, `${safe(cur.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`);
+      }
     } catch (e: any) { setErr(e.message || '出圖失敗'); }
     finally { setBusy(''); }
   }
@@ -63,17 +67,26 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
   async function all() {
     setErr(''); setBusy('all');
     try {
-      const files: { name: string; blob: Blob }[] = [];
-      for (let i = 0; i < certs.length; i++) {
-        const c = certs[i];
-        setBusy(`all:${i + 1}/${certs.length}`);
-        const blob = await certToBlob(
-          { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate, serial: c.serial },
-          tune, { format, scale: 2 });
-        files.push({ name: `${safe(c.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`, blob });
+      if (format === 'pdf') {
+        // 全部合成一份 PDF（每張一頁）
+        const items = certs.map((c) => ({
+          data: { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate, serial: c.serial },
+          tune,
+        }));
+        downloadBlob(await certsToPdf(items, 2), `n8n證照_${certs.length}張.pdf`);
+      } else {
+        const files: { name: string; blob: Blob }[] = [];
+        for (let i = 0; i < certs.length; i++) {
+          const c = certs[i];
+          setBusy(`all:${i + 1}/${certs.length}`);
+          const blob = await certToBlob(
+            { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate, serial: c.serial },
+            tune, { format, scale: 2 });
+          files.push({ name: `${safe(c.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`, blob });
+        }
+        if (files.length === 1) downloadBlob(files[0].blob, files[0].name);
+        else downloadBlob(await zipBlobs(files), `n8n證照_${files.length}張.zip`);
       }
-      if (files.length === 1) downloadBlob(files[0].blob, files[0].name);
-      else downloadBlob(await zipBlobs(files), `n8n證照_${files.length}張.zip`);
     } catch (e: any) { setErr(e.message || '批次出圖失敗'); }
     finally { setBusy(''); }
   }
@@ -104,9 +117,13 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
           <div className="t-panel" style={{ margin: 0 }}>
             <div className="t-panel__h">檔案格式</div>
             <div className="t-seg">
-              <button aria-pressed={format === 'png'} onClick={() => setFormat('png')}>PNG（透明度佳）</button>
-              <button aria-pressed={format === 'jpeg'} onClick={() => setFormat('jpeg')}>JPG（檔案小）</button>
+              <button aria-pressed={format === 'png'} onClick={() => setFormat('png')}>PNG</button>
+              <button aria-pressed={format === 'jpeg'} onClick={() => setFormat('jpeg')}>JPG</button>
+              <button aria-pressed={format === 'pdf'} onClick={() => setFormat('pdf')}>PDF</button>
             </div>
+            <p className="t-f__help" style={{ margin: '8px 0 0' }}>
+              {format === 'pdf' ? '多張會合成「一份」PDF（每張一頁）。' : '圖片格式；多張會打包成一個 ZIP。'}
+            </p>
           </div>
 
           <div className="t-panel" style={{ margin: 0 }}>
@@ -122,7 +139,9 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
           </button>
           <button className="t-btn" disabled={!!busy} onClick={all}>
             <Icon name="download" size={16} />
-            {busy.startsWith('all') ? `出圖中 ${busy.split(':')[1] || ''}…` : certs.length > 1 ? `全部 ${certs.length} 張打包下載` : '下載'}
+            {busy.startsWith('all') ? `出圖中 ${busy.split(':')[1] || ''}…`
+              : certs.length > 1 ? (format === 'pdf' ? `全部 ${certs.length} 張合成一份 PDF` : `全部 ${certs.length} 張打包 ZIP`)
+              : '下載'}
           </button>
           <p className="t-f__help">出圖為 1398×965 的 2 倍解析度（約 2796px 寬），印 A4／A5 橫式都夠清楚。</p>
         </aside>

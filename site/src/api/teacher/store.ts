@@ -137,7 +137,7 @@ export async function listCerts(db: D1Database, f: CertFilter = {}) {
   return rows;
 }
 
-const CERT_FIELDS = ['studentName', 'course', 'issueDate', 'courseName', 'recipientName', 'org', 'jobTitle', 'email', 'phone', 'address', 'certUrl', 'fee', 'note'];
+const CERT_FIELDS = ['studentName', 'course', 'issueDate', 'courseName', 'recipientName', 'org', 'jobTitle', 'email', 'phone', 'address', 'certUrl', 'tracking', 'fee', 'note'];
 
 /** 建一筆證照，掛在某位講師底下 */
 export async function createCert(
@@ -164,6 +164,8 @@ export async function createCert(
     printed: false, printedAt: '',
     shipped: false, shippedAt: '',
     tracking: '',
+    settled: false, settledAt: '',
+    returnReason: '', returnedAt: '',
     editRequest: '', editRequestAt: '',
   };
   if (!data.studentName) throw new Error('學員姓名是必填的');
@@ -193,6 +195,39 @@ export async function markCerts(db: D1Database, ids: string[], field: 'printed' 
     await putRow(db, certificatesCollection, id, data);
   }
   return ids.length;
+}
+
+/** 批次標記已結算／取消結算（owner 收款、對帳後封存用）。 */
+export async function markSettled(db: D1Database, ids: string[], value: boolean) {
+  for (const id of ids) {
+    const existing = await getRow(db, certificatesCollection, id);
+    if (!existing) continue;
+    const data = { ...existing };
+    delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+    data.settled = value; data.settledAt = value ? nowISO() : '';
+    await putRow(db, certificatesCollection, id, data);
+  }
+  return ids.length;
+}
+
+/** 退件：owner 把一筆退回講師、附原因（講師改完會清掉）。 */
+export async function returnCert(db: D1Database, id: string, reason: string) {
+  const existing = await getRow(db, certificatesCollection, id);
+  if (!existing) throw new Error('找不到這一筆');
+  const data = { ...existing };
+  delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+  data.returnReason = String(reason || '').trim(); data.returnedAt = nowISO();
+  return putRow(db, certificatesCollection, id, data);
+}
+
+/** 清掉退件標記（講師改完、或 owner 取消退件）。 */
+export async function clearReturn(db: D1Database, id: string) {
+  const existing = await getRow(db, certificatesCollection, id);
+  if (!existing) return;
+  const data = { ...existing };
+  delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+  data.returnReason = ''; data.returnedAt = '';
+  return putRow(db, certificatesCollection, id, data);
 }
 
 /**
@@ -275,11 +310,13 @@ export async function certReport(db: D1Database) {
     const month = String(r.createdAt || '').slice(0, 7) || '未知';
     const who = String(r.instructorName || '未指定');
     const key = who + '｜' + month;
-    const g = map.get(key) || { instructor: who, month, count: 0, printed: 0, shipped: 0, amount: 0 };
+    const g = map.get(key) || { instructor: who, month, count: 0, printed: 0, shipped: 0, amount: 0, settled: 0, settledAmount: 0 };
+    const fee = Number(r.fee) || 0;
     g.count += 1;
     if (r.printed) g.printed += 1;
     if (r.shipped) g.shipped += 1;
-    g.amount += Number(r.fee) || 0;
+    g.amount += fee;
+    if (r.settled) { g.settled += 1; g.settledAmount += fee; }
     map.set(key, g);
   }
   return [...map.values()].sort((a, b) => (b.month + b.instructor).localeCompare(a.month + a.instructor));

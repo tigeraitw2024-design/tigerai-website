@@ -69,6 +69,12 @@ export const certificatesCollection: Collection = {
     { name: 'shipped', label: '已寄送', type: 'boolean', default: false, listed: true },
     { name: 'shippedAt', label: '寄送時間', type: 'datetime', readonly: true },
     { name: 'tracking', label: '物流單號', type: 'text' },
+    // 對帳封存：owner 收款/結算後打勾，封存起來、之後仍可查
+    { name: 'settled', label: '已結算', type: 'boolean', default: false, listed: true },
+    { name: 'settledAt', label: '結算時間', type: 'datetime', readonly: true },
+    // 退件：owner 把不合格的退回講師（附原因）；講師改完會清掉
+    { name: 'returnReason', label: '退件原因', type: 'text' },
+    { name: 'returnedAt', label: '退件時間', type: 'datetime', readonly: true },
     // 接單後講師不能直接改，只能送「修改申請」給 owner；有值＝有待處理的申請
     { name: 'editRequest', label: '修改申請', type: 'text' },
     { name: 'editRequestAt', label: '修改申請時間', type: 'datetime', readonly: true },

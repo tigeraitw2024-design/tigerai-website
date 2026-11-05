@@ -166,6 +166,56 @@ function crc32(buf: Uint8Array): number {
   return ~c >>> 0;
 }
 
+// ── 批次：合成一份 PDF（每張證照一頁，內嵌 JPEG，純手寫、不加套件） ──
+// JPEG 可以直接當 PDF 的影像物件（DCTDecode），所以出圖走 jpeg、整包塞進一份 PDF。
+
+export async function certsToPdf(items: { data: CertData; tune?: CertTune }[], scale = 2): Promise<Blob> {
+  const imgs: { bytes: Uint8Array; iw: number; ih: number }[] = [];
+  const iw = Math.round(EXPORT_W * scale);
+  const ih = Math.round(EXPORT_W * 965 / 1398 * scale);
+  for (const it of items) {
+    const blob = await certToBlob(it.data, it.tune, { format: 'jpeg', scale });
+    imgs.push({ bytes: new Uint8Array(await blob.arrayBuffer()), iw, ih });
+  }
+  return buildPdf(imgs);
+}
+
+function buildPdf(imgs: { bytes: Uint8Array; iw: number; ih: number }[]): Blob {
+  const enc = new TextEncoder();
+  const parts: Uint8Array[] = [];
+  let pos = 0;
+  const offsets: number[] = [];
+  const out = (d: string | Uint8Array) => { const u = typeof d === 'string' ? enc.encode(d) : d; parts.push(u); pos += u.length; };
+  const at = (n: number) => { offsets[n] = pos; };
+
+  out('%PDF-1.4\n');
+  const pageNums = imgs.map((_, i) => 3 + i * 3);
+  at(1); out('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  at(2); out(`2 0 obj\n<< /Type /Pages /Kids [${pageNums.map((n) => `${n} 0 R`).join(' ')}] /Count ${imgs.length} >>\nendobj\n`);
+
+  imgs.forEach((im, i) => {
+    const pageN = 3 + i * 3, contentN = pageN + 1, imgN = pageN + 2;
+    const PW = 842, PH = Math.round(842 * im.ih / im.iw); // A4 橫向寬，等比高
+    at(pageN);
+    out(`${pageN} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${imgN} 0 R >> >> /Contents ${contentN} 0 R >>\nendobj\n`);
+    const content = `q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
+    at(contentN);
+    out(`${contentN} 0 obj\n<< /Length ${content.length} >>\nstream\n${content}\nendstream\nendobj\n`);
+    at(imgN);
+    out(`${imgN} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${im.iw} /Height ${im.ih} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bytes.length} >>\nstream\n`);
+    out(im.bytes);
+    out('\nendstream\nendobj\n');
+  });
+
+  const xrefPos = pos;
+  const total = 2 + imgs.length * 3;
+  let xref = `xref\n0 ${total + 1}\n0000000000 65535 f \n`;
+  for (let n = 1; n <= total; n++) xref += String(offsets[n] || 0).padStart(10, '0') + ' 00000 n \n';
+  out(xref);
+  out(`trailer\n<< /Size ${total + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`);
+  return new Blob(parts as BlobPart[], { type: 'application/pdf' });
+}
+
 export async function zipBlobs(files: { name: string; blob: Blob }[]): Promise<Blob> {
   const enc = new TextEncoder();
   const chunks: Uint8Array[] = [];

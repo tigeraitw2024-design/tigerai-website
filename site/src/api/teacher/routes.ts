@@ -5,6 +5,7 @@ import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
   acceptCerts, requestEdit, clearEditRequest, deleteCert, deleteInstructor,
+  markSettled, returnCert, clearReturn,
 } from './store';
 import { certificatesCollection } from './schema';
 import {
@@ -148,7 +149,8 @@ app.put('/certs/:id', async (ctx) => {
   const input = await ctx.req.json<Record<string, unknown>>();
   try {
     await updateCert(ctx.env.DB, id, input);
-    if (owner(ctx)) await clearEditRequest(ctx.env.DB, id); // owner 改完就把待處理的申請清掉
+    if (existing.returnReason) await clearReturn(ctx.env.DB, id);     // 改完＝退件已處理，解除標記
+    if (owner(ctx)) await clearEditRequest(ctx.env.DB, id);          // owner 改完就把待處理的申請清掉
     return ctx.json({ id });
   } catch (e: any) { return ctx.json({ error: e.message || '更新失敗' }, 400); }
 });
@@ -207,6 +209,24 @@ app.post('/certs/mark', async (ctx) => {
   }
   const n = await markCerts(ctx.env.DB, ids, field, !!value);
   return ctx.json({ ok: true, count: n });
+});
+
+// 批次標記已結算／取消（owner 對帳封存用）
+app.post('/certs/settle', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能結算' }, 403);
+  const { ids, value } = await ctx.req.json<{ ids: string[]; value: boolean }>();
+  if (!Array.isArray(ids)) return ctx.json({ error: '參數不對' }, 400);
+  const n = await markSettled(ctx.env.DB, ids, value !== false);
+  return ctx.json({ ok: true, count: n });
+});
+
+// 退件（owner）：退回講師並附原因
+app.post('/certs/:id/return', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能退件' }, 403);
+  const { reason } = await ctx.req.json<{ reason: string }>();
+  if (!String(reason || '').trim()) return ctx.json({ error: '請寫退件原因' }, 400);
+  await returnCert(ctx.env.DB, ctx.req.param('id'), reason);
+  return ctx.json({ ok: true });
 });
 
 app.get('/report', async (ctx) => {

@@ -69,6 +69,10 @@ export type Cert = {
   shipped: boolean;
   shippedAt: string;
   tracking: string;
+  settled: boolean;
+  settledAt: string;
+  returnReason: string;
+  returnedAt: string;
   editRequest: string;
   editRequestAt: string;
   note: string;
@@ -101,4 +105,6 @@ export type ReportRow = {
   printed: number;
   shipped: number;
   amount: number;
+  settled: number;
+  settledAmount: number;
 };

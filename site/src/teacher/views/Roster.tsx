@@ -39,6 +39,19 @@ export default function Roster({ meId }: { meId: string }) {
     finally { setBusy(false); }
   }
 
+  // 編輯講師（改姓名/角色/啟用）——後端 upsert 同 email 就是更新。
+  const [editing, setEditing] = useState<Instructor | null>(null);
+  const [ef, setEf] = useState({ name: '', role: 'instructor', active: true });
+  function openEdit(r: Instructor) { setErr(''); setEditing(r); setEf({ name: r.name, role: r.role, active: r.active }); }
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault(); if (!editing) return; setErr(''); setBusy(true);
+    try {
+      await api.post('/api/teacher/instructors', { email: editing.email, name: ef.name, role: ef.role, active: ef.active });
+      setEditing(null); await load();
+    } catch (e: any) { setErr(e.message); }
+    finally { setBusy(false); }
+  }
+
   return (
     <div>
       <h1 className="t-h1">講師名冊</h1>
@@ -73,7 +86,8 @@ export default function Roster({ meId }: { meId: string }) {
                 </div>
                 <div className="t-card__meta"><span className="t-mono">{r.email}</span></div>
                 {r.note && <div className="t-card__meta"><span>{r.note}</span></div>}
-                <div className="t-row" style={{ marginTop: 4 }}>
+                <div className="t-row" style={{ marginTop: 4, gap: 8 }}>
+                  <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => openEdit(r)}>編輯</button>
                   {r.id === meId
                     ? <span className="t-pill" data-tone="off">你自己（登入中）</span>
                     : <button className="t-btn t-btn--ghost t-btn--sm" style={{ color: 'var(--t-danger)' }} onClick={() => del(r)}>刪除</button>}
@@ -82,6 +96,31 @@ export default function Roster({ meId }: { meId: string }) {
             ))}
           </div>
         )}
+
+      {editing && (
+        <div className="t-modal" onClick={() => setEditing(null)}>
+          <form className="t-modal__box" onClick={(e) => e.stopPropagation()} onSubmit={saveEdit}>
+            <div className="t-modal__head"><h3>編輯講師</h3>
+              <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={() => setEditing(null)}><Icon name="x" /></button></div>
+            <div className="t-f"><label className="t-f__label">Gmail（不可改）</label>
+              <input className="t-input" value={editing.email} readOnly disabled /></div>
+            <div className="t-f"><label className="t-f__label">姓名 <span style={{ color: 'var(--t-danger)' }}>*</span></label>
+              <input className="t-input" required value={ef.name} onChange={(e) => setEf({ ...ef, name: e.target.value })} /></div>
+            <div className="t-f"><label className="t-f__label">角色</label>
+              <select className="t-select" value={ef.role} onChange={(e) => setEf({ ...ef, role: e.target.value })}>
+                <option value="instructor">instructor・只看自己的學生</option>
+                <option value="owner">owner・看全部、出證照、寄送、對帳</option>
+              </select></div>
+            <label className="t-check" style={{ marginBottom: 10 }}>
+              <input type="checkbox" checked={ef.active} onChange={(e) => setEf({ ...ef, active: e.target.checked })} /> 啟用（取消＝停用，停用後進不來但資料留著）
+            </label>
+            <div className="t-row">
+              <button className="t-btn t-btn--brand" disabled={busy}>{busy ? '儲存中…' : '儲存'}</button>
+              <button type="button" className="t-btn t-btn--ghost" onClick={() => setEditing(null)}>取消</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

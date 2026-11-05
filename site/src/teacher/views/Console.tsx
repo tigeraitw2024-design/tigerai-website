@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, type Cert, type TeacherUser } from '../api';
 import Icon from '../Icon';
 import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRecord, isEmail, isPhoneTW, isAddressTW, type Grid } from '../importParse';
+import { downloadBlob } from '../certExport';
 
 /**
  * 證照主控台：講師區的主畫面。
@@ -130,6 +131,21 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     finally { setBusy(''); }
   }
 
+  // 把目前清單（含篩選/搜尋結果）匯出成 CSV，給會計或備份。
+  function exportCsv() {
+    const cols: [string, (r: Cert) => unknown][] = [
+      ['編號', (r) => r.serial], ['學員(英文名)', (r) => r.studentName], ['收件人', (r) => r.recipientName],
+      ['證照', (r) => r.course], ['發證日期', (r) => r.issueDate], ['梯次', (r) => r.courseName],
+      ['Email', (r) => r.email], ['電話', (r) => r.phone], ['地址', (r) => r.address], ['證明連結', (r) => r.certUrl],
+      ['費用', (r) => r.fee], ['狀態', (r) => statusOf(r).label], ['物流單號', (r) => r.tracking],
+      ['已結算', (r) => (r.settled ? '是' : '')], ['講師', (r) => r.instructorName], ['建立', (r) => (r.createdAt || '').slice(0, 10)],
+    ];
+    const lines = [cols.map((c) => c[0]).join(',')];
+    for (const r of filtered) lines.push(cols.map((c) => `"${String(c[1](r) ?? '').replace(/"/g, '""')}"`).join(','));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    downloadBlob(blob, `證照名單_${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
   return (
     <div>
       <h1 className="t-h1">證照</h1>
@@ -146,10 +162,11 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
 
       <div className="t-toolbar">
         <div className="t-search" style={{ position: 'relative' }}>
-          <input className="t-input" placeholder="搜尋姓名、梯次、地址…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="t-input" placeholder="搜尋姓名、編號、梯次、地址…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <button className="t-btn t-btn--brand t-btn--sm" onClick={() => setModal('add')}><Icon name="plus" size={16} /> 新增</button>
         <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setModal('import')}><Icon name="upload" size={16} /> 匯入 Excel</button>
+        {isOwner && rows && rows.length > 0 && <button className="t-btn t-btn--ghost t-btn--sm" onClick={exportCsv}><Icon name="download" size={16} /> 匯出 CSV</button>}
       </div>
 
       <div className="t-row" style={{ marginBottom: 14, gap: 6, flexWrap: 'wrap' }}>
@@ -195,6 +212,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   {r.settled && <span style={{ color: '#2e7d57' }}><b>已結算</b> {(r.settledAt || '').slice(0, 10)}</span>}
                 </div>
                 {r.address && <div className="t-card__addr">📮 {r.address}</div>}
+                {r.certUrl && <div className="t-card__meta"><a href={r.certUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--t-brand)', fontWeight: 600 }}>🔗 開啟證照證明</a></div>}
                 {r.editRequest && <div className="t-card__addr" style={{ color: 'var(--t-danger)' }}>✎ 修改申請：{r.editRequest}</div>}
                 {r.returnReason && <div className="t-card__addr" style={{ color: 'var(--t-danger)' }}>⤺ 已退件：{r.returnReason}</div>}
                 <div className="t-row" style={{ gap: 8, marginTop: 2 }}>
@@ -238,6 +256,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   </td>
                   <td style={{ textAlign: 'right' }}>{r.fee}</td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
+                    {r.certUrl && <a className="t-btn t-btn--ghost t-btn--sm" href={r.certUrl} target="_blank" rel="noopener noreferrer" style={{ marginRight: 4, textDecoration: 'none' }}>證明</a>}
                     {(isOwner || !r.accepted)
                       ? <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setEdit(r)}>編輯</button>
                       : <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setReq(r)}>申請修改</button>}
@@ -275,7 +294,9 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       )}
 
       {modal === 'add' && <AddModal isOwner={isOwner} onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
-      {modal === 'import' && <ImportModal isOwner={isOwner} onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
+      {modal === 'import' && <ImportModal isOwner={isOwner}
+        existing={new Set((rows || []).map((r) => `${(r.studentName || '').toLowerCase().trim()}|${(r.email || '').toLowerCase().trim()}`))}
+        onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
       {edit && <EditModal cert={edit} isOwner={isOwner} onClose={() => setEdit(null)} onDone={() => { setEdit(null); load(); }} />}
       {req && <RequestModal cert={req} onClose={() => setReq(null)} onDone={() => { setReq(null); load(); }} />}
       {ret && <ReturnModal cert={ret} onClose={() => setRet(null)} onDone={() => { setRet(null); load(); }} />}
@@ -390,7 +411,7 @@ function AddModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () 
 
 // ── 匯入 Excel／CSV ───────────────────────────────────────────────
 // 流程：上傳 .xlsx／.csv（或貼 CSV）→ 自動認抬頭、攤出對應表讓人改 → 預覽 → 匯入。
-function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () => void; onDone: () => void }) {
+function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean; existing: Set<string>; onClose: () => void; onDone: () => void }) {
   const [grid, setGrid] = useState<Grid | null>(null);
   const [map, setMap] = useState<string[]>([]);
   const [course, setCourse] = useState('n8n Quickstart');
@@ -430,6 +451,10 @@ function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: 
     if (!String(r.certUrl || '').trim()) bad.push('證明連結');
     return bad.length ? `${r.studentName}（${bad.join('、')}）` : '';
   }).filter(Boolean), [records]);
+  // 去重提醒：同姓名＋Email 已經在清單裡的，標出來（仍可匯入）。
+  const dups = useMemo(() => records
+    .filter((r) => existing.has(`${String(r.studentName || '').toLowerCase().trim()}|${String(r.email || '').toLowerCase().trim()}`))
+    .map((r) => String(r.studentName)), [records, existing]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setErr(''); setBusy(true); setResult(null);
@@ -524,6 +549,11 @@ function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: 
                 <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12 }}>
                   {problems.slice(0, 6).map((x, i) => <li key={i}>{x}</li>)}
                 </ul>
+              </div>
+            )}
+            {hasName && dups.length > 0 && (
+              <div className="t-msg t-msg--info" style={{ marginTop: 8, borderColor: 'var(--t-warn, #C08423)' }}>
+                ⚠ 有 {dups.length} 筆可能重複（同姓名＋Email 已在清單）：{dups.slice(0, 6).join('、')}{dups.length > 6 ? '…' : ''}。確認不是重送再匯入。
               </div>
             )}
 

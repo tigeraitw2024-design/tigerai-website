@@ -11,7 +11,7 @@ export const CERT_CSS = `
   --pink:#ea4b71; --card:#ebebeb; --ink:#15151c; --ink2:#2b2b33; --sub:#5b5b64;
   --bg:radial-gradient(125% 95% at 50% 20%,#5c2841 0%,#3d1c30 40%,#26142b 74%,#160e1c 100%);
   --framepad:2.3; --cardbd:0.26; --cardrad:1.9; --glow:none; --cardpy:4.4; --cardpx:7; --cardpb:3.6;
-  --notchsz:3.4; --notchbg:var(--pink); --notchbw:0.42; --notchbc:#f0d6e0; --notchring:0; --nl:2.3; --nr:2.8;
+  --notchsz:3.4; --notchbg:var(--pink); --notchbw:0.42; --notchbc:#f0d6e0; --notchring:0; --notchshadow:none; --nl:2.3; --nr:2.8;
   --stackgap:1.3; --logomb:0;
   --titlesz:3.75; --titlew:400; --titlemt:1.1;
   --namesz:2.7; --namew:700; --namemt:0.5; --nrulew:36; --nruleh:0.16;
@@ -25,7 +25,7 @@ export const CERT_CSS = `
 .tgc[data-style="b"]{ --pink:#ff4b8b; --card:#f3f4f6; --ink:#111827; --ink2:#1f2937; --sub:#6b7280;
   --bg:linear-gradient(135deg,#2d0a21 0%,#1a0515 100%);
   --framepad:2.6; --cardbd:0.3; --cardrad:4; --glow:0 0 0 calc(var(--u)*0.5) rgba(255,75,139,.2); --cardpy:6; --cardpx:5; --cardpb:6;
-  --notchsz:3.2; --notchbg:var(--pink); --notchbw:0.42; --notchbc:#ffd9ea; --notchring:0; --nl:2.6; --nr:2.6;
+  --notchsz:3.2; --notchbg:var(--pink); --notchbw:0.42; --notchbc:#ffffff; --notchring:0; --notchshadow:0 0 0 calc(var(--u)*0.32) var(--pink); --nl:2.6; --nr:2.6;
   --stackgap:0; --logomb:4;
   --titlesz:4; --titlew:500; --titlemt:0;
   --namesz:3.5; --namew:700; --namemt:3; --nrulew:35; --nruleh:0.2;
@@ -39,7 +39,8 @@ export const CERT_CSS = `
   display:flex; flex-direction:column; justify-content:space-between; align-items:center;
   padding:calc(var(--u)*var(--cardpy)) calc(var(--u)*var(--cardpx)) calc(var(--u)*var(--cardpb)); text-align:center; overflow:hidden; }
 .tgc__notch{ position:absolute; top:50%; width:calc(var(--u)*var(--notchsz)); height:calc(var(--u)*var(--notchsz)); border-radius:50%;
-  background:var(--notchbg); border:calc(var(--u)*var(--notchbw)) solid var(--notchbc); transform:translate(-50%,-50%); z-index:3; }
+  background:var(--notchbg); border:calc(var(--u)*var(--notchbw)) solid var(--notchbc); box-shadow:var(--notchshadow);
+  transform:translate(-50%,-50%); z-index:3; }
 .tgc__notch::after{ content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
   width:40%; height:40%; border-radius:50%; border:calc(var(--u)*0.14) solid rgba(255,75,139,.4); opacity:var(--notchring); }
 .tgc__notch.l{ left:calc(var(--u)*var(--nl)); } .tgc__notch.r{ left:calc(100% - var(--u)*var(--nr)); }

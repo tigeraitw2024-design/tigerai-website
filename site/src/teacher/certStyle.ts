@@ -46,7 +46,7 @@ export const CERT_CSS = `
 .tgc__foot .tgc__mark{ height:calc(var(--u)*1.9); color:var(--ink); display:block; }
 .tgc__foot .tgc__rule{ width:calc(var(--u)*15); height:calc(var(--u)*0.13); background:var(--pink); border-radius:calc(var(--u)*1); }
 .tgc__foot .tgc__lbl{ font-size:calc(var(--u)*1.22); color:var(--sub); }
-.tgc__bolt{ color:#8a8a94; } .tgc__bolt svg{ height:calc(var(--u)*3.4); display:block; }
+.tgc__bolt img{ height:calc(var(--u)*3.9); width:auto; display:block; }
 .tgc__endorse{ position:absolute; left:var(--sx,63%); top:var(--sy,72%); transform:translate(-50%,-50%);
   display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*0.35); z-index:2; pointer-events:none; }
 .tgc__sig{ width:calc(var(--u)*var(--sigw,17)); height:auto; display:block; }

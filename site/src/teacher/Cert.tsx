@@ -111,7 +111,7 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
             <div className="tgc__rule" />
             <div className="tgc__lbl">Date</div>
           </div>
-          <div className="tgc__bolt"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 2 4 14h6l-1.5 8L20 9h-6.5z" /></svg></div>
+          <div className="tgc__bolt"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 2 H16.4 L11.7 10 H15.6 L7.4 22 L10.4 12.8 H6.2 Z" /></svg></div>
           <div className="tgc__foot">
             <N8nLogo className="tgc__mark" />
             <div className="tgc__rule" />

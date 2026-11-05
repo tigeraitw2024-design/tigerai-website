@@ -215,12 +215,12 @@ function AddModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () 
           <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
         {err && <div className="t-msg t-msg--err">{err}</div>}
         {Field('studentName', '學員姓名（印在證照上的英文名）', { required: true, ph: 'LIN,YUNG-CHING' })}
-        {Field('recipientName', '收件人（寄送用中文名）', { ph: '林永青' })}
-        {Field('courseName', '上課梯次／班級')}
-        {Field('email', 'Email', { type: 'email' })}
-        {Field('phone', '電話', { type: 'tel' })}
-        {Field('address', '寄送地址（含郵遞區號）')}
-        {Field('note', '備註')}
+        {Field('recipientName', '收件人（寄送用中文名）', { required: true, ph: '林永青' })}
+        {Field('courseName', '上課梯次／班級', { required: true, ph: '例：11 月週末班' })}
+        {Field('email', 'Email', { type: 'email', required: true, ph: 'a@example.com' })}
+        {Field('phone', '電話', { type: 'tel', required: true, ph: '0912345678' })}
+        {Field('address', '寄送地址（含郵遞區號）', { required: true, ph: '116 臺北市文山區…' })}
+        {Field('note', '備註（選填）')}
         {isOwner && (
           <>
             <div className="t-f__group">以下由虎智設定（講師看不到）</div>

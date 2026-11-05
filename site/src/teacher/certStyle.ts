@@ -58,6 +58,8 @@ export const CERT_CSS = `
 .tgc__stamp{ position:absolute; left:var(--stx,80%); top:var(--sty,72%); width:var(--stsz,24%);
   transform:translate(-50%,-50%); z-index:4; pointer-events:none; }
 .tgc__stamp svg{ width:100%; height:auto; display:block; }
+.tgc__overlay{ position:absolute; left:var(--ovx,50%); top:var(--ovy,50%); width:var(--ovsz,25%);
+  transform:translate(-50%,-50%); z-index:6; pointer-events:none; }
 .tgc__serial{ position:absolute; left:calc(var(--u)*2.6); bottom:calc(var(--u)*1.2); z-index:5;
   font-size:calc(var(--u)*0.95); letter-spacing:.03em; color:var(--sub); white-space:nowrap; }
 `.trim();

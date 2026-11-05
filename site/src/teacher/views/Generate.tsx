@@ -35,6 +35,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
         sealX: s.sealX, sealY: s.sealY, sealSize: s.sealSize, sealRot: s.sealRot, sealOp: s.sealOp,
         stampX: s.stampX, stampY: s.stampY, stampSize: s.stampSize,
         endorseCaption: s.endorseCaption, blocks: s.blocks,
+        overlayImg: s.overlayImg, overlayShow: s.overlayShow, overlayX: s.overlayX, overlayY: s.overlayY, overlaySize: s.overlaySize,
       });
       if (s.defaultCourse) setDefCourse(s.defaultCourse);
     }).catch(() => { /* 讀不到就用元件預設，不擋出圖 */ });

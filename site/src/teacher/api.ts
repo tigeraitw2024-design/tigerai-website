@@ -90,6 +90,7 @@ export type CertSettings = {
   endorseCaption: string; defaultCourse: string;
   printDays: number; shipDays: number; serialNext: number;
   blocks: Record<string, { show: boolean; scale: number; x: number; y: number }>;
+  overlayImg: string; overlayShow: boolean; overlayX: number; overlayY: number; overlaySize: number;
 };
 
 export type Instructor = {

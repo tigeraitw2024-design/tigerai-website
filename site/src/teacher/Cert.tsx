@@ -33,6 +33,7 @@ export type CertTune = {
   endorseCaption?: string;
   style?: 'a' | 'b';
   blocks?: Record<string, BlockCfg>;
+  overlayImg?: string; overlayShow?: boolean; overlayX?: number; overlayY?: number; overlaySize?: number;
 };
 
 /** 版面上可各自調整的九塊：key → 中文名。設定頁與這裡共用。 */
@@ -52,6 +53,7 @@ const DEF: Required<CertTune> = {
   endorseCaption: 'n8n Taiwan Ambassador',
   style: 'a',
   blocks: Object.fromEntries(BLOCKS.map(([k]) => [k, { ...BLOCK_DEFAULT }])),
+  overlayImg: '', overlayShow: false, overlayX: 50, overlayY: 50, overlaySize: 25,
 };
 
 /** 一塊：讀 blocks[k] 套位移/縮放/顯示。 */
@@ -112,6 +114,7 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
     '--kx': t.sealX + '%', '--ky': t.sealY + '%', '--ksz': t.sealSize + '%',
     '--krot': t.sealRot + 'deg', '--kop': (t.sealOp / 100).toFixed(2),
     '--stx': t.stampX + '%', '--sty': t.stampY + '%', '--stsz': t.stampSize + '%',
+    '--ovx': t.overlayX + '%', '--ovy': t.overlayY + '%', '--ovsz': t.overlaySize + '%',
   };
   if (width) vars['--cw'] = width + 'px';
 
@@ -173,6 +176,7 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
             </svg>
           </div>
         )}
+        {t.overlayImg && t.overlayShow && <img className="tgc__overlay" src={t.overlayImg} alt="" />}
         {data.serial && <div className="tgc__serial">Tiger AI　{data.serial}</div>}
       </div>
     </div>

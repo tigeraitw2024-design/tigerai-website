@@ -63,6 +63,14 @@ export default function CertSettings() {
 
   const set = <K extends keyof TSettings>(k: K, v: TSettings[K]) => { setMsg(''); setS((o) => (o ? { ...o, [k]: v } : o)); };
 
+  function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; if (!f) return;
+    if (f.size > 700 * 1024) { setErr('圖片太大（超過 700KB），請先縮小或壓縮再上傳。'); return; }
+    const fr = new FileReader();
+    fr.onload = () => { setErr(''); setMsg(''); setS((o) => (o ? { ...o, overlayImg: String(fr.result), overlayShow: true } : o)); };
+    fr.readAsDataURL(f);
+  }
+
   async function save() {
     if (!s) return;
     setErr(''); setMsg(''); setBusy(true);
@@ -153,6 +161,29 @@ export default function CertSettings() {
               <Slider label="大小" value={s.stampSize} min={10} max={45} suffix="%" onChange={(v) => set('stampSize', v)} />
               <Slider label="水平位置" value={s.stampX} min={0} max={100} suffix="%" onChange={(v) => set('stampX', v)} />
               <Slider label="垂直位置" value={s.stampY} min={0} max={100} suffix="%" onChange={(v) => set('stampY', v)} />
+            </>}
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">自訂圖層（上傳 PNG）</div>
+            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>上傳一張圖（建議透明底 PNG、檔案小於 700KB）蓋在證照上，自己拉大小與位置。只放一張。</p>
+            <label className="t-drop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 64, border: '1px dashed var(--t-line)', borderRadius: 10, cursor: 'pointer', color: 'var(--t-fg-2)' }}>
+              <input type="file" accept="image/png,image/*" onChange={onUpload} style={{ display: 'none' }} />
+              <Icon name="upload" size={18} /><span>{s.overlayImg ? '換一張圖' : '選 PNG 圖片'}</span>
+            </label>
+            {s.overlayImg && <>
+              <div style={{ margin: '10px 0', textAlign: 'center' }}>
+                <img src={s.overlayImg} alt="" style={{ maxWidth: '100%', maxHeight: 90, borderRadius: 6, background: 'repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%) 50% / 14px 14px' }} />
+              </div>
+              <label className="t-check" style={{ marginBottom: 10 }}>
+                <input type="checkbox" checked={s.overlayShow} onChange={(e) => set('overlayShow', e.target.checked)} /> 顯示自訂圖層
+              </label>
+              {s.overlayShow && <>
+                <Slider label="大小" value={s.overlaySize} min={3} max={90} suffix="%" onChange={(v) => set('overlaySize', v)} />
+                <Slider label="水平位置" value={s.overlayX} min={0} max={100} suffix="%" onChange={(v) => set('overlayX', v)} />
+                <Slider label="垂直位置" value={s.overlayY} min={0} max={100} suffix="%" onChange={(v) => set('overlayY', v)} />
+              </>}
+              <button type="button" className="t-btn t-btn--ghost t-btn--sm" style={{ marginTop: 6, color: 'var(--t-danger)' }} onClick={() => { set('overlayImg', ''); set('overlayShow', false); }}>移除圖層</button>
             </>}
           </div>
 

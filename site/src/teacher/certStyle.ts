@@ -31,7 +31,7 @@ export const CERT_CSS = `
   --namesz:3.5; --namew:700; --namemt:3; --nrulew:35; --nruleh:0.2;
   --bodysz:1.5; --bodymw:52; --bodymt:4.6;
   --coursesz:3; --coursew:500; --coursecol:var(--ink2); --coursemt:1.6;
-  --footpad:8.5; --footmt:5; --footgap:0.5; --valsz:1.4; --valw:700; --fmark:1.9; --frulew:18; --fruleh:0.2; --flblsz:1.35;
+  --footpad:12; --footmt:5; --footgap:0.5; --valsz:1.4; --valw:700; --fmark:1.9; --frulew:18; --fruleh:0.2; --flblsz:1.35;
   --boltsz:4.4; --boltop:0.4; --flogocol:var(--pink); }
 .tgc *{ box-sizing:border-box; }
 .tgc__card{ position:relative; height:100%; width:100%; background:var(--card);
@@ -62,7 +62,7 @@ export const CERT_CSS = `
   padding:0 calc(var(--u)*var(--footpad)); margin-top:calc(var(--u)*var(--footmt)); }
 .tgc__foot{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*var(--footgap)); min-width:0; }
 .tgc__foot .tgc__val{ font-size:calc(var(--u)*var(--valsz)); font-weight:var(--valw); color:var(--ink); white-space:nowrap; }
-.tgc__foot .tgc__mark{ height:calc(var(--u)*var(--fmark)); color:var(--flogocol); display:block; }
+.tgc__foot .tgc__mark{ height:calc(var(--u)*var(--fmark)); color:var(--ink); --marknodes:var(--flogocol); display:block; }
 .tgc__foot .tgc__rule{ width:calc(var(--u)*var(--frulew)); height:calc(var(--u)*var(--fruleh)); background:var(--pink); border-radius:calc(var(--u)*1); }
 .tgc__foot .tgc__lbl{ font-size:calc(var(--u)*var(--flblsz)); color:var(--sub); }
 .tgc__bolt img{ height:calc(var(--u)*var(--boltsz)); width:auto; display:block; opacity:var(--boltop); }

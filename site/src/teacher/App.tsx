@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, type Cert, type TeacherUser } from './api';
 import Icon from './Icon';
 import Login from './views/Login';
+import Dashboard from './views/Dashboard';
 import Console from './views/Console';
 import Generate from './views/Generate';
 import Report from './views/Report';
@@ -19,10 +20,10 @@ import './teacher.css';
  * 分頁：證照清單｜產生證照｜對帳｜名冊。後兩者只有 owner 看得到。
  */
 
-type View = 'certs' | 'generate' | 'settings' | 'report' | 'roster';
+type View = 'dashboard' | 'certs' | 'generate' | 'settings' | 'report' | 'roster';
 const viewOf = (): View => {
   const h = location.hash.replace(/^#\/?/, '');
-  return (['certs', 'generate', 'settings', 'report', 'roster'].includes(h) ? h : 'certs') as View;
+  return (['dashboard', 'certs', 'generate', 'settings', 'report', 'roster'].includes(h) ? h : 'dashboard') as View;
 };
 
 export default function App() {
@@ -56,6 +57,7 @@ export default function App() {
   // 講師只有「證照」一頁：上傳資料、看自己的印/寄狀態。
   // 出圖列印（產生證照）、對帳、名冊都是 owner 專用——講師不經手印什麼。
   const NAV: [View, string, string][] = [
+    ['dashboard', 'grid', '總覽'],
     ['certs', 'list', '證照'],
     ...(isOwner ? [
       ['generate', 'award', '產生證照'],
@@ -84,6 +86,7 @@ export default function App() {
       </header>
 
       <main className="t-body">
+        {view === 'dashboard' && <Dashboard user={user} />}
         {view === 'certs' && <Console user={user} onGenerate={toGenerate} />}
         {view === 'generate' && (isOwner ? <Generate certs={genCerts} onBack={() => go('certs')} /> : <Denied />)}
         {view === 'settings' && (isOwner ? <CertSettings /> : <Denied />)}

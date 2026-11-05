@@ -34,7 +34,11 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   const [rows, setRows] = useState<Cert[] | null>(null);
   const [err, setErr] = useState('');
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState<StatusFilter>('all');
+  const [status, setStatus] = useState<StatusFilter>(() => {
+    // 從儀表板點某一格進來時，帶著那個篩選（用完就清掉）。
+    try { const f = sessionStorage.getItem('tg_cert_filter'); if (f) { sessionStorage.removeItem('tg_cert_filter'); return f as StatusFilter; } } catch { /* 無痕視窗 */ }
+    return 'all';
+  });
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState('');
   const [modal, setModal] = useState<'' | 'add' | 'import'>('');

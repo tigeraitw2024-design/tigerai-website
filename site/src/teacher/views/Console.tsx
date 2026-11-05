@@ -176,15 +176,20 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
         </div>
       )}
 
-      {modal === 'add' && <AddModal onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
-      {modal === 'import' && <ImportModal onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
+      {modal === 'add' && <AddModal isOwner={isOwner} onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
+      {modal === 'import' && <ImportModal isOwner={isOwner} onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
     </div>
   );
 }
 
 // ── 新增一筆 ──────────────────────────────────────────────────────
-function AddModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
-  const [f, setF] = useState({ studentName: '', course: 'n8n Quickstart', issueDate: '', courseName: '', email: '', phone: '', address: '', fee: '200', note: '' });
+// 講師只填「他的資料」（學員、收件、聯絡）。證照名稱／發證日期／費用是 owner 才設的，
+// 對講師整段藏起來——他丟上來，這些由虎智決定。
+function AddModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () => void; onDone: () => void }) {
+  const [f, setF] = useState({
+    studentName: '', course: 'n8n Quickstart', issueDate: '', courseName: '', recipientName: '',
+    email: '', phone: '', address: '', certUrl: '', fee: '200', note: '',
+  });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: string) => setF((o) => ({ ...o, [k]: v }));
@@ -209,14 +214,21 @@ function AddModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
         <div className="t-modal__head"><h3>新增一位通過的學員</h3>
           <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
         {err && <div className="t-msg t-msg--err">{err}</div>}
-        {Field('studentName', '學員姓名', { required: true, ph: '王小明' })}
-        {Field('course', '證照名稱', { ph: 'n8n Quickstart' })}
-        {Field('issueDate', '發證日期', { ph: 'July 29, 2026（印在證照上的字樣）' })}
+        {Field('studentName', '學員姓名（印在證照上的英文名）', { required: true, ph: 'LIN,YUNG-CHING' })}
+        {Field('recipientName', '收件人（寄送用中文名）', { ph: '林永青' })}
         {Field('courseName', '上課梯次／班級')}
         {Field('email', 'Email', { type: 'email' })}
         {Field('phone', '電話', { type: 'tel' })}
-        {Field('address', '寄送地址')}
-        {Field('fee', '費用（元，含運）', { type: 'number' })}
+        {Field('address', '寄送地址（含郵遞區號）')}
+        {Field('note', '備註')}
+        {isOwner && (
+          <>
+            <div className="t-f__group">以下由虎智設定（講師看不到）</div>
+            {Field('course', '證照名稱', { ph: 'n8n Quickstart' })}
+            {Field('issueDate', '發證日期', { ph: 'July 29, 2026（印在證照上的字樣）' })}
+            {Field('fee', '費用（元，含運）', { type: 'number' })}
+          </>
+        )}
         <div className="t-row" style={{ marginTop: 6 }}>
           <button className="t-btn t-btn--brand" disabled={busy}>{busy ? '儲存中…' : '新增'}</button>
           <button type="button" className="t-btn t-btn--ghost" onClick={onClose}>取消</button>
@@ -228,7 +240,7 @@ function AddModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
 
 // ── 匯入 Excel／CSV ───────────────────────────────────────────────
 // 流程：上傳 .xlsx／.csv（或貼 CSV）→ 自動認抬頭、攤出對應表讓人改 → 預覽 → 匯入。
-function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () => void; onDone: () => void }) {
   const [grid, setGrid] = useState<Grid | null>(null);
   const [map, setMap] = useState<string[]>([]);
   const [course, setCourse] = useState('n8n Quickstart');
@@ -238,9 +250,14 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
   const [result, setResult] = useState<{ ok: number; errors: string[] } | null>(null);
   const [err, setErr] = useState('');
 
+  // 證照名稱／發證日期／費用是 owner 才設的；講師版的對應下拉不給這些選項。
+  const OWNER_ONLY = ['course', 'issueDate', 'fee'];
+  const options = isOwner ? FIELDS : FIELDS.filter((f) => !OWNER_ONLY.includes(f.key));
+
   function take(g: Grid) {
     if (!g.headers.length) { setErr('讀不到任何欄位，檔案可能是空的。'); return; }
-    setErr(''); setGrid(g); setMap(guessMapping(g.headers));
+    const m = guessMapping(g.headers).map((k) => (!isOwner && OWNER_ONLY.includes(k) ? '' : k));
+    setErr(''); setGrid(g); setMap(m);
   }
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return;
@@ -250,8 +267,8 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
   }
 
   const records = useMemo(
-    () => (grid ? buildRecords(grid.rows, map, { course, fee: Number(fee) || 200 }) : []),
-    [grid, map, course, fee],
+    () => (grid ? buildRecords(grid.rows, map, isOwner ? { course, fee: Number(fee) || 200 } : { course: '', fee: 200 }) : []),
+    [grid, map, course, fee, isOwner],
   );
   const hasName = map.includes('studentName');
 
@@ -313,22 +330,24 @@ function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
                     setMap((m) => m.map((x, j) => (j === i ? v : (v && x === v ? '' : x)))); // 同一目標只留一欄
                   }}>
                     <option value="">略過</option>
-                    {FIELDS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+                    {options.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
                   </select>
                 </div>
               ))}
             </div>
 
-            <div className="t-row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-              <div className="t-f" style={{ flex: '1 1 160px', margin: 0 }}>
-                <label className="t-f__label">證照名稱（整批套用）</label>
-                <input className="t-input" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="n8n Quickstart" />
+            {isOwner && (
+              <div className="t-row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                <div className="t-f" style={{ flex: '1 1 160px', margin: 0 }}>
+                  <label className="t-f__label">證照名稱（整批套用）</label>
+                  <input className="t-input" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="n8n Quickstart" />
+                </div>
+                <div className="t-f" style={{ flex: '0 0 120px', margin: 0 }}>
+                  <label className="t-f__label">每張費用</label>
+                  <input className="t-input" type="number" value={fee} onChange={(e) => setFee(e.target.value)} />
+                </div>
               </div>
-              <div className="t-f" style={{ flex: '0 0 120px', margin: 0 }}>
-                <label className="t-f__label">每張費用</label>
-                <input className="t-input" type="number" value={fee} onChange={(e) => setFee(e.target.value)} />
-              </div>
-            </div>
+            )}
 
             {!hasName
               ? <div className="t-msg t-msg--err" style={{ marginTop: 10 }}>請先把其中一欄設成「證照姓名」。</div>

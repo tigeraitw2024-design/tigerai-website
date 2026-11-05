@@ -13,7 +13,11 @@ let ensured = false;
 export async function ensureTables(db: D1Database) {
   if (ensured) return;
   for (const c of TEACHER_COLLECTIONS) {
-    for (const sql of createTableSQL(c)) await db.prepare(sql).run();
+    for (const sql of createTableSQL(c)) {
+      // 單句容錯：在「已存在的舊表」上建「新索引欄的索引」會噴「no such column」，
+      // 絕不能讓這種 schema 演進的錯拖垮整個 /api/teacher（連 /me、登入都會跟著 500）。
+      try { await db.prepare(sql).run(); } catch (e) { console.error('[ensureTables]', sql, e); }
+    }
   }
   ensured = true;
 }

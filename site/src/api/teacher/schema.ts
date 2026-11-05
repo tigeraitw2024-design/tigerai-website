@@ -44,7 +44,7 @@ export const certificatesCollection: Collection = {
   write: 'owner',
   fields: [
     { name: 'studentName', label: '學員姓名', type: 'text', required: true, listed: true },
-    { name: 'serial', label: '編號', type: 'text', readonly: true, listed: true, indexed: true, help: '接單（出單）時自動給的 Tiger AI 流水號，例如 26-1001。後台可用這個查。' },
+    { name: 'serial', label: '編號', type: 'text', readonly: true, listed: true, help: '接單（出單）時自動給的 Tiger AI 流水號，例如 26-1001。後台可用這個查（搜尋框打編號即可）。' },
     { name: 'course', label: '證照名稱', type: 'text', default: 'n8n Quickstart', listed: true },
     { name: 'issueDate', label: '發證日期', type: 'text', listed: true, help: '證照上印的日期。接單當天自動帶入（例如 November 5, 2026），也可手動改。' },
     // 所屬講師：資料擁有者，列級權限就靠這個欄位過濾

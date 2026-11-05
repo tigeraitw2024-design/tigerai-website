@@ -68,9 +68,15 @@ export default function CertSettings() {
 
         <aside className="t-gen__side">
           <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">版型</div>
+            <div className="t-seg">
+              <button type="button" aria-pressed={s.style === 'a'} onClick={() => set('style', 'a')}>A・經典深框</button>
+              <button type="button" aria-pressed={s.style === 'b'} onClick={() => set('style', 'b')}>B・圓角亮粉</button>
+            </div>
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
             <div className="t-panel__h">內容</div>
-            <div className="t-f"><label className="t-f__label">落款文字（簽名下方）</label>
-              <input className="t-input" value={s.endorseCaption} onChange={(e) => set('endorseCaption', e.target.value)} /></div>
             <div className="t-f" style={{ marginBottom: 0 }}><label className="t-f__label">預設證照名稱</label>
               <input className="t-input" value={s.defaultCourse} onChange={(e) => set('defaultCourse', e.target.value)} placeholder="n8n Quickstart" /></div>
           </div>
@@ -92,6 +98,11 @@ export default function CertSettings() {
               <Slider label="水平位置" value={s.sigX} min={0} max={100} suffix="%" onChange={(v) => set('sigX', v)} />
               <Slider label="垂直位置" value={s.sigY} min={0} max={100} suffix="%" onChange={(v) => set('sigY', v)} />
             </>}
+            <div className="t-f" style={{ marginTop: 10 }}><label className="t-f__label">落款文字（簽名下方）</label>
+              <input className="t-input" value={s.endorseCaption} onChange={(e) => set('endorseCaption', e.target.value)} /></div>
+            <label className="t-check" style={{ marginBottom: 0 }}>
+              <input type="checkbox" checked={s.showCaption} onChange={(e) => set('showCaption', e.target.checked)} /> 顯示落款文字
+            </label>
           </div>
 
           <div className="t-panel" style={{ margin: 0 }}>
@@ -105,6 +116,19 @@ export default function CertSettings() {
               <Slider label="垂直位置" value={s.sealY} min={0} max={100} suffix="%" onChange={(v) => set('sealY', v)} />
               <Slider label="角度" value={s.sealRot} min={-30} max={30} suffix="°" onChange={(v) => set('sealRot', v)} />
               <Slider label="透明度" value={s.sealOp} min={30} max={100} suffix="%" onChange={(v) => set('sealOp', v)} />
+            </>}
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">藍色大使印章</div>
+            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>空殼印章（n8n TAIPEI AMBASSADOR），印出來之後請大使在裡面手簽。</p>
+            <label className="t-check" style={{ marginBottom: 10 }}>
+              <input type="checkbox" checked={s.showStamp} onChange={(e) => set('showStamp', e.target.checked)} /> 顯示藍色印章
+            </label>
+            {s.showStamp && <>
+              <Slider label="大小" value={s.stampSize} min={10} max={45} suffix="%" onChange={(v) => set('stampSize', v)} />
+              <Slider label="水平位置" value={s.stampX} min={0} max={100} suffix="%" onChange={(v) => set('stampX', v)} />
+              <Slider label="垂直位置" value={s.stampY} min={0} max={100} suffix="%" onChange={(v) => set('stampY', v)} />
             </>}
           </div>
 

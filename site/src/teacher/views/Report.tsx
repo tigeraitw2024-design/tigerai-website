@@ -8,7 +8,7 @@ import { downloadBlob } from '../certExport';
  * 收款後到「證照」頁勾選那批、按「標已結算」，這裡就會把那些算進「已結」。
  * 「只看未結」把已全部結清的月份收起來（＝封存，不佔畫面但隨時切回來查）。
  */
-export default function Report() {
+export default function Report({ isOwner }: { isOwner: boolean }) {
   const [rows, setRows] = useState<ReportRow[] | null>(null);
   const [err, setErr] = useState('');
   const [onlyOpen, setOnlyOpen] = useState(false);
@@ -44,7 +44,9 @@ export default function Report() {
           <button className="t-btn t-btn--ghost t-btn--sm" onClick={exportCsv}><Icon name="download" size={14} /> 匯出 CSV</button>
         )}
       </div>
-      <p className="t-intro">依講師與月份加總。收款後到「證照」頁勾選那批按「標已結算」，這裡就會進「已結」。</p>
+      <p className="t-intro">{isOwner
+        ? '依講師與月份加總。收款後到「證照」頁勾選那批按「標已結算」，這裡就會進「已結」。'
+        : '你的證照對帳：張數、該付多少、已結多少、還欠多少。虎智收款後標「已結算」，這裡就更新。'}</p>
 
       {err && <div className="t-msg t-msg--err">{err}</div>}
       {rows && rows.length > 0 && (
@@ -60,7 +62,7 @@ export default function Report() {
             <table className="t-report">
               <thead>
                 <tr>
-                  <th>講師</th><th>月份</th>
+                  {isOwner && <th>講師</th>}<th>月份</th>
                   <th className="num">張數</th><th className="num">已印</th><th className="num">已寄</th>
                   <th className="num">已結算</th><th className="num">金額</th><th className="num">未結金額</th>
                 </tr>
@@ -70,7 +72,7 @@ export default function Report() {
                   const open = r.amount - r.settledAmount;
                   return (
                     <tr key={i}>
-                      <td><b>{r.instructor}</b></td>
+                      {isOwner && <td><b>{r.instructor}</b></td>}
                       <td className="t-mono">{r.month}</td>
                       <td className="num">{r.count}</td>
                       <td className="num">{r.printed}</td>
@@ -84,7 +86,7 @@ export default function Report() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={2}>合計</td>
+                  <td colSpan={isOwner ? 2 : 1}>合計</td>
                   <td className="num">{total.count}</td>
                   <td className="num">{total.printed}</td>
                   <td className="num">{total.shipped}</td>

@@ -59,10 +59,10 @@ export default function App() {
   const NAV: [View, string, string][] = [
     ['dashboard', 'grid', '總覽'],
     ['certs', 'list', '證照'],
+    ['report', 'chart', '對帳'],
     ...(isOwner ? [
       ['generate', 'award', '產生證照'],
       ['settings', 'settings', '獎狀設定'],
-      ['report', 'chart', '對帳'],
       ['roster', 'users', '名冊'],
     ] as [View, string, string][] : []),
   ];
@@ -90,7 +90,7 @@ export default function App() {
         {view === 'certs' && <Console user={user} onGenerate={toGenerate} />}
         {view === 'generate' && (isOwner ? <Generate certs={genCerts} onBack={() => go('certs')} /> : <Denied />)}
         {view === 'settings' && (isOwner ? <CertSettings /> : <Denied />)}
-        {view === 'report' && (isOwner ? <Report /> : <Denied />)}
+        {view === 'report' && <Report isOwner={isOwner} />}
         {view === 'roster' && (isOwner ? <Roster meId={user.id} /> : <Denied />)}
       </main>
 

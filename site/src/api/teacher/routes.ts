@@ -230,8 +230,9 @@ app.post('/certs/:id/return', async (ctx) => {
 });
 
 app.get('/report', async (ctx) => {
-  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能看報表' }, 403);
-  return ctx.json({ rows: await certReport(ctx.env.DB) });
+  const t = ctx.get('teacher');
+  const scopeId = owner(ctx) ? undefined : t.id;   // 講師只對自己的帳；owner 看全部
+  return ctx.json({ rows: await certReport(ctx.env.DB, scopeId) });
 });
 
 // 獎狀設定（格式與內容）：只有 owner 能看與改。

@@ -30,9 +30,10 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
     api.get<{ settings: CertSettings }>('/api/teacher/settings').then((r) => {
       const s = r.settings;
       setTune({
-        sigColor: s.sigColor, showSig: s.showSig, showSeal: s.showSeal,
+        style: s.style, sigColor: s.sigColor, showSig: s.showSig, showCaption: s.showCaption, showSeal: s.showSeal, showStamp: s.showStamp,
         sigW: s.sigW, sigX: s.sigX, sigY: s.sigY,
         sealX: s.sealX, sealY: s.sealY, sealSize: s.sealSize, sealRot: s.sealRot, sealOp: s.sealOp,
+        stampX: s.stampX, stampY: s.stampY, stampSize: s.stampSize,
         endorseCaption: s.endorseCaption,
       });
       if (s.defaultCourse) setDefCourse(s.defaultCourse);

@@ -86,9 +86,11 @@ export async function upsertInstructor(
 
 /** 預設值：沒設定過就用這份（跟 Cert.tsx 的 CERT_DEFAULTS 對齊）。 */
 export const SETTINGS_DEFAULTS = {
-  sigColor: 'black', showSig: true, showSeal: true,
+  style: 'a' as 'a' | 'b', // 證照版型：a=原本經典、b=s2c 圓角亮粉
+  sigColor: 'black', showSig: true, showCaption: true, showSeal: true, showStamp: false,
   sigW: 17, sigX: 63, sigY: 72,
   sealX: 84, sealY: 75, sealSize: 16, sealRot: -5, sealOp: 90,
+  stampX: 80, stampY: 72, stampSize: 24,
   endorseCaption: 'n8n Taiwan Ambassador',
   defaultCourse: 'n8n Quickstart',
   printDays: 2, shipDays: 2,
@@ -302,9 +304,9 @@ export async function clearEditRequest(db: D1Database, id: string) {
   return putRow(db, certificatesCollection, id, data);
 }
 
-/** 對帳報表：依「講師 × 月份」統計張數、已印、已寄、金額 */
-export async function certReport(db: D1Database) {
-  const rows = await listCerts(db);
+/** 對帳報表：依「講師 × 月份」統計張數、已印、已寄、金額、已結算。instructorId 有給就只算那位（講師看自己的）。 */
+export async function certReport(db: D1Database, instructorId?: string) {
+  const rows = await listCerts(db, instructorId ? { instructorId } : {});
   const map = new Map<string, any>();
   for (const r of rows) {
     const month = String(r.createdAt || '').slice(0, 7) || '未知';

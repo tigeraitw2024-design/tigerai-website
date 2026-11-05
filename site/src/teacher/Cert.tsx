@@ -24,17 +24,23 @@ export type CertData = { studentName: string; course: string; issueDate: string;
 export type CertTune = {
   sigColor?: 'black' | 'red' | 'blue';
   showSig?: boolean;
+  showCaption?: boolean;
   showSeal?: boolean;
+  showStamp?: boolean;
   sigW?: number; sigX?: number; sigY?: number;
   sealX?: number; sealY?: number; sealSize?: number; sealRot?: number; sealOp?: number;
+  stampX?: number; stampY?: number; stampSize?: number;
   endorseCaption?: string;
+  style?: 'a' | 'b';
 };
 
 const DEF: Required<CertTune> = {
-  sigColor: 'black', showSig: true, showSeal: true,
+  sigColor: 'black', showSig: true, showCaption: true, showSeal: true, showStamp: false,
   sigW: 17, sigX: 63, sigY: 72,
   sealX: 84, sealY: 75, sealSize: 16, sealRot: -5, sealOp: 90,
+  stampX: 80, stampY: 72, stampSize: 24,
   endorseCaption: 'n8n Taiwan Ambassador',
+  style: 'a',
 };
 
 function N8nLogo({ className }: { className?: string }) {
@@ -84,11 +90,12 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
     '--sigw': String(t.sigW), '--sx': t.sigX + '%', '--sy': t.sigY + '%',
     '--kx': t.sealX + '%', '--ky': t.sealY + '%', '--ksz': t.sealSize + '%',
     '--krot': t.sealRot + 'deg', '--kop': (t.sealOp / 100).toFixed(2),
+    '--stx': t.stampX + '%', '--sty': t.stampY + '%', '--stsz': t.stampSize + '%',
   };
   if (width) vars['--cw'] = width + 'px';
 
   return (
-    <div className="tgc" ref={ref} style={vars as any} data-tgc>
+    <div className="tgc" ref={ref} style={vars as any} data-tgc data-style={t.style || 'a'}>
       <span className="tgc__notch l" />
       <span className="tgc__notch r" />
       <div className="tgc__card">
@@ -119,14 +126,24 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
           </div>
         </div>
 
-        {t.showSig && (
+        {(t.showSig || t.showCaption) && (
           <div className="tgc__endorse">
-            <img className="tgc__sig" src={SIG_SRC[t.sigColor]} alt="Morris 簽名" crossOrigin="anonymous" />
-            <div className="tgc__sigrule" />
-            <div className="tgc__sigcap">{t.endorseCaption}</div>
+            {t.showSig && <img className="tgc__sig" src={SIG_SRC[t.sigColor]} alt="Morris 簽名" crossOrigin="anonymous" />}
+            {t.showSig && <div className="tgc__sigrule" />}
+            {t.showCaption && <div className="tgc__sigcap">{t.endorseCaption}</div>}
           </div>
         )}
         {t.showSeal && <img className="tgc__seal" src="/teacher/seal.png" alt="虎智科技公司印章" crossOrigin="anonymous" />}
+        {t.showStamp && (
+          <div className="tgc__stamp" aria-hidden="true">
+            <svg viewBox="0 0 230 134">
+              <ellipse cx="115" cy="67" rx="110" ry="62" fill="none" stroke="#2f55b0" strokeWidth="2.6" />
+              <ellipse cx="115" cy="67" rx="103" ry="55" fill="none" stroke="#2f55b0" strokeWidth="1" />
+              <line x1="52" y1="82" x2="178" y2="82" stroke="#2f55b0" strokeWidth="1.3" />
+              <text x="115" y="103" textAnchor="middle" fill="#2f55b0" fontSize="13" fontWeight="700" letterSpacing="0.4">n8n TAIPEI AMBASSADOR</text>
+            </svg>
+          </div>
+        )}
         {data.serial && <div className="tgc__serial">Tiger AI　{data.serial}</div>}
       </div>
     </div>

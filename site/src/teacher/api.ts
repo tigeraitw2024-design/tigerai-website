@@ -82,9 +82,11 @@ export type Cert = {
 
 /** 獎狀設定（owner 在「獎狀設定」頁設好、全站套用）。對應 src/api/teacher/store.ts 的 SETTINGS_DEFAULTS。 */
 export type CertSettings = {
-  sigColor: 'black' | 'red' | 'blue'; showSig: boolean; showSeal: boolean;
+  style: 'a' | 'b';
+  sigColor: 'black' | 'red' | 'blue'; showSig: boolean; showCaption: boolean; showSeal: boolean; showStamp: boolean;
   sigW: number; sigX: number; sigY: number;
   sealX: number; sealY: number; sealSize: number; sealRot: number; sealOp: number;
+  stampX: number; stampY: number; stampSize: number;
   endorseCaption: string; defaultCourse: string;
   printDays: number; shipDays: number; serialNext: number;
 };

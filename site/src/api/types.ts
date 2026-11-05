@@ -53,6 +53,18 @@ export type Env = {
   SITE_URL?: string;
 
   /**
+   * 講師區（證照系統）的 Google 登入。
+   * 到 Google Cloud Console 開一組 OAuth 2.0 用戶端，授權重新導向 URI 填
+   *   <SITE_URL>/api/teacher/auth/google/callback
+   * 然後用 `npx wrangler secret put GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` 設進來。
+   * 沒設的話講師區登入頁會顯示「還沒設定」，不會影響官網其他功能。
+   */
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  /** 講師區 owner 白名單（逗號分隔的 Gmail）。列在這裡的人第一次 Google 登入即自動成為 owner。 */
+  TEACHER_OWNER_EMAILS?: string;
+
+  /**
    * 第一次建立 owner 帳號用的一次性密語。
    * 用過就該從 Cloudflare 上刪掉——留著等於多一把備用鑰匙。
    */
@@ -71,5 +83,7 @@ export type Ctx = {
   Variables: {
     admin?: AdminUser;
     memberId?: string;
+    /** 講師區登入身分（見 api/teacher/auth.ts）。跟 admin 互不相干。 */
+    teacher?: { id: string; email: string; name: string; role: 'owner' | 'instructor' };
   };
 };

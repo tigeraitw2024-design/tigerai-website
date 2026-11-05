@@ -8,6 +8,7 @@ import mediaRoutes, { rawHandler } from './routes/media';
 import opsRoutes, { runCron } from './routes/ops';
 import publicRoutes from './routes/public';
 import shopRoutes from './routes/shop';
+import teacherRoutes from './teacher/routes';
 
 /**
  * Worker 進入點。
@@ -48,6 +49,10 @@ app.route('/api', publicRoutes);
 app.route('/api', shopRoutes);
 app.route('/api/content', contentRoutes);
 app.get('/api/media/raw/*', rawHandler);
+
+// ── 講師區（證照系統）。自己管登入，不走下面的後台中介層。 ──────
+// 獨立模組：src/api/teacher/*。不碰官網現有的 modules、/admin、前台頁面。
+app.route('/api/teacher', teacherRoutes);
 
 // ── 後台：從這裡開始都要登入 ────────────────────────────────────
 

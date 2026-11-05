@@ -1,0 +1,39 @@
+---
+// 講師區（證照系統）。
+//
+// 跟 /admin 同樣做法：整塊是一支 React 應用，路由走網址的 #，所以伺服器上
+// 只要這一個檔案、不用任何重寫規則。client:only 是刻意的——沒登入的人看到
+// 的是 Google 登入框，沒有一個字需要被搜尋引擎讀到，也沒有「第一眼就要看到
+// 內容」的需求；在建置時先渲染一次只會因為 localStorage、ResizeObserver 這些
+// 瀏覽器專屬的東西出錯。
+//
+// 刻意不用前台的 Page.astro：那套版面是為了跟原型對到 0.00% 的，動不得，
+// 而且講師區不需要前台的字型與設計系統。它是獨立的一塊，只跟官網共用網域。
+import TeacherApp from '../../teacher/App.tsx';
+---
+
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>虎智講師區</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/assets/logo/color-square-mark.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    {/* Noto Sans TC：介面中文；Work Sans：證照本體（跟 n8n 原證照同字體） */}
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+TC:wght@400;700;800&family=Work+Sans:wght@400;500;600;700;800&display=swap"
+    />
+  </head>
+  <body class="tg-teacher">
+    <TeacherApp client:only="react" />
+    <noscript>
+      <div style="padding:32px;font-family:system-ui,sans-serif">
+        講師區需要 JavaScript 才能運作，請在瀏覽器設定裡開啟。
+      </div>
+    </noscript>
+  </body>
+</html>

@@ -1,0 +1,126 @@
+import { useState } from 'react';
+import type { Cert as CertRec } from '../api';
+import Cert, { type CertTune } from '../Cert';
+import { certToBlob, downloadBlob, zipBlobs } from '../certExport';
+import Icon from '../Icon';
+
+/**
+ * 證照產生器：把選到的學員出成圖檔。
+ *
+ * 證照本體跟 cert.html 同一份版式（Cert 元件），這裡只加「批次出圖」：
+ * 單張直接下載，多張打包成一個 ZIP（出圖、打包全在瀏覽器端，不碰付費 API）。
+ * 出圖用 1398 寬 ×2，列印級；版面跟畫面上看到的逐像素一致。
+ *
+ * 簽名顏色、紅印顯不顯示先留著可調（預設黑、都顯示）；用印的精確位置
+ * Robin 說之後再喬，所以位置沿用 cert.html 的預設值，不開滑桿。
+ */
+
+const safe = (s: string) => (s || 'cert').replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, 40);
+
+export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: () => void }) {
+  const [idx, setIdx] = useState(0);
+  const [format, setFormat] = useState<'png' | 'jpeg'>('png');
+  const [tune, setTune] = useState<CertTune>({ sigColor: 'black', showSig: true, showSeal: true });
+  const [busy, setBusy] = useState('');
+  const [err, setErr] = useState('');
+
+  if (!certs.length) {
+    return (
+      <div className="t-empty">
+        <p>還沒有選要產生的證照。</p>
+        <button className="t-btn t-btn--ghost" onClick={onBack}><Icon name="chevron-left" size={16} /> 回證照清單去勾選</button>
+      </div>
+    );
+  }
+
+  const cur = certs[Math.min(idx, certs.length - 1)];
+  const data = { studentName: cur.studentName, course: cur.course, issueDate: cur.issueDate };
+
+  async function one() {
+    setErr(''); setBusy('one');
+    try {
+      const blob = await certToBlob(data, tune, { format, scale: 2 });
+      downloadBlob(blob, `${safe(cur.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`);
+    } catch (e: any) { setErr(e.message || '出圖失敗'); }
+    finally { setBusy(''); }
+  }
+
+  async function all() {
+    setErr(''); setBusy('all');
+    try {
+      const files: { name: string; blob: Blob }[] = [];
+      for (let i = 0; i < certs.length; i++) {
+        const c = certs[i];
+        setBusy(`all:${i + 1}/${certs.length}`);
+        const blob = await certToBlob(
+          { studentName: c.studentName, course: c.course, issueDate: c.issueDate },
+          tune, { format, scale: 2 });
+        files.push({ name: `${safe(c.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`, blob });
+      }
+      if (files.length === 1) downloadBlob(files[0].blob, files[0].name);
+      else downloadBlob(await zipBlobs(files), `n8n證照_${files.length}張.zip`);
+    } catch (e: any) { setErr(e.message || '批次出圖失敗'); }
+    finally { setBusy(''); }
+  }
+
+  return (
+    <div>
+      <div className="t-row" style={{ marginBottom: 12 }}>
+        <button className="t-btn t-btn--ghost t-btn--sm" onClick={onBack}><Icon name="chevron-left" size={16} /> 清單</button>
+        <h1 className="t-h1" style={{ margin: 0 }}>產生證照</h1>
+        <span className="t-spacer t-mono" style={{ fontSize: 12, color: 'var(--t-fg-3)' }}>{certs.length} 張</span>
+      </div>
+
+      {err && <div className="t-msg t-msg--err">{err}</div>}
+
+      <div className="t-gen">
+        <div className="t-gen__stage">
+          <Cert data={data} tune={tune} />
+          {certs.length > 1 && (
+            <div className="t-row" style={{ justifyContent: 'center', marginTop: 12 }}>
+              <button className="t-btn t-btn--ghost t-btn--sm" disabled={idx === 0} onClick={() => setIdx((i) => Math.max(0, i - 1))}>上一張</button>
+              <span className="t-mono" style={{ fontSize: 13 }}>{Math.min(idx, certs.length - 1) + 1} / {certs.length}　{cur.studentName}</span>
+              <button className="t-btn t-btn--ghost t-btn--sm" disabled={idx >= certs.length - 1} onClick={() => setIdx((i) => Math.min(certs.length - 1, i + 1))}>下一張</button>
+            </div>
+          )}
+        </div>
+
+        <aside className="t-gen__side">
+          <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">檔案格式</div>
+            <div className="t-seg">
+              <button aria-pressed={format === 'png'} onClick={() => setFormat('png')}>PNG（透明度佳）</button>
+              <button aria-pressed={format === 'jpeg'} onClick={() => setFormat('jpeg')}>JPG（檔案小）</button>
+            </div>
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">Morris 簽名</div>
+            <div className="t-seg" style={{ marginBottom: 10 }}>
+              {(['black', 'red', 'blue'] as const).map((c) => (
+                <button key={c} aria-pressed={tune.sigColor === c} onClick={() => setTune((t) => ({ ...t, sigColor: c }))}>
+                  {c === 'black' ? '黑' : c === 'red' ? '紅' : '藍'}
+                </button>
+              ))}
+            </div>
+            <label className="t-check" style={{ marginBottom: 8 }}>
+              <input type="checkbox" checked={tune.showSig !== false} onChange={(e) => setTune((t) => ({ ...t, showSig: e.target.checked }))} /> 顯示簽名
+            </label>
+            <label className="t-check">
+              <input type="checkbox" checked={tune.showSeal !== false} onChange={(e) => setTune((t) => ({ ...t, showSeal: e.target.checked }))} /> 顯示公司紅印
+            </label>
+          </div>
+
+          <button className="t-btn t-btn--brand" disabled={!!busy} onClick={one}>
+            <Icon name="download" size={16} /> {busy === 'one' ? '出圖中…' : '下載這一張'}
+          </button>
+          <button className="t-btn" disabled={!!busy} onClick={all}>
+            <Icon name="download" size={16} />
+            {busy.startsWith('all') ? `出圖中 ${busy.split(':')[1] || ''}…` : certs.length > 1 ? `全部 ${certs.length} 張打包下載` : '下載'}
+          </button>
+          <p className="t-f__help">出圖為 1398×965 的 2 倍解析度（約 2796px 寬），印 A4／A5 橫式都夠清楚。</p>
+        </aside>
+      </div>
+    </div>
+  );
+}

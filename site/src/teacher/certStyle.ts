@@ -12,7 +12,7 @@ export const CERT_CSS = `
   --bg:radial-gradient(125% 95% at 50% 20%,#5c2841 0%,#3d1c30 40%,#26142b 74%,#160e1c 100%);
   --framepad:2.3; --cardbd:0.26; --cardrad:1.9; --glow:none; --cardpy:4.4; --cardpx:7; --cardpb:3.6;
   --notchsz:3.4; --notchbg:var(--pink); --notchbw:0.42; --notchbc:#f0d6e0; --notchring:0; --notchshadow:none; --nl:2.3; --nr:2.8;
-  --stackgap:1.3; --logomb:0;
+  --stackgap:1.3; --logomb:0; --logosz:3;
   --titlesz:3.75; --titlew:400; --titlemt:1.1;
   --namesz:2.7; --namew:700; --namemt:0.5; --nrulew:36; --nruleh:0.16;
   --bodysz:1.34; --bodymw:60; --bodymt:3.4;
@@ -26,13 +26,13 @@ export const CERT_CSS = `
   --bg:linear-gradient(135deg,#2d0a21 0%,#1a0515 100%);
   --framepad:2.6; --cardbd:0.3; --cardrad:4; --glow:0 0 0 calc(var(--u)*0.5) rgba(255,75,139,.2); --cardpy:6; --cardpx:5; --cardpb:6;
   --notchsz:3.2; --notchbg:var(--pink); --notchbw:0.42; --notchbc:#ffffff; --notchring:0; --notchshadow:0 0 0 calc(var(--u)*0.32) var(--pink); --nl:2.6; --nr:2.6;
-  --stackgap:0; --logomb:4;
+  --stackgap:0; --logomb:4; --logosz:3.6;
   --titlesz:4; --titlew:500; --titlemt:0;
   --namesz:3.5; --namew:700; --namemt:3; --nrulew:35; --nruleh:0.2;
   --bodysz:1.5; --bodymw:52; --bodymt:4.6;
   --coursesz:3; --coursew:500; --coursecol:var(--ink2); --coursemt:1.6;
-  --footpad:5; --footmt:5; --footgap:0.5; --valsz:1.4; --valw:700; --fmark:1.9; --frulew:18; --fruleh:0.2; --flblsz:1.35;
-  --boltsz:4; --boltop:0.4; }
+  --footpad:8.5; --footmt:5; --footgap:0.5; --valsz:1.4; --valw:700; --fmark:1.9; --frulew:18; --fruleh:0.2; --flblsz:1.35;
+  --boltsz:4.4; --boltop:0.4; }
 .tgc *{ box-sizing:border-box; }
 .tgc__card{ position:relative; height:100%; width:100%; background:var(--card);
   border:calc(var(--u)*var(--cardbd)) solid var(--pink); box-shadow:var(--glow); border-radius:calc(var(--u)*var(--cardrad));
@@ -46,7 +46,7 @@ export const CERT_CSS = `
 .tgc__notch.l{ left:calc(var(--u)*var(--nl)); } .tgc__notch.r{ left:calc(100% - var(--u)*var(--nr)); }
 .tgc__stack{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*var(--stackgap)); width:100%; }
 .tgc__logo{ display:flex; align-items:center; gap:calc(var(--u)*1.1); color:var(--ink); margin-bottom:calc(var(--u)*var(--logomb)); }
-.tgc__logo .tgc__mark{ height:calc(var(--u)*3); width:auto; display:block; }
+.tgc__logo .tgc__mark{ height:calc(var(--u)*var(--logosz)); width:auto; display:block; }
 .tgc__logo .tgc__divider{ width:calc(var(--u)*0.14); height:calc(var(--u)*2.6); background:#b4b4bb; }
 .tgc__logo .tgc__academy{ font-size:calc(var(--u)*2.35); font-weight:400; color:var(--ink2); letter-spacing:.01em; }
 .tgc__title{ font-size:calc(var(--u)*var(--titlesz)); color:var(--pink); font-weight:var(--titlew); margin:calc(var(--u)*var(--titlemt)) 0 0; line-height:1; }

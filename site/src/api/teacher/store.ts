@@ -78,6 +78,38 @@ export async function upsertInstructor(
   return putRow(db, instructorsCollection, (existing?.id as string) || null, merged);
 }
 
+// ── 獎狀設定（單例）──────────────────────────────────────────────
+
+/** 預設值：沒設定過就用這份（跟 Cert.tsx 的 CERT_DEFAULTS 對齊）。 */
+export const SETTINGS_DEFAULTS = {
+  sigColor: 'black', showSig: true, showSeal: true,
+  sigW: 17, sigX: 63, sigY: 72,
+  sealX: 84, sealY: 75, sealSize: 16, sealRot: -5, sealOp: 90,
+  endorseCaption: '台灣虎智科技股份有限公司',
+  defaultCourse: 'n8n Quickstart',
+  printDays: 2, shipDays: 2,
+};
+export type CertSettings = typeof SETTINGS_DEFAULTS;
+const SETTINGS_ID = 'cert_settings';
+
+export async function getSettings(db: D1Database): Promise<CertSettings> {
+  const row = await db.prepare(`SELECT data FROM cert_settings WHERE id=?`).bind(SETTINGS_ID).first<any>();
+  let saved: Record<string, unknown> = {};
+  try { saved = row ? JSON.parse(row.data || '{}') : {}; } catch { saved = {}; }
+  return { ...SETTINGS_DEFAULTS, ...saved };
+}
+
+/** 局部更新：只覆蓋有帶的欄位，其餘保留。 */
+export async function putSettings(db: D1Database, patch: Partial<CertSettings>): Promise<CertSettings> {
+  const next = { ...(await getSettings(db)), ...patch };
+  const at = nowISO();
+  await db.prepare(
+    `INSERT INTO cert_settings (id,sort,data,created_at,updated_at) VALUES (?,?,?,?,?)
+     ON CONFLICT(id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at`,
+  ).bind(SETTINGS_ID, 0, JSON.stringify(next), at, at).run();
+  return next;
+}
+
 // ── 證照 ──────────────────────────────────────────────────────────
 
 export type CertFilter = { instructorId?: string; q?: string; printed?: boolean; shipped?: boolean };

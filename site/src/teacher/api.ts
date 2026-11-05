@@ -51,9 +51,13 @@ export type Cert = {
   instructorId: string;
   instructorName: string;
   courseName: string;
+  recipientName: string;
+  org: string;
+  jobTitle: string;
   email: string;
   phone: string;
   address: string;
+  certUrl: string;
   fee: number;
   printed: boolean;
   printedAt: string;
@@ -63,6 +67,15 @@ export type Cert = {
   note: string;
   createdAt: string;
   updatedAt: string;
+};
+
+/** 獎狀設定（owner 在「獎狀設定」頁設好、全站套用）。對應 src/api/teacher/store.ts 的 SETTINGS_DEFAULTS。 */
+export type CertSettings = {
+  sigColor: 'black' | 'red' | 'blue'; showSig: boolean; showSeal: boolean;
+  sigW: number; sigX: number; sigY: number;
+  sealX: number; sealY: number; sealSize: number; sealRot: number; sealOp: number;
+  endorseCaption: string; defaultCourse: string;
+  printDays: number; shipDays: number;
 };
 
 export type Instructor = {

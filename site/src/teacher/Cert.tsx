@@ -27,12 +27,14 @@ export type CertTune = {
   showSeal?: boolean;
   sigW?: number; sigX?: number; sigY?: number;
   sealX?: number; sealY?: number; sealSize?: number; sealRot?: number; sealOp?: number;
+  endorseCaption?: string;
 };
 
 const DEF: Required<CertTune> = {
   sigColor: 'black', showSig: true, showSeal: true,
   sigW: 17, sigX: 63, sigY: 72,
   sealX: 84, sealY: 75, sealSize: 16, sealRot: -5, sealOp: 90,
+  endorseCaption: '台灣虎智科技股份有限公司',
 };
 
 function N8nLogo({ className }: { className?: string }) {
@@ -121,7 +123,7 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
           <div className="tgc__endorse">
             <img className="tgc__sig" src={SIG_SRC[t.sigColor]} alt="Morris 簽名" crossOrigin="anonymous" />
             <div className="tgc__sigrule" />
-            <div className="tgc__sigcap">台灣虎智科技股份有限公司</div>
+            <div className="tgc__sigcap">{t.endorseCaption}</div>
           </div>
         )}
         {t.showSeal && <img className="tgc__seal" src="/teacher/seal.png" alt="虎智科技公司印章" crossOrigin="anonymous" />}

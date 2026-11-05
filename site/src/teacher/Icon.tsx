@@ -2,8 +2,12 @@
  * 講師區用到的圖示，直接內嵌路徑（取自 lucide，ISC 授權）。
  * 跟後台一樣只收用得到的幾個，不整包帶進來。
  */
-const P: Record<string, string> = {
+const P: Record<string, string | string[]> = {
   award: 'M15.477 12.89 17 22l-5-3-5 3 1.523-9.11M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12z',
+  settings: [
+    'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z',
+    'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+  ],
   printer: 'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 9V2h12v7M6 14h12v8H6z',
   truck: 'M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2M14 9h4l4 4v4a1 1 0 0 1-1 1h-1M7.5 20a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM17.5 20a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
   chart: 'M3 3v16a2 2 0 0 0 2 2h16M7 16l4-4 4 4 4-6',
@@ -22,10 +26,11 @@ const P: Record<string, string> = {
 };
 
 export default function Icon({ name, size = 18 }: { name: string; size?: number }) {
+  const d = P[name] || P['file-text'];
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor"
       strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={P[name] || P['file-text']} />
+      {(Array.isArray(d) ? d : [d]).map((dd, i) => <path key={i} d={dd} />)}
     </svg>
   );
 }

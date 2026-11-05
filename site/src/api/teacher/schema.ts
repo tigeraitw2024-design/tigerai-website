@@ -68,4 +68,22 @@ export const certificatesCollection: Collection = {
   ],
 };
 
-export const TEACHER_COLLECTIONS: Collection[] = [instructorsCollection, certificatesCollection];
+/**
+ * 獎狀設定（單例）：owner 在後台設好的證照格式與內容——簽名顏色/位置、用印位置、
+ * 落款文字、預設證照名稱、印刷/寄送天數。全站（預覽、產生器、前台顯示）都讀這一份。
+ * 只存一列（id='cert_settings'），值收在 data JSON，用 getSettings/putSettings 讀寫。
+ */
+export const settingsCollection: Collection = {
+  name: 'cert_settings',
+  label: '獎狀設定',
+  group: '系統',
+  icon: 'settings',
+  kind: 'singleton',
+  read: 'owner',
+  write: 'owner',
+  canCreate: false,
+  canDelete: false,
+  fields: [],
+};
+
+export const TEACHER_COLLECTIONS: Collection[] = [instructorsCollection, certificatesCollection, settingsCollection];

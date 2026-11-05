@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { Cert as CertRec } from '../api';
+import { useEffect, useState } from 'react';
+import { api, type Cert as CertRec, type CertSettings } from '../api';
 import Cert, { type CertTune } from '../Cert';
 import { certToBlob, downloadBlob, zipBlobs } from '../certExport';
 import Icon from '../Icon';
@@ -21,8 +21,23 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
   const [idx, setIdx] = useState(0);
   const [format, setFormat] = useState<'png' | 'jpeg'>('png');
   const [tune, setTune] = useState<CertTune>({ sigColor: 'black', showSig: true, showSeal: true });
+  const [defCourse, setDefCourse] = useState('n8n Quickstart');
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
+
+  // 讀「獎狀設定」當出圖的起點：owner 在設定頁喬好的簽名/用印/落款，這裡直接套用。
+  useEffect(() => {
+    api.get<{ settings: CertSettings }>('/api/teacher/settings').then((r) => {
+      const s = r.settings;
+      setTune({
+        sigColor: s.sigColor, showSig: s.showSig, showSeal: s.showSeal,
+        sigW: s.sigW, sigX: s.sigX, sigY: s.sigY,
+        sealX: s.sealX, sealY: s.sealY, sealSize: s.sealSize, sealRot: s.sealRot, sealOp: s.sealOp,
+        endorseCaption: s.endorseCaption,
+      });
+      if (s.defaultCourse) setDefCourse(s.defaultCourse);
+    }).catch(() => { /* 讀不到就用元件預設，不擋出圖 */ });
+  }, []);
 
   if (!certs.length) {
     return (
@@ -34,7 +49,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
   }
 
   const cur = certs[Math.min(idx, certs.length - 1)];
-  const data = { studentName: cur.studentName, course: cur.course, issueDate: cur.issueDate };
+  const data = { studentName: cur.studentName, course: cur.course || defCourse, issueDate: cur.issueDate };
 
   async function one() {
     setErr(''); setBusy('one');
@@ -53,7 +68,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
         const c = certs[i];
         setBusy(`all:${i + 1}/${certs.length}`);
         const blob = await certToBlob(
-          { studentName: c.studentName, course: c.course, issueDate: c.issueDate },
+          { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate },
           tune, { format, scale: 2 });
         files.push({ name: `${safe(c.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`, blob });
       }
@@ -95,20 +110,11 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
           </div>
 
           <div className="t-panel" style={{ margin: 0 }}>
-            <div className="t-panel__h">Morris 簽名</div>
-            <div className="t-seg" style={{ marginBottom: 10 }}>
-              {(['black', 'red', 'blue'] as const).map((c) => (
-                <button key={c} aria-pressed={tune.sigColor === c} onClick={() => setTune((t) => ({ ...t, sigColor: c }))}>
-                  {c === 'black' ? '黑' : c === 'red' ? '紅' : '藍'}
-                </button>
-              ))}
-            </div>
-            <label className="t-check" style={{ marginBottom: 8 }}>
-              <input type="checkbox" checked={tune.showSig !== false} onChange={(e) => setTune((t) => ({ ...t, showSig: e.target.checked }))} /> 顯示簽名
-            </label>
-            <label className="t-check">
-              <input type="checkbox" checked={tune.showSeal !== false} onChange={(e) => setTune((t) => ({ ...t, showSeal: e.target.checked }))} /> 顯示公司紅印
-            </label>
+            <div className="t-panel__h">獎狀格式</div>
+            <p className="t-f__help" style={{ margin: 0 }}>
+              簽名顏色/位置、公司紅印統一在 <a href="#/settings" style={{ color: 'var(--t-brand)', fontWeight: 600 }}>獎狀設定</a> 調，
+              這裡出的圖會套用那份設定。
+            </p>
           </div>
 
           <button className="t-btn t-btn--brand" disabled={!!busy} onClick={one}>

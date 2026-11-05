@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, type Cert, type TeacherUser } from '../api';
 import Icon from '../Icon';
-import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, type Grid } from '../importParse';
+import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRecord, isEmail, isPhoneTW, isAddressTW, type Grid } from '../importParse';
 
 /**
  * 證照主控台：講師區的主畫面。
@@ -192,10 +192,14 @@ function AddModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () 
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [errs, setErrs] = useState<Record<string, string>>({});
   const set = (k: string, v: string) => setF((o) => ({ ...o, [k]: v }));
 
   async function submit(e: React.FormEvent) {
-    e.preventDefault(); setErr(''); setBusy(true);
+    e.preventDefault();
+    const v = validateRecord(f); // 格式防呆：空值＋Email／電話／地址格式＋證照姓名要英文
+    if (Object.keys(v).length) { setErrs(v); return; }
+    setErr(''); setErrs({}); setBusy(true);
     try { await api.post('/api/teacher/certs', { ...f, fee: Number(f.fee) || 200 }); onDone(); }
     catch (e: any) { setErr(e.message); setBusy(false); }
   }
@@ -203,14 +207,15 @@ function AddModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () 
   const Field = (k: string, label: string, opts: { type?: string; required?: boolean; ph?: string } = {}) => (
     <div className="t-f">
       <label className="t-f__label">{label}{opts.required && <span style={{ color: 'var(--t-danger)' }}> *</span>}</label>
-      <input className="t-input" type={opts.type || 'text'} value={(f as any)[k]} placeholder={opts.ph}
-        required={opts.required} onChange={(e) => set(k, e.target.value)} />
+      <input className={`t-input${errs[k] ? ' t-input--bad' : ''}`} type={opts.type || 'text'} value={(f as any)[k]} placeholder={opts.ph}
+        onChange={(e) => { set(k, e.target.value); if (errs[k]) setErrs((o) => { const n = { ...o }; delete n[k]; return n; }); }} />
+      {errs[k] && <div className="t-f__err">{errs[k]}</div>}
     </div>
   );
 
   return (
     <div className="t-modal" onClick={onClose}>
-      <form className="t-modal__box" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+      <form className="t-modal__box" noValidate onClick={(e) => e.stopPropagation()} onSubmit={submit}>
         <div className="t-modal__head"><h3>新增一位通過的學員</h3>
           <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
         {err && <div className="t-msg t-msg--err">{err}</div>}
@@ -271,6 +276,14 @@ function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: 
     [grid, map, course, fee, isOwner],
   );
   const hasName = map.includes('studentName');
+  // 匯入是大量資料，格式不對的只警告、不硬擋，匯入後可到清單修正。
+  const problems = useMemo(() => records.map((r) => {
+    const bad: string[] = [];
+    if (!isEmail(String(r.email || ''))) bad.push('Email');
+    if (!isPhoneTW(String(r.phone || ''))) bad.push('電話');
+    if (!isAddressTW(String(r.address || ''))) bad.push('地址');
+    return bad.length ? `${r.studentName}（${bad.join('、')}）` : '';
+  }).filter(Boolean), [records]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setErr(''); setBusy(true); setResult(null);
@@ -359,6 +372,14 @@ function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: 
                     {records[0].address ? `，${records[0].address}` : ''}
                   </div>}
                 </div>}
+            {hasName && problems.length > 0 && (
+              <div className="t-msg t-msg--info" style={{ marginTop: 8, borderColor: 'var(--t-warn, #C08423)' }}>
+                ⚠ 有 {problems.length} 筆 Email／電話／地址格式要確認（仍可匯入，之後到清單修正）：
+                <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12 }}>
+                  {problems.slice(0, 6).map((x, i) => <li key={i}>{x}</li>)}
+                </ul>
+              </div>
+            )}
 
             <div className="t-row" style={{ marginTop: 12 }}>
               <button className="t-btn t-btn--brand" disabled={busy || !hasName || !records.length}>

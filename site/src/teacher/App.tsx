@@ -6,6 +6,7 @@ import Console from './views/Console';
 import Generate from './views/Generate';
 import Report from './views/Report';
 import Roster from './views/Roster';
+import CertSettings from './views/CertSettings';
 import './teacher.css';
 
 /**
@@ -18,10 +19,10 @@ import './teacher.css';
  * 分頁：證照清單｜產生證照｜對帳｜名冊。後兩者只有 owner 看得到。
  */
 
-type View = 'certs' | 'generate' | 'report' | 'roster';
+type View = 'certs' | 'generate' | 'settings' | 'report' | 'roster';
 const viewOf = (): View => {
   const h = location.hash.replace(/^#\/?/, '');
-  return (['certs', 'generate', 'report', 'roster'].includes(h) ? h : 'certs') as View;
+  return (['certs', 'generate', 'settings', 'report', 'roster'].includes(h) ? h : 'certs') as View;
 };
 
 export default function App() {
@@ -58,6 +59,7 @@ export default function App() {
     ['certs', 'list', '證照'],
     ...(isOwner ? [
       ['generate', 'award', '產生證照'],
+      ['settings', 'settings', '獎狀設定'],
       ['report', 'chart', '對帳'],
       ['roster', 'users', '名冊'],
     ] as [View, string, string][] : []),
@@ -84,6 +86,7 @@ export default function App() {
       <main className="t-body">
         {view === 'certs' && <Console user={user} onGenerate={toGenerate} />}
         {view === 'generate' && (isOwner ? <Generate certs={genCerts} onBack={() => go('certs')} /> : <Denied />)}
+        {view === 'settings' && (isOwner ? <CertSettings /> : <Denied />)}
         {view === 'report' && (isOwner ? <Report /> : <Denied />)}
         {view === 'roster' && (isOwner ? <Roster /> : <Denied />)}
       </main>

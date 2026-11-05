@@ -3,7 +3,7 @@ import type { Ctx } from '../types';
 import { readCookie, cookieHeader, clearCookie, rateLimit, clientKey } from '../auth';
 import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
-  listInstructors, upsertInstructor, getRow,
+  listInstructors, upsertInstructor, getRow, getSettings, putSettings,
 } from './store';
 import { certificatesCollection } from './schema';
 import {
@@ -87,6 +87,7 @@ app.use('/certs', requireTeacher);
 app.use('/report', requireTeacher);
 app.use('/instructors', requireTeacher);
 app.use('/instructors/*', requireTeacher);
+app.use('/settings', requireTeacher);
 
 async function requireTeacher(ctx: any, next: any) {
   const t = await currentTeacher(ctx.env.DB, ctx.req.raw);
@@ -160,6 +161,17 @@ app.post('/certs/mark', async (ctx) => {
 app.get('/report', async (ctx) => {
   if (!owner(ctx)) return ctx.json({ error: '只有 owner 能看報表' }, 403);
   return ctx.json({ rows: await certReport(ctx.env.DB) });
+});
+
+// 獎狀設定（格式與內容）：只有 owner 能看與改。
+app.get('/settings', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能看設定' }, 403);
+  return ctx.json({ settings: await getSettings(ctx.env.DB) });
+});
+app.put('/settings', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能改設定' }, 403);
+  const patch = await ctx.req.json<Record<string, unknown>>();
+  return ctx.json({ settings: await putSettings(ctx.env.DB, patch) });
 });
 
 // 名冊：owner 專用

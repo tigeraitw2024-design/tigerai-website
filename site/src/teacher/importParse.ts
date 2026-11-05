@@ -57,6 +57,52 @@ export function guessMapping(headers: string[]): string[] {
   return map;
 }
 
+// ── 格式驗證（新增表單與匯入共用）────────────────────────────────────
+
+export const hasLatin = (v: string) => /[A-Za-z]/.test(v || '');
+export const hasCJK = (v: string) => /[一-鿿]/.test(v || '');
+export const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v || '').trim());
+
+/** 台灣電話：去掉非數字、+886 轉 0，接受手機 09######## 或市話 0＋區碼＋號碼。 */
+export const normPhoneTW = (v: string) => (v || '').replace(/[^\d]/g, '').replace(/^886/, '0');
+export const isPhoneTW = (v: string) => {
+  const d = normPhoneTW(v);
+  return /^09\d{8}$/.test(d) || /^0[2-8]\d{6,8}$/.test(d);
+};
+
+/** 台灣地址防呆：要有門牌「號」＋數字＋路街段等＋縣市區，長度也要夠（擋「只寫路沒有號」）。 */
+export const isAddressTW = (v: string) => {
+  const s = (v || '').trim();
+  return s.length >= 8 && /號/.test(s) && /[0-9０-９]/.test(s)
+    && /[路街道段巷弄村里鄰]/.test(s) && /[市縣區鄉鎮]/.test(s);
+};
+
+/** 證照上印的英文名：要有英文字母、且不能是中文（中文名要填在收件人）。 */
+export function checkCertName(v: string): string {
+  const s = (v || '').trim();
+  if (!s) return '必填';
+  if (hasCJK(s)) return '證照上印英文：請填護照英文拼音，中文名填在「收件人」';
+  if (!hasLatin(s)) return '請填英文姓名（護照拼音）';
+  return '';
+}
+
+/** 一筆紀錄的格式問題，回傳每個有問題欄位的中文訊息（空物件＝沒問題）。 */
+export function validateRecord(r: Record<string, unknown>): Record<string, string> {
+  const e: Record<string, string> = {};
+  const g = (k: string) => String(r[k] ?? '').trim();
+  const nameErr = checkCertName(g('studentName'));
+  if (nameErr) e.studentName = nameErr;
+  if (!g('recipientName')) e.recipientName = '必填';
+  if (!g('courseName')) e.courseName = '必填';
+  if (!g('email')) e.email = '必填';
+  else if (!isEmail(g('email'))) e.email = 'Email 格式不對，例：a@example.com';
+  if (!g('phone')) e.phone = '必填';
+  else if (!isPhoneTW(g('phone'))) e.phone = '電話格式不對（手機 09xxxxxxxx 或市話含區碼）';
+  if (!g('address')) e.address = '必填';
+  else if (!isAddressTW(g('address'))) e.address = '地址不完整：要有路/街＋門牌號（例：116 臺北市文山區保儀路26巷1號9樓之5）';
+  return e;
+}
+
 /** 把資料列 + 對應表，整理成要送出去的證照紀錄。studentName 是必要的，空的那列會跳過。 */
 export function buildRecords(
   rows: string[][], map: string[], defaults: { course?: string; fee?: number },

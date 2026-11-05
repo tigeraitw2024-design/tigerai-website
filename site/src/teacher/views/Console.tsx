@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, type Cert, type TeacherUser } from '../api';
 import Icon from '../Icon';
+import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, type Grid } from '../importParse';
 
 /**
  * 證照主控台：講師區的主畫面。
@@ -67,8 +68,9 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     <div>
       <h1 className="t-h1">證照</h1>
       <p className="t-intro">
-        {isOwner ? '所有講師的證照都在這裡。' : '這裡是你學生的證照。'}
-        勾選後可以拿去「產生證照」出圖列印{isOwner ? '，或批次標記已列印、已寄送' : ''}。
+        {isOwner
+          ? '所有講師的證照都在這裡。勾選後可以「產生證照」出圖列印，或批次標記已列印、已寄送。'
+          : '把你班上通過的學員用「匯入 Excel」上傳上來就好，列印與寄送由虎智統一處理。每一筆的狀態（待印 → 已印 → 已寄）你隨時看得到。'}
       </p>
 
       {err && <div className="t-msg t-msg--err">{err}</div>}
@@ -78,7 +80,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
           <input className="t-input" placeholder="搜尋姓名、梯次、地址…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <button className="t-btn t-btn--brand t-btn--sm" onClick={() => setModal('add')}><Icon name="plus" size={16} /> 新增</button>
-        <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setModal('import')}><Icon name="upload" size={16} /> 匯入 CSV</button>
+        <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setModal('import')}><Icon name="upload" size={16} /> 匯入 Excel</button>
       </div>
 
       <div className="t-row" style={{ marginBottom: 14, gap: 6 }}>
@@ -94,23 +96,26 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       {rows === null ? (
         <div className="t-empty">載入中…</div>
       ) : filtered.length === 0 ? (
-        <div className="t-empty">沒有符合的證照。{(rows.length === 0) && '先用「新增」或「匯入 CSV」把通過的學員加進來。'}</div>
+        <div className="t-empty">沒有符合的證照。{(rows.length === 0) && '先用「新增」或「匯入 Excel」把通過的學員加進來。'}</div>
       ) : (
         <>
           {/* 手機：卡片 */}
           <div className="t-cards">
-            <label className="t-check" style={{ marginBottom: 6, fontSize: 13, color: 'var(--t-fg-2)' }}>
-              <input type="checkbox" checked={allOn} onChange={toggleAll} /> 全選這一頁（{filtered.length}）
-            </label>
+            {isOwner && (
+              <label className="t-check" style={{ marginBottom: 6, fontSize: 13, color: 'var(--t-fg-2)' }}>
+                <input type="checkbox" checked={allOn} onChange={toggleAll} /> 全選這一頁（{filtered.length}）
+              </label>
+            )}
             {filtered.map((r) => (
               <div className="t-card" key={r.id} data-sel={sel.has(r.id) ? '1' : '0'}>
                 <div className="t-card__top">
-                  <input type="checkbox" style={{ width: 20, height: 20, accentColor: 'var(--t-brand)' }}
-                    checked={sel.has(r.id)} onChange={() => toggle(r.id)} />
+                  {isOwner && <input type="checkbox" style={{ width: 20, height: 20, accentColor: 'var(--t-brand)' }}
+                    checked={sel.has(r.id)} onChange={() => toggle(r.id)} />}
                   <span className="t-card__t">{r.studentName}</span>
                   <span className="t-spacer" />
-                  {r.printed && <span className="t-pill" data-tone="ok">已印</span>}
-                  {r.shipped && <span className="t-pill" data-tone="ok">已寄</span>}
+                  <span className="t-pill" data-tone={r.shipped ? 'ok' : r.printed ? 'warn' : 'off'}>
+                    {r.shipped ? '已寄' : r.printed ? '已印待寄' : '待印'}
+                  </span>
                 </div>
                 <div className="t-card__meta">
                   <span><b>證照</b> {r.course}</span>
@@ -127,17 +132,17 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
           <table className="t-table">
             <thead>
               <tr>
-                <th style={{ width: 36 }}><input type="checkbox" checked={allOn} onChange={toggleAll} /></th>
+                {isOwner && <th style={{ width: 36 }}><input type="checkbox" checked={allOn} onChange={toggleAll} /></th>}
                 <th>學員</th><th>證照／梯次</th>{isOwner && <th>講師</th>}
                 <th className="addr">寄送地址</th><th>狀態</th><th style={{ textAlign: 'right' }}>費用</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((r) => (
-                <tr key={r.id} data-sel={sel.has(r.id) ? '1' : '0'} onClick={(e) => {
-                  if ((e.target as HTMLElement).tagName !== 'INPUT') toggle(r.id);
-                }} style={{ cursor: 'pointer' }}>
-                  <td><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggle(r.id)} /></td>
+                <tr key={r.id} data-sel={sel.has(r.id) ? '1' : '0'}
+                  onClick={isOwner ? (e) => { if ((e.target as HTMLElement).tagName !== 'INPUT') toggle(r.id); } : undefined}
+                  style={{ cursor: isOwner ? 'pointer' : 'default' }}>
+                  {isOwner && <td><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggle(r.id)} /></td>}
                   <td><b>{r.studentName}</b></td>
                   <td>{r.course}{r.courseName ? <><br /><span style={{ color: 'var(--t-fg-3)', fontSize: 12 }}>{r.courseName}</span></> : null}</td>
                   {isOwner && <td>{r.instructorName}</td>}
@@ -154,20 +159,19 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
         </>
       )}
 
-      {sel.size > 0 && (
+      {/* 批次動作只有 owner 有：出圖列印、標已印/已寄。講師只上傳與看狀態，不經手這些。 */}
+      {isOwner && sel.size > 0 && (
         <div className="t-actionbar">
           <b>{sel.size} 筆已選</b>
           <button className="t-btn t-btn--brand t-btn--sm" onClick={() => onGenerate(selCerts)}>
             <Icon name="download" size={16} /> 產生證照
           </button>
-          {isOwner && <>
-            <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('printed', true)}>
-              <Icon name="printer" size={16} /> 標已列印
-            </button>
-            <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('shipped', true)}>
-              <Icon name="truck" size={16} /> 標已寄送
-            </button>
-          </>}
+          <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('printed', true)}>
+            <Icon name="printer" size={16} /> 標已列印
+          </button>
+          <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('shipped', true)}>
+            <Icon name="truck" size={16} /> 標已寄送
+          </button>
           <button className="t-btn t-btn--ghost t-btn--sm t-spacer" onClick={() => setSel(new Set())}>清除</button>
         </div>
       )}
@@ -222,42 +226,130 @@ function AddModal({ onClose, onDone }: { onClose: () => void; onDone: () => void
   );
 }
 
-// ── 匯入 CSV ──────────────────────────────────────────────────────
+// ── 匯入 Excel／CSV ───────────────────────────────────────────────
+// 流程：上傳 .xlsx／.csv（或貼 CSV）→ 自動認抬頭、攤出對應表讓人改 → 預覽 → 匯入。
 function ImportModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
-  const [csv, setCsv] = useState('');
+  const [grid, setGrid] = useState<Grid | null>(null);
+  const [map, setMap] = useState<string[]>([]);
+  const [course, setCourse] = useState('n8n Quickstart');
+  const [fee, setFee] = useState('200');
+  const [paste, setPaste] = useState('');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: number; errors: string[] } | null>(null);
   const [err, setErr] = useState('');
 
+  function take(g: Grid) {
+    if (!g.headers.length) { setErr('讀不到任何欄位，檔案可能是空的。'); return; }
+    setErr(''); setGrid(g); setMap(guessMapping(g.headers));
+  }
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; if (!f) return;
+    setErr('');
+    try { take(await parseFile(f)); }
+    catch (e: any) { setErr(e.message || '讀檔失敗'); }
+  }
+
+  const records = useMemo(
+    () => (grid ? buildRecords(grid.rows, map, { course, fee: Number(fee) || 200 }) : []),
+    [grid, map, course, fee],
+  );
+  const hasName = map.includes('studentName');
+
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setErr(''); setBusy(true); setResult(null);
-    try { setResult(await api.post<{ ok: number; errors: string[] }>('/api/teacher/certs/import', { csv })); }
+    try { setResult(await api.post<{ ok: number; errors: string[] }>('/api/teacher/certs/import', { rows: records })); }
     catch (e: any) { setErr(e.message); }
     finally { setBusy(false); }
   }
 
   return (
     <div className="t-modal" onClick={onClose}>
-      <form className="t-modal__box" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <div className="t-modal__head"><h3>匯入 CSV</h3>
+      <form className="t-modal__box t-modal__box--wide" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="t-modal__head"><h3>匯入學員（Excel／CSV）</h3>
           <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
-        <p className="t-f__help" style={{ marginBottom: 8 }}>
-          第一列是表頭，欄位名含這些關鍵字就會自動對上：<b>姓名／name</b>、<b>email</b>、<b>電話</b>、
-          <b>地址</b>、<b>梯次</b>、<b>日期</b>、<b>費用</b>。從 Excel 或 Google 試算表複製整塊貼進來即可。
-        </p>
+
         {err && <div className="t-msg t-msg--err">{err}</div>}
-        {result && (
-          <div className={`t-msg ${result.errors.length ? 't-msg--info' : 't-msg--ok'}`}>
-            成功匯入 {result.ok} 筆。{result.errors.length > 0 && <>有 {result.errors.length} 筆沒進：
-              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{result.errors.slice(0, 8).map((x, i) => <li key={i} style={{ fontSize: 12 }}>{x}</li>)}</ul></>}
-          </div>
+        {result ? (
+          <>
+            <div className={`t-msg ${result.errors.length ? 't-msg--info' : 't-msg--ok'}`}>
+              成功匯入 {result.ok} 筆。{result.errors.length > 0 && <>有 {result.errors.length} 筆沒進：
+                <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>{result.errors.slice(0, 8).map((x, i) => <li key={i} style={{ fontSize: 12 }}>{x}</li>)}</ul></>}
+            </div>
+            <div className="t-row" style={{ marginTop: 10 }}>
+              <button type="button" className="t-btn t-btn--brand" onClick={onDone}>完成</button>
+            </div>
+          </>
+        ) : !grid ? (
+          <>
+            <p className="t-f__help" style={{ marginBottom: 10 }}>
+              選一個 Google 表單匯出的 <b>.xlsx</b>（或 CSV）。抬頭我會自動對應，下一步你可以逐欄確認、修改。
+            </p>
+            <label className="t-drop">
+              <input type="file" accept=".xlsx,.csv,text/csv" onChange={onFile} style={{ display: 'none' }} />
+              <Icon name="upload" size={22} /><span>點這裡選 Excel／CSV 檔</span>
+            </label>
+            <details style={{ marginTop: 12 }}>
+              <summary className="t-f__help" style={{ cursor: 'pointer' }}>或直接貼上 CSV 文字</summary>
+              <textarea className="t-textarea" style={{ marginTop: 8 }} value={paste} onChange={(e) => setPaste(e.target.value)}
+                placeholder={'姓名,email,電話,地址\n王小明,a@b.com,0912,台北市…'} />
+              <button type="button" className="t-btn t-btn--ghost t-btn--sm" style={{ marginTop: 6 }}
+                disabled={!paste.trim()} onClick={() => take(parseCsvText(paste))}>解析這段文字</button>
+            </details>
+          </>
+        ) : (
+          <>
+            <p className="t-f__help" style={{ marginBottom: 8 }}>
+              左邊是你檔案的欄位，右邊選它要對到哪個證照欄位。<b>證照姓名</b>一定要指定一欄。
+            </p>
+            <div className="t-maptable">
+              {grid.headers.map((h, i) => (
+                <div className="t-maprow" key={i}>
+                  <div className="t-mapsrc">
+                    <b>{h || <span style={{ color: 'var(--t-fg-3)' }}>（第 {i + 1} 欄）</span>}</b>
+                    <span className="t-mapsample">{(grid.rows[0]?.[i] || '').slice(0, 24) || '—'}</span>
+                  </div>
+                  <select className="t-select" value={map[i] || ''} onChange={(e) => {
+                    const v = e.target.value;
+                    setMap((m) => m.map((x, j) => (j === i ? v : (v && x === v ? '' : x)))); // 同一目標只留一欄
+                  }}>
+                    <option value="">略過</option>
+                    {FIELDS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <div className="t-row" style={{ gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+              <div className="t-f" style={{ flex: '1 1 160px', margin: 0 }}>
+                <label className="t-f__label">證照名稱（整批套用）</label>
+                <input className="t-input" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="n8n Quickstart" />
+              </div>
+              <div className="t-f" style={{ flex: '0 0 120px', margin: 0 }}>
+                <label className="t-f__label">每張費用</label>
+                <input className="t-input" type="number" value={fee} onChange={(e) => setFee(e.target.value)} />
+              </div>
+            </div>
+
+            {!hasName
+              ? <div className="t-msg t-msg--err" style={{ marginTop: 10 }}>請先把其中一欄設成「證照姓名」。</div>
+              : <div className="t-msg t-msg--info" style={{ marginTop: 10 }}>
+                  將匯入 <b>{records.length}</b> 筆{grid.rows.length > records.length && <>（{grid.rows.length - records.length} 筆因為沒有姓名略過）</>}。
+                  {records[0] && <div style={{ fontSize: 12, marginTop: 4, color: 'var(--t-fg-2)' }}>
+                    例：{records[0].studentName as string}
+                    {records[0].recipientName ? ` → 寄給 ${records[0].recipientName}` : ''}
+                    {records[0].address ? `，${records[0].address}` : ''}
+                  </div>}
+                </div>}
+
+            <div className="t-row" style={{ marginTop: 12 }}>
+              <button className="t-btn t-btn--brand" disabled={busy || !hasName || !records.length}>
+                {busy ? '匯入中…' : `匯入 ${records.length} 筆`}
+              </button>
+              <button type="button" className="t-btn t-btn--ghost" onClick={() => { setGrid(null); setErr(''); }}>重選檔案</button>
+              <button type="button" className="t-btn t-btn--ghost t-spacer" onClick={onClose}>取消</button>
+            </div>
+          </>
         )}
-        <textarea className="t-textarea" value={csv} onChange={(e) => setCsv(e.target.value)}
-          placeholder={'姓名,email,電話,地址,梯次,日期,費用\n王小明,a@b.com,0912,台北市…,11月班,July 29 2026,200'} />
-        <div className="t-row" style={{ marginTop: 10 }}>
-          <button className="t-btn t-btn--brand" disabled={busy || !csv.trim()}>{busy ? '匯入中…' : '匯入'}</button>
-          <button type="button" className="t-btn t-btn--ghost" onClick={result ? onDone : onClose}>{result ? '完成' : '取消'}</button>
-        </div>
       </form>
     </div>
   );

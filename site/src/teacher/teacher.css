@@ -140,6 +140,19 @@ body.tg-teacher {
 .t-modal__box { background: var(--t-panel); width: min(640px, 100%); max-height: 90dvh; overflow: auto; border: 1px solid var(--t-line); padding: 18px; }
 .t-modal__head { display: flex; align-items: center; margin-bottom: 14px; }
 .t-modal__head h3 { margin: 0; font-size: 17px; }
+.t-modal__box--wide { width: min(760px, 100%); }
+
+/* 匯入：上傳區 + 欄位對應表 */
+.t-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  min-height: 110px; border: 2px dashed var(--t-line-2); background: #FBFAF8; color: var(--t-fg-2);
+  cursor: pointer; font-size: 14px; }
+.t-drop:hover { border-color: var(--t-brand); color: var(--t-fg); }
+.t-maptable { display: grid; gap: 8px; max-height: 42dvh; overflow: auto; padding: 2px; }
+.t-maprow { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,210px); gap: 10px; align-items: center; }
+.t-mapsrc { min-width: 0; display: grid; gap: 1px; }
+.t-mapsrc b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-mapsample { font-size: 12px; color: var(--t-fg-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-maprow .t-select { min-height: 40px; }
 
 /* ── 登入 ───────────────────────────────────────────────────── */
 .t-login { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; background: var(--t-fg); }

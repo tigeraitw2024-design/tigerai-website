@@ -52,10 +52,15 @@ export default function App() {
 
   const logout = async () => { await api.post('/api/teacher/logout').catch(() => {}); location.hash = ''; location.reload(); };
 
+  // 講師只有「證照」一頁：上傳資料、看自己的印/寄狀態。
+  // 出圖列印（產生證照）、對帳、名冊都是 owner 專用——講師不經手印什麼。
   const NAV: [View, string, string][] = [
     ['certs', 'list', '證照'],
-    ['generate', 'award', '產生證照'],
-    ...(isOwner ? [['report', 'chart', '對帳'], ['roster', 'users', '名冊']] as [View, string, string][] : []),
+    ...(isOwner ? [
+      ['generate', 'award', '產生證照'],
+      ['report', 'chart', '對帳'],
+      ['roster', 'users', '名冊'],
+    ] as [View, string, string][] : []),
   ];
 
   return (
@@ -78,7 +83,7 @@ export default function App() {
 
       <main className="t-body">
         {view === 'certs' && <Console user={user} onGenerate={toGenerate} />}
-        {view === 'generate' && <Generate certs={genCerts} onBack={() => go('certs')} />}
+        {view === 'generate' && (isOwner ? <Generate certs={genCerts} onBack={() => go('certs')} /> : <Denied />)}
         {view === 'report' && (isOwner ? <Report /> : <Denied />)}
         {view === 'roster' && (isOwner ? <Roster /> : <Denied />)}
       </main>

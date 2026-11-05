@@ -95,7 +95,7 @@ export async function listCerts(db: D1Database, f: CertFilter = {}) {
   return rows;
 }
 
-const CERT_FIELDS = ['studentName', 'course', 'issueDate', 'courseName', 'email', 'phone', 'address', 'fee', 'note'];
+const CERT_FIELDS = ['studentName', 'course', 'issueDate', 'courseName', 'recipientName', 'org', 'jobTitle', 'email', 'phone', 'address', 'certUrl', 'fee', 'note'];
 
 /** 建一筆證照，掛在某位講師底下 */
 export async function createCert(
@@ -106,9 +106,13 @@ export async function createCert(
     course: String(input.course || 'n8n Quickstart').trim() || 'n8n Quickstart',
     issueDate: String(input.issueDate || '').trim(),
     courseName: String(input.courseName || '').trim(),
+    recipientName: String(input.recipientName || '').trim(),
+    org: String(input.org || '').trim(),
+    jobTitle: String(input.jobTitle || '').trim(),
     email: String(input.email || '').trim().toLowerCase(),
     phone: String(input.phone || '').trim(),
     address: String(input.address || '').trim(),
+    certUrl: String(input.certUrl || '').trim(),
     fee: Number(input.fee) || 200,
     note: String(input.note || '').trim(),
     instructorId: instructor.id,

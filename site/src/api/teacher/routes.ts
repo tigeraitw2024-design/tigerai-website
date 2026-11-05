@@ -124,12 +124,13 @@ app.post('/certs', async (ctx) => {
 
 app.post('/certs/import', async (ctx) => {
   const t = ctx.get('teacher');
-  const { csv } = await ctx.req.json<{ csv: string }>();
-  const rows = parseCSV(String(csv || ''));
+  const body = await ctx.req.json<{ csv?: string; rows?: Record<string, unknown>[] }>();
+  // 兩種來源：前端已對應好的 rows（Excel 匯入走這條），或舊的 CSV 純文字。
+  const rows = Array.isArray(body.rows) ? body.rows : parseCSV(String(body.csv || ''));
   let ok = 0; const errors: string[] = [];
   for (const r of rows) {
     try { await createCert(ctx.env.DB, { id: t.id, name: t.name }, r); ok++; }
-    catch (e: any) { errors.push(`${r.studentName || '(無名)'}：${e.message}`); }
+    catch (e: any) { errors.push(`${(r as any).studentName || '(無名)'}：${e.message}`); }
   }
   return ctx.json({ ok, errors });
 });

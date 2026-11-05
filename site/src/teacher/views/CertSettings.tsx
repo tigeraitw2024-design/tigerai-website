@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, type CertSettings as TSettings } from '../api';
-import Cert from '../Cert';
+import Cert, { BLOCKS, type BlockCfg } from '../Cert';
 import Icon from '../Icon';
 
 /**
@@ -23,6 +23,29 @@ function Slider({ label, value, min, max, step = 1, suffix = '', onChange }: {
     <div className="t-slider">
       <div className="t-slider__top"><span>{label}</span><span className="t-mono">{value}{suffix}</span></div>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+
+function BlockCtl({ label, cfg, onChange }: { label: string; cfg: BlockCfg; onChange: (c: BlockCfg) => void }) {
+  const [open, setOpen] = useState(false);
+  const c = { show: true, scale: 100, x: 0, y: 0, ...cfg };
+  return (
+    <div style={{ borderTop: '1px solid var(--t-line)', padding: '8px 0' }}>
+      <div className="t-row" style={{ alignItems: 'center' }}>
+        <label className="t-check" style={{ margin: 0 }}>
+          <input type="checkbox" checked={c.show} onChange={(e) => onChange({ ...c, show: e.target.checked })} /> {label}
+        </label>
+        <span className="t-spacer" />
+        <button type="button" className="t-btn t-btn--ghost t-btn--sm" onClick={() => setOpen((o) => !o)}>{open ? '收起' : '調整'}</button>
+      </div>
+      {open && c.show && (
+        <div style={{ marginTop: 8 }}>
+          <Slider label="大小" value={c.scale} min={40} max={200} suffix="%" onChange={(v) => onChange({ ...c, scale: v })} />
+          <Slider label="左右" value={c.x} min={-45} max={45} suffix="%" onChange={(v) => onChange({ ...c, x: v })} />
+          <Slider label="上下" value={c.y} min={-45} max={45} suffix="%" onChange={(v) => onChange({ ...c, y: v })} />
+        </div>
+      )}
     </div>
   );
 }
@@ -68,17 +91,18 @@ export default function CertSettings() {
 
         <aside className="t-gen__side">
           <div className="t-panel" style={{ margin: 0 }}>
-            <div className="t-panel__h">版型</div>
-            <div className="t-seg">
-              <button type="button" aria-pressed={s.style === 'a'} onClick={() => set('style', 'a')}>A・經典深框</button>
-              <button type="button" aria-pressed={s.style === 'b'} onClick={() => set('style', 'b')}>B・圓角亮粉</button>
-            </div>
-          </div>
-
-          <div className="t-panel" style={{ margin: 0 }}>
             <div className="t-panel__h">內容</div>
             <div className="t-f" style={{ marginBottom: 0 }}><label className="t-f__label">預設證照名稱</label>
               <input className="t-input" value={s.defaultCourse} onChange={(e) => set('defaultCourse', e.target.value)} placeholder="n8n Quickstart" /></div>
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">版面微調</div>
+            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 8 }}>每一塊都能開關、移動、縮放。打勾＝顯示，按「調整」拉大小與左右上下位置。</p>
+            {BLOCKS.map(([k, label]) => (
+              <BlockCtl key={k} label={label} cfg={(s.blocks && s.blocks[k]) || {}}
+                onChange={(c) => set('blocks', { ...s.blocks, [k]: c } as TSettings['blocks'])} />
+            ))}
           </div>
 
           <div className="t-panel" style={{ margin: 0 }}>

@@ -95,6 +95,18 @@ export const SETTINGS_DEFAULTS = {
   defaultCourse: 'n8n Quickstart',
   printDays: 2, shipDays: 2,
   serialNext: 1001, // 下一個流水號序號（從 1001 起，不從 0）
+  // 版面九塊各自的顯示/縮放/位移（x,y 是證照寬的 %，scale 是 %）
+  blocks: {
+    logo: { show: true, scale: 100, x: 0, y: 0 },
+    title: { show: true, scale: 100, x: 0, y: 0 },
+    presented: { show: true, scale: 100, x: 0, y: 0 },
+    name: { show: true, scale: 100, x: 0, y: 0 },
+    body: { show: true, scale: 100, x: 0, y: 0 },
+    course: { show: true, scale: 100, x: 0, y: 0 },
+    date: { show: true, scale: 100, x: 0, y: 0 },
+    bolt: { show: true, scale: 100, x: 0, y: 0 },
+    eduteam: { show: true, scale: 100, x: 0, y: 0 },
+  } as Record<string, { show: boolean; scale: number; x: number; y: number }>,
 };
 export type CertSettings = typeof SETTINGS_DEFAULTS;
 const SETTINGS_ID = 'cert_settings';

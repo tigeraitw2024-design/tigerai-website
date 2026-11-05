@@ -32,7 +32,17 @@ export type CertTune = {
   stampX?: number; stampY?: number; stampSize?: number;
   endorseCaption?: string;
   style?: 'a' | 'b';
+  blocks?: Record<string, BlockCfg>;
 };
+
+/** 版面上可各自調整的九塊：key → 中文名。設定頁與這裡共用。 */
+export type BlockCfg = { show?: boolean; scale?: number; x?: number; y?: number };
+export const BLOCKS: [string, string][] = [
+  ['logo', '上方 logo'], ['title', 'Certificate 標題'], ['presented', 'presented 小字'],
+  ['name', '學員姓名'], ['body', '說明文字'], ['course', '證照名稱'],
+  ['date', '日期（左下）'], ['bolt', '閃電（中）'], ['eduteam', 'Education Team（右下）'],
+];
+export const BLOCK_DEFAULT: BlockCfg = { show: true, scale: 100, x: 0, y: 0 };
 
 const DEF: Required<CertTune> = {
   sigColor: 'black', showSig: true, showCaption: true, showSeal: true, showStamp: false,
@@ -41,7 +51,18 @@ const DEF: Required<CertTune> = {
   stampX: 80, stampY: 72, stampSize: 24,
   endorseCaption: 'n8n Taiwan Ambassador',
   style: 'a',
+  blocks: Object.fromEntries(BLOCKS.map(([k]) => [k, { ...BLOCK_DEFAULT }])),
 };
+
+/** 一塊：讀 blocks[k] 套位移/縮放/顯示。 */
+function Blk({ k, t, children }: { k: string; t: Required<CertTune>; children: React.ReactNode }) {
+  const b = (t.blocks && t.blocks[k]) || {};
+  if (b.show === false) return null;
+  const style = {
+    '--bx': String(b.x ?? 0), '--by': String(b.y ?? 0), '--bsc': String((b.scale ?? 100) / 100),
+  } as React.CSSProperties;
+  return <div className="tgc__blk" data-blk={k} style={style}>{children}</div>;
+}
 
 function N8nLogo({ className }: { className?: string }) {
   return (
@@ -95,35 +116,43 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
   if (width) vars['--cw'] = width + 'px';
 
   return (
-    <div className="tgc" ref={ref} style={vars as any} data-tgc data-style={t.style || 'a'}>
+    <div className="tgc" ref={ref} style={vars as any} data-tgc>
       <span className="tgc__notch l" />
       <span className="tgc__notch r" />
       <div className="tgc__card">
         <div className="tgc__stack">
-          <div className="tgc__logo">
-            <N8nLogo className="tgc__mark" />
-            <span className="tgc__divider" />
-            <span className="tgc__academy">academy</span>
-          </div>
-          <h2 className="tgc__title">Certificate</h2>
-          <div className="tgc__presented">This certificate is proudly presented to</div>
-          <div className="tgc__name">{data.studentName || '學員姓名'}</div>
-          <div className="tgc__namerule" />
-          <div className="tgc__body">successfully completed, received a passing grade<br />and was awarded this certificate of completion</div>
-          <div className="tgc__course">{data.course || 'n8n Quickstart'}</div>
+          <Blk k="logo" t={t}>
+            <div className="tgc__logo">
+              <N8nLogo className="tgc__mark" />
+              <span className="tgc__divider" />
+              <span className="tgc__academy">academy</span>
+            </div>
+          </Blk>
+          <Blk k="title" t={t}><h2 className="tgc__title">Certificate</h2></Blk>
+          <Blk k="presented" t={t}><div className="tgc__presented">This certificate is proudly presented to</div></Blk>
+          <Blk k="name" t={t}>
+            <div className="tgc__name">{data.studentName || '學員姓名'}</div>
+            <div className="tgc__namerule" />
+          </Blk>
+          <Blk k="body" t={t}><div className="tgc__body">successfully completed, received a passing grade<br />and was awarded this certificate of completion</div></Blk>
+          <Blk k="course" t={t}><div className="tgc__course">{data.course || 'n8n Quickstart'}</div></Blk>
         </div>
         <div className="tgc__footer">
-          <div className="tgc__foot">
-            <div className="tgc__val">{data.issueDate || '—'}</div>
-            <div className="tgc__rule" />
-            <div className="tgc__lbl">Date</div>
-          </div>
-          <div className="tgc__bolt"><img src="/teacher/bolt.png" alt="" crossOrigin="anonymous" /></div>
-          <div className="tgc__foot">
-            <N8nLogo className="tgc__mark" />
-            <div className="tgc__rule" />
-            <div className="tgc__lbl">Education Team</div>
-          </div>
+          <Blk k="date" t={t}>
+            <div className="tgc__foot">
+              <div className="tgc__val">{data.issueDate || '—'}</div>
+              <div className="tgc__rule" />
+              <div className="tgc__lbl">Date</div>
+            </div>
+          </Blk>
+          <Blk k="bolt" t={t}><div className="tgc__bolt"><img src="/teacher/bolt.png" alt="" crossOrigin="anonymous" /></div></Blk>
+          <Blk k="eduteam" t={t}>
+            <div className="tgc__foot">
+              <N8nLogo className="tgc__mark" />
+              <div className="tgc__rule" />
+              <div className="tgc__lbl">Education Team</div>
+            </div>
+          </Blk>
         </div>
 
         {(t.showSig || t.showCaption) && (

@@ -89,6 +89,7 @@ export type CertSettings = {
   stampX: number; stampY: number; stampSize: number;
   endorseCaption: string; defaultCourse: string;
   printDays: number; shipDays: number; serialNext: number;
+  blocks: Record<string, { show: boolean; scale: number; x: number; y: number }>;
 };
 
 export type Instructor = {

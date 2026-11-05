@@ -69,7 +69,7 @@ export default function CertSettings() {
         <aside className="t-gen__side">
           <div className="t-panel" style={{ margin: 0 }}>
             <div className="t-panel__h">內容</div>
-            <div className="t-f"><label className="t-f__label">落款公司名（簽名下方）</label>
+            <div className="t-f"><label className="t-f__label">落款文字（簽名下方）</label>
               <input className="t-input" value={s.endorseCaption} onChange={(e) => set('endorseCaption', e.target.value)} /></div>
             <div className="t-f" style={{ marginBottom: 0 }}><label className="t-f__label">預設證照名稱</label>
               <input className="t-input" value={s.defaultCourse} onChange={(e) => set('defaultCourse', e.target.value)} placeholder="n8n Quickstart" /></div>

@@ -34,7 +34,7 @@ const DEF: Required<CertTune> = {
   sigColor: 'black', showSig: true, showSeal: true,
   sigW: 17, sigX: 63, sigY: 72,
   sealX: 84, sealY: 75, sealSize: 16, sealRot: -5, sealOp: 90,
-  endorseCaption: '台灣虎智科技股份有限公司',
+  endorseCaption: 'n8n Taiwan Ambassador',
 };
 
 function N8nLogo({ className }: { className?: string }) {

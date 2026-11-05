@@ -49,7 +49,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
   }
 
   const cur = certs[Math.min(idx, certs.length - 1)];
-  const data = { studentName: cur.studentName, course: cur.course || defCourse, issueDate: cur.issueDate };
+  const data = { studentName: cur.studentName, course: cur.course || defCourse, issueDate: cur.issueDate, serial: cur.serial };
 
   async function one() {
     setErr(''); setBusy('one');
@@ -68,7 +68,7 @@ export default function Generate({ certs, onBack }: { certs: CertRec[]; onBack: 
         const c = certs[i];
         setBusy(`all:${i + 1}/${certs.length}`);
         const blob = await certToBlob(
-          { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate },
+          { studentName: c.studentName, course: c.course || defCourse, issueDate: c.issueDate, serial: c.serial },
           tune, { format, scale: 2 });
         files.push({ name: `${safe(c.studentName)}-n8n證照.${format === 'jpeg' ? 'jpg' : 'png'}`, blob });
       }

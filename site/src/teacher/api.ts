@@ -35,6 +35,7 @@ export const api = {
   post: <T>(p: string, body?: unknown) =>
     call<T>(p, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) }),
   put: <T>(p: string, body: unknown) => call<T>(p, { method: 'PUT', body: JSON.stringify(body) }),
+  del: <T>(p: string) => call<T>(p, { method: 'DELETE' }),
 };
 
 // ── 型別（跟 src/api/teacher/schema.ts 對應） ──────────────────────
@@ -46,6 +47,7 @@ export type TeacherUser = { id: string; email: string; name: string; role: Role 
 export type Cert = {
   id: string;
   studentName: string;
+  serial: string;
   course: string;
   issueDate: string;
   instructorId: string;
@@ -80,7 +82,7 @@ export type CertSettings = {
   sigW: number; sigX: number; sigY: number;
   sealX: number; sealY: number; sealSize: number; sealRot: number; sealOp: number;
   endorseCaption: string; defaultCourse: string;
-  printDays: number; shipDays: number;
+  printDays: number; shipDays: number; serialNext: number;
 };
 
 export type Instructor = {

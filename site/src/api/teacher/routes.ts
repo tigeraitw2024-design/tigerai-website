@@ -4,7 +4,7 @@ import { readCookie, cookieHeader, clearCookie, rateLimit, clientKey } from '../
 import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
-  acceptCerts, requestEdit, clearEditRequest,
+  acceptCerts, requestEdit, clearEditRequest, deleteCert,
 } from './store';
 import { certificatesCollection } from './schema';
 import {
@@ -151,6 +151,20 @@ app.put('/certs/:id', async (ctx) => {
     if (owner(ctx)) await clearEditRequest(ctx.env.DB, id); // owner 改完就把待處理的申請清掉
     return ctx.json({ id });
   } catch (e: any) { return ctx.json({ error: e.message || '更新失敗' }, 400); }
+});
+
+// 刪除：owner 刪任何一筆；講師只能刪自己的、且還沒接單（已接單在製作中，要走申請修改）。
+app.delete('/certs/:id', async (ctx) => {
+  const t = ctx.get('teacher');
+  const id = ctx.req.param('id');
+  const existing = await getRow(ctx.env.DB, certificatesCollection, id);
+  if (!existing) return ctx.json({ error: '找不到這一筆' }, 404);
+  if (!owner(ctx)) {
+    if (existing.instructorId !== t.id) return ctx.json({ error: '不能刪別人的資料' }, 403);
+    if (existing.accepted) return ctx.json({ error: '已接單製作中，不能刪，請按「申請修改」聯絡虎智。' }, 403);
+  }
+  await deleteCert(ctx.env.DB, id);
+  return ctx.json({ ok: true });
 });
 
 // 接單（owner）：鎖定、算預計寄出日。回傳天數與預計日給前台顯示提示。

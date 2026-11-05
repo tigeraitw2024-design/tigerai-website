@@ -56,4 +56,6 @@ export const CERT_CSS = `
 .tgc__sigcap{ font-size:calc(var(--u)*1.18); color:var(--ink); font-weight:600; white-space:nowrap; }
 .tgc__seal{ position:absolute; left:var(--kx,84%); top:var(--ky,75%); width:var(--ksz,16%);
   transform:translate(-50%,-50%) rotate(var(--krot,-5deg)); opacity:var(--kop,.9); z-index:4; pointer-events:none; }
+.tgc__serial{ position:absolute; left:calc(var(--u)*2.6); bottom:calc(var(--u)*1.2); z-index:5;
+  font-size:calc(var(--u)*0.95); letter-spacing:.03em; color:var(--sub); white-space:nowrap; }
 `.trim();

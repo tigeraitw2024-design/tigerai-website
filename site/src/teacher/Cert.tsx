@@ -19,7 +19,7 @@ const SIG_SRC: Record<string, string> = {
   blue: '/teacher/sig_blue.png',
 };
 
-export type CertData = { studentName: string; course: string; issueDate: string };
+export type CertData = { studentName: string; course: string; issueDate: string; serial?: string };
 
 export type CertTune = {
   sigColor?: 'black' | 'red' | 'blue';
@@ -127,6 +127,7 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
           </div>
         )}
         {t.showSeal && <img className="tgc__seal" src="/teacher/seal.png" alt="虎智科技公司印章" crossOrigin="anonymous" />}
+        {data.serial && <div className="tgc__serial">Tiger AI　{data.serial}</div>}
       </div>
     </div>
   );

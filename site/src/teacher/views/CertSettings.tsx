@@ -51,7 +51,7 @@ export default function CertSettings() {
   if (err && !s) return <div className="t-msg t-msg--err">{err}</div>;
   if (!s) return <div className="t-empty">載入中…</div>;
 
-  const sample = { studentName: SAMPLE.studentName, course: s.defaultCourse || 'n8n Quickstart', issueDate: SAMPLE.issueDate };
+  const sample = { studentName: SAMPLE.studentName, course: s.defaultCourse || 'n8n Quickstart', issueDate: SAMPLE.issueDate, serial: '26-1001' };
 
   return (
     <div>

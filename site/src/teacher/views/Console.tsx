@@ -11,7 +11,15 @@ import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRe
  * 列表的範圍後端已經依身分切好（instructor 只拿得到自己的），前端只管篩選呈現。
  */
 
-type StatusFilter = 'all' | 'unprinted' | 'printed' | 'unshipped' | 'shipped';
+type StatusFilter = 'all' | 'pending' | 'making' | 'printed' | 'shipped' | 'editreq';
+const matchFilter = (r: Cert, s: StatusFilter) =>
+  s === 'all' ? true
+    : s === 'pending' ? !r.accepted
+    : s === 'making' ? r.accepted && !r.printed
+    : s === 'printed' ? r.printed && !r.shipped
+    : s === 'shipped' ? r.shipped
+    : s === 'editreq' ? !!r.editRequest
+    : true;
 
 /** 狀態推導：待確認 →（owner 接單）製作中 → 已列印 → 已寄出。 */
 function statusOf(r: Cert): { label: string; tone: string } {
@@ -42,17 +50,19 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
-    let r = rows || [];
-    if (status === 'unprinted') r = r.filter((x) => !x.printed);
-    if (status === 'printed') r = r.filter((x) => x.printed);
-    if (status === 'unshipped') r = r.filter((x) => !x.shipped);
-    if (status === 'shipped') r = r.filter((x) => x.shipped);
+    let r = (rows || []).filter((x) => matchFilter(x, status));
     const kw = q.trim().toLowerCase();
     if (kw) r = r.filter((x) =>
-      [x.studentName, x.courseName, x.instructorName, x.address, x.email, x.course]
+      [x.studentName, x.serial, x.courseName, x.instructorName, x.address, x.email, x.course]
         .some((v) => (v || '').toLowerCase().includes(kw)));
     return r;
   }, [rows, status, q]);
+
+  const counts = useMemo(() => {
+    const r = rows || [];
+    const c = (s: StatusFilter) => r.filter((x) => matchFilter(x, s)).length;
+    return { all: r.length, pending: c('pending'), making: c('making'), printed: c('printed'), shipped: c('shipped'), editreq: c('editreq') };
+  }, [rows]);
 
   const selCerts = useMemo(() => (rows || []).filter((r) => sel.has(r.id)), [rows, sel]);
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -96,6 +106,15 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     catch (e: any) { setErr(e.message); }
   }
 
+  // 刪除一筆：owner 任何時候；講師只有自己的、且還沒接單（已接單在製作中不給刪）。
+  const canDelete = (r: Cert) => isOwner || !r.accepted;
+  async function del(c: Cert) {
+    if (!canDelete(c)) return;
+    if (!window.confirm(`確定刪除「${c.studentName}」這一筆？刪掉就救不回來了。`)) return;
+    try { await api.del(`/api/teacher/certs/${c.id}`); await load(); }
+    catch (e: any) { setErr(e.message); }
+  }
+
   return (
     <div>
       <h1 className="t-h1">證照</h1>
@@ -118,12 +137,12 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
         <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setModal('import')}><Icon name="upload" size={16} /> 匯入 Excel</button>
       </div>
 
-      <div className="t-row" style={{ marginBottom: 14, gap: 6 }}>
-        {([['all', '全部'], ['unprinted', '未列印'], ['printed', '已列印'], ['unshipped', '未寄送'], ['shipped', '已寄送']] as [StatusFilter, string][])
+      <div className="t-row" style={{ marginBottom: 14, gap: 6, flexWrap: 'wrap' }}>
+        {([['all', '全部'], ['pending', '待確認'], ['making', '製作中'], ['printed', '已列印'], ['shipped', '已寄出'], ['editreq', '修改申請']] as [StatusFilter, string][])
           .map(([v, label]) => (
             <button key={v} className="t-pill" data-tone={status === v ? 'warn' : undefined}
               style={{ cursor: 'pointer', minHeight: 32, padding: '4px 12px' }}
-              onClick={() => setStatus(v)}>{label}</button>
+              onClick={() => setStatus(v)}>{label} <span className="t-mono" style={{ opacity: .7 }}>{counts[v]}</span></button>
           ))}
         <span className="t-spacer t-mono" style={{ fontSize: 12, color: 'var(--t-fg-3)' }}>{filtered.length} 筆</span>
       </div>
@@ -151,6 +170,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
                 </div>
                 <div className="t-card__meta">
+                  {r.serial && <span><b>編號</b> {r.serial}</span>}
                   <span><b>證照</b> {r.course}</span>
                   {r.courseName && <span><b>梯次</b> {r.courseName}</span>}
                   {isOwner && <span><b>講師</b> {r.instructorName}</span>}
@@ -164,6 +184,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                     ? <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setEdit(r)}><Icon name="file-text" size={14} /> 編輯</button>
                     : <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setReq(r)}>✎ 申請修改</button>}
                   {isOwner && r.editRequest && <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => dismiss(r.id)}>忽略申請</button>}
+                  {canDelete(r) && <button className="t-btn t-btn--ghost t-btn--sm" style={{ color: 'var(--t-danger)' }} onClick={() => del(r)}>刪除</button>}
                 </div>
               </div>
             ))}
@@ -184,7 +205,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   onClick={isOwner ? (e) => { if ((e.target as HTMLElement).tagName !== 'INPUT') toggle(r.id); } : undefined}
                   style={{ cursor: isOwner ? 'pointer' : 'default' }}>
                   {isOwner && <td><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggle(r.id)} /></td>}
-                  <td><b>{r.studentName}</b></td>
+                  <td><b>{r.studentName}</b>{r.serial && <><br /><span className="t-mono" style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>編號 {r.serial}</span></>}</td>
                   <td>{r.course}{r.courseName ? <><br /><span style={{ color: 'var(--t-fg-3)', fontSize: 12 }}>{r.courseName}</span></> : null}</td>
                   {isOwner && <td>{r.instructorName}</td>}
                   <td className="addr">{r.address || <span style={{ color: 'var(--t-fg-3)' }}>—</span>}</td>
@@ -198,6 +219,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                     {(isOwner || !r.accepted)
                       ? <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setEdit(r)}>編輯</button>
                       : <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setReq(r)}>申請修改</button>}
+                    {canDelete(r) && <button className="t-btn t-btn--ghost t-btn--sm" style={{ color: 'var(--t-danger)', marginLeft: 4 }} onClick={() => del(r)}>刪除</button>}
                   </td>
                 </tr>
               ))}

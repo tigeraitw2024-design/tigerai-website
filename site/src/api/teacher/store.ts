@@ -88,6 +88,7 @@ export const SETTINGS_DEFAULTS = {
   endorseCaption: 'n8n Taiwan Ambassador',
   defaultCourse: 'n8n Quickstart',
   printDays: 2, shipDays: 2,
+  serialNext: 1001, // 下一個流水號序號（從 1001 起，不從 0）
 };
 export type CertSettings = typeof SETTINGS_DEFAULTS;
 const SETTINGS_ID = 'cert_settings';
@@ -135,6 +136,7 @@ export async function createCert(
 ) {
   const data: Record<string, unknown> = {
     studentName: String(input.studentName || '').trim(),
+    serial: '', // 接單時才給號
     course: String(input.course || 'n8n Quickstart').trim() || 'n8n Quickstart',
     issueDate: String(input.issueDate || '').trim(),
     courseName: String(input.courseName || '').trim(),
@@ -184,25 +186,44 @@ export async function markCerts(db: D1Database, ids: string[], field: 'printed' 
   return ids.length;
 }
 
-/** 接單：owner 收下這些單、鎖定、算預計寄出日（接單日＋印刷＋寄送天數）。已接單的跳過。 */
+/**
+ * 接單：owner 收下這些單、鎖定、算預計寄出日、帶入發證日期、給流水號。已接單的跳過。
+ *   - 預計寄出日＝接單日＋印刷＋寄送天數（台北時區）
+ *   - 發證日期＝接單當天（空的才帶，手動設過的不蓋），印在證照上的英文日期
+ *   - 流水號＝「yy-序號」，序號從設定裡的 serialNext 接續（接單才給，重接不重給）
+ */
+const TPE_OFFSET = 8 * 3600 * 1000; // 台北 UTC+8
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function tpe(iso: string) { return new Date(new Date(iso).getTime() + TPE_OFFSET); }
 function addDays(iso: string, n: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + (Number(n) || 0));
+  const d = tpe(iso);
+  d.setUTCDate(d.getUTCDate() + (Number(n) || 0));
   return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+function certDate(iso: string): string {
+  const d = tpe(iso);
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 export async function acceptCerts(db: D1Database, ids: string[], days: number) {
   const now = nowISO();
   const eta = addDays(now, days);
-  let count = 0;
+  const issue = certDate(now);
+  const yy = String(tpe(now).getUTCFullYear()).slice(2);
+  const settings = await getSettings(db);
+  let serialNext = Number(settings.serialNext) || 1001;
+  let count = 0, assigned = 0;
   for (const id of ids) {
     const existing = await getRow(db, certificatesCollection, id);
     if (!existing || existing.accepted) continue;
     const data = { ...existing };
     delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
     data.accepted = true; data.acceptedAt = now; data.etaDate = eta;
+    if (!String(data.issueDate || '').trim()) data.issueDate = issue;
+    if (!String(data.serial || '').trim()) { data.serial = `${yy}-${serialNext}`; serialNext++; assigned++; }
     await putRow(db, certificatesCollection, id, data);
     count++;
   }
+  if (assigned) await putSettings(db, { serialNext });
   return { count, etaDate: eta };
 }
 
@@ -215,6 +236,11 @@ export async function requestEdit(db: D1Database, id: string, message: string) {
   data.editRequest = String(message || '').trim();
   data.editRequestAt = nowISO();
   return putRow(db, certificatesCollection, id, data);
+}
+
+/** 刪除一筆證照。 */
+export async function deleteCert(db: D1Database, id: string) {
+  await db.prepare(`DELETE FROM cert_records WHERE id=?`).bind(id).run();
 }
 
 /** 清掉修改申請（owner 改完或忽略）。 */

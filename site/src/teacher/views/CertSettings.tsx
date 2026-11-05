@@ -100,12 +100,29 @@ export default function CertSettings() {
               <input type="checkbox" checked={s.showSeal} onChange={(e) => set('showSeal', e.target.checked)} /> 顯示公司紅印
             </label>
             {s.showSeal && <>
-              <Slider label="大小" value={s.sealSize} min={8} max={40} suffix="%" onChange={(v) => set('sealSize', v)} />
+              <Slider label="大小" value={s.sealSize} min={2} max={40} suffix="%" onChange={(v) => set('sealSize', v)} />
               <Slider label="水平位置" value={s.sealX} min={0} max={100} suffix="%" onChange={(v) => set('sealX', v)} />
               <Slider label="垂直位置" value={s.sealY} min={0} max={100} suffix="%" onChange={(v) => set('sealY', v)} />
               <Slider label="角度" value={s.sealRot} min={-30} max={30} suffix="°" onChange={(v) => set('sealRot', v)} />
               <Slider label="透明度" value={s.sealOp} min={30} max={100} suffix="%" onChange={(v) => set('sealOp', v)} />
             </>}
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">寄送設定</div>
+            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>按「接單」時用這個算預計寄出日＝接單日＋印刷＋寄送天數。</p>
+            <div className="t-row" style={{ gap: 10 }}>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}>
+                <label className="t-f__label">印刷天數</label>
+                <input className="t-input" type="number" min={0} value={s.printDays}
+                  onChange={(e) => set('printDays', Number(e.target.value) || 0)} />
+              </div>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}>
+                <label className="t-f__label">寄送天數</label>
+                <input className="t-input" type="number" min={0} value={s.shipDays}
+                  onChange={(e) => set('shipDays', Number(e.target.value) || 0)} />
+              </div>
+            </div>
           </div>
 
           <button className="t-btn t-btn--brand" disabled={busy} onClick={save}>

@@ -149,9 +149,11 @@ export async function createCert(
     note: String(input.note || '').trim(),
     instructorId: instructor.id,
     instructorName: instructor.name,
+    accepted: false, acceptedAt: '', etaDate: '',
     printed: false, printedAt: '',
     shipped: false, shippedAt: '',
     tracking: '',
+    editRequest: '', editRequestAt: '',
   };
   if (!data.studentName) throw new Error('學員姓名是必填的');
   return putRow(db, certificatesCollection, null, data);
@@ -180,6 +182,49 @@ export async function markCerts(db: D1Database, ids: string[], field: 'printed' 
     await putRow(db, certificatesCollection, id, data);
   }
   return ids.length;
+}
+
+/** 接單：owner 收下這些單、鎖定、算預計寄出日（接單日＋印刷＋寄送天數）。已接單的跳過。 */
+function addDays(iso: string, n: number): string {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + (Number(n) || 0));
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+export async function acceptCerts(db: D1Database, ids: string[], days: number) {
+  const now = nowISO();
+  const eta = addDays(now, days);
+  let count = 0;
+  for (const id of ids) {
+    const existing = await getRow(db, certificatesCollection, id);
+    if (!existing || existing.accepted) continue;
+    const data = { ...existing };
+    delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+    data.accepted = true; data.acceptedAt = now; data.etaDate = eta;
+    await putRow(db, certificatesCollection, id, data);
+    count++;
+  }
+  return { count, etaDate: eta };
+}
+
+/** 講師送出修改申請（接單後不能直接改，只能申請）。有值＝owner 待處理。 */
+export async function requestEdit(db: D1Database, id: string, message: string) {
+  const existing = await getRow(db, certificatesCollection, id);
+  if (!existing) throw new Error('找不到這一筆');
+  const data = { ...existing };
+  delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+  data.editRequest = String(message || '').trim();
+  data.editRequestAt = nowISO();
+  return putRow(db, certificatesCollection, id, data);
+}
+
+/** 清掉修改申請（owner 改完或忽略）。 */
+export async function clearEditRequest(db: D1Database, id: string) {
+  const existing = await getRow(db, certificatesCollection, id);
+  if (!existing) return;
+  const data = { ...existing };
+  delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+  data.editRequest = ''; data.editRequestAt = '';
+  return putRow(db, certificatesCollection, id, data);
 }
 
 /** 對帳報表：依「講師 × 月份」統計張數、已印、已寄、金額 */

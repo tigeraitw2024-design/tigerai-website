@@ -59,11 +59,18 @@ export const certificatesCollection: Collection = {
     { name: 'address', label: '寄送地址', type: 'text', pii: true, listed: true, help: '含郵遞區號的完整地址。' },
     { name: 'certUrl', label: 'n8n 證照原檔連結', type: 'text', help: '對方上傳的 n8n 電子證照檔（核對姓名／發證日期用）。' },
     { name: 'fee', label: '費用(元)', type: 'number', default: 200, help: '每張含運，預設 200' },
+    // 接單流程：講師送出後→owner 按「接單」鎖定並算預計寄出日→已印→已寄
+    { name: 'accepted', label: '已接單', type: 'boolean', default: false, listed: true },
+    { name: 'acceptedAt', label: '接單時間', type: 'datetime', readonly: true },
+    { name: 'etaDate', label: '預計寄出日', type: 'text', readonly: true, help: '接單日＋印刷天數＋寄送天數，接單當下算好。' },
     { name: 'printed', label: '已列印', type: 'boolean', default: false, listed: true },
     { name: 'printedAt', label: '列印時間', type: 'datetime', readonly: true },
     { name: 'shipped', label: '已寄送', type: 'boolean', default: false, listed: true },
     { name: 'shippedAt', label: '寄送時間', type: 'datetime', readonly: true },
     { name: 'tracking', label: '物流單號', type: 'text' },
+    // 接單後講師不能直接改，只能送「修改申請」給 owner；有值＝有待處理的申請
+    { name: 'editRequest', label: '修改申請', type: 'text' },
+    { name: 'editRequestAt', label: '修改申請時間', type: 'datetime', readonly: true },
     { name: 'note', label: '備註', type: 'text' },
   ],
 };

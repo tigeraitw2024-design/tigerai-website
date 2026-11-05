@@ -59,11 +59,16 @@ export type Cert = {
   address: string;
   certUrl: string;
   fee: number;
+  accepted: boolean;
+  acceptedAt: string;
+  etaDate: string;
   printed: boolean;
   printedAt: string;
   shipped: boolean;
   shippedAt: string;
   tracking: string;
+  editRequest: string;
+  editRequestAt: string;
   note: string;
   createdAt: string;
   updatedAt: string;

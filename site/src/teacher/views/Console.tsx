@@ -13,6 +13,14 @@ import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRe
 
 type StatusFilter = 'all' | 'unprinted' | 'printed' | 'unshipped' | 'shipped';
 
+/** 狀態推導：待確認 →（owner 接單）製作中 → 已列印 → 已寄出。 */
+function statusOf(r: Cert): { label: string; tone: string } {
+  if (r.shipped) return { label: '已寄出', tone: 'ok' };
+  if (r.printed) return { label: '已列印', tone: 'warn' };
+  if (r.accepted) return { label: '製作中', tone: 'warn' };
+  return { label: '待確認', tone: 'off' };
+}
+
 export default function Console({ user, onGenerate }: { user: TeacherUser; onGenerate: (certs: Cert[]) => void }) {
   const isOwner = user.role === 'owner';
   const [rows, setRows] = useState<Cert[] | null>(null);
@@ -22,6 +30,9 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState('');
   const [modal, setModal] = useState<'' | 'add' | 'import'>('');
+  const [edit, setEdit] = useState<Cert | null>(null);   // 正在編輯的那筆
+  const [req, setReq] = useState<Cert | null>(null);      // 正在申請修改的那筆（講師）
+  const [banner, setBanner] = useState('');               // 接單成功提示（含預計天數）
 
   async function load() {
     setErr('');
@@ -64,16 +75,38 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     finally { setBusy(''); }
   }
 
+  // 接單：收下選取的單、鎖定、算預計寄出日，並把天數提示顯示出來。
+  async function accept() {
+    const ids = [...sel];
+    if (!ids.length) return;
+    setBusy('accept'); setBanner('');
+    try {
+      const r = await api.post<{ count: number; days: number; printDays: number; shipDays: number; etaDate: string }>(
+        '/api/teacher/certs/accept', { ids });
+      setBanner(`已接單 ${r.count} 筆。印刷 ${r.printDays} 天＋寄送 ${r.shipDays} 天＝共 ${r.days} 天，預計 ${r.etaDate} 前寄出。`);
+      setSel(new Set());
+      await load();
+    } catch (e: any) { setErr(e.message); }
+    finally { setBusy(''); }
+  }
+
+  // owner 忽略某筆的修改申請（不照改、直接清掉標記）。
+  async function dismiss(id: string) {
+    try { await api.post(`/api/teacher/certs/${id}/dismiss-edit`); await load(); }
+    catch (e: any) { setErr(e.message); }
+  }
+
   return (
     <div>
       <h1 className="t-h1">證照</h1>
       <p className="t-intro">
         {isOwner
-          ? '所有講師的證照都在這裡。勾選後可以「產生證照」出圖列印，或批次標記已列印、已寄送。'
-          : '把你班上通過的學員用「匯入 Excel」上傳上來就好，列印與寄送由虎智統一處理。每一筆的狀態（待印 → 已印 → 已寄）你隨時看得到。'}
+          ? '所有講師的證照都在這裡。勾選後可以「接單」（鎖定並算預計寄出日）、「產生證照」出圖列印，或標記已列印、已寄送。'
+          : '把你班上通過的學員用「匯入 Excel」上傳上來就好，列印與寄送由虎智統一處理。狀態（待確認 → 製作中 → 已列印 → 已寄出）你隨時看得到；虎智接單前都還能自己改。'}
       </p>
 
       {err && <div className="t-msg t-msg--err">{err}</div>}
+      {banner && <div className="t-msg t-msg--ok">{banner}</div>}
 
       <div className="t-toolbar">
         <div className="t-search" style={{ position: 'relative' }}>
@@ -113,17 +146,23 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                     checked={sel.has(r.id)} onChange={() => toggle(r.id)} />}
                   <span className="t-card__t">{r.studentName}</span>
                   <span className="t-spacer" />
-                  <span className="t-pill" data-tone={r.shipped ? 'ok' : r.printed ? 'warn' : 'off'}>
-                    {r.shipped ? '已寄' : r.printed ? '已印待寄' : '待印'}
-                  </span>
+                  <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
                 </div>
                 <div className="t-card__meta">
                   <span><b>證照</b> {r.course}</span>
                   {r.courseName && <span><b>梯次</b> {r.courseName}</span>}
                   {isOwner && <span><b>講師</b> {r.instructorName}</span>}
                   <span><b>費用</b> {r.fee} 元</span>
+                  {r.accepted && !r.shipped && r.etaDate && <span><b>預計寄出</b> {r.etaDate}</span>}
                 </div>
                 {r.address && <div className="t-card__addr">📮 {r.address}</div>}
+                {r.editRequest && <div className="t-card__addr" style={{ color: 'var(--t-danger)' }}>✎ 修改申請：{r.editRequest}</div>}
+                <div className="t-row" style={{ gap: 8, marginTop: 2 }}>
+                  {(isOwner || !r.accepted)
+                    ? <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setEdit(r)}><Icon name="file-text" size={14} /> 編輯</button>
+                    : <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setReq(r)}>✎ 申請修改</button>}
+                  {isOwner && r.editRequest && <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => dismiss(r.id)}>忽略申請</button>}
+                </div>
               </div>
             ))}
           </div>
@@ -134,7 +173,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
               <tr>
                 {isOwner && <th style={{ width: 36 }}><input type="checkbox" checked={allOn} onChange={toggleAll} /></th>}
                 <th>學員</th><th>證照／梯次</th>{isOwner && <th>講師</th>}
-                <th className="addr">寄送地址</th><th>狀態</th><th style={{ textAlign: 'right' }}>費用</th>
+                <th className="addr">寄送地址</th><th>狀態</th><th style={{ textAlign: 'right' }}>費用</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -148,10 +187,16 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   {isOwner && <td>{r.instructorName}</td>}
                   <td className="addr">{r.address || <span style={{ color: 'var(--t-fg-3)' }}>—</span>}</td>
                   <td>
-                    <span className="t-pill" data-tone={r.printed ? 'ok' : 'off'}>{r.printed ? '已印' : '未印'}</span>{' '}
-                    <span className="t-pill" data-tone={r.shipped ? 'ok' : 'off'}>{r.shipped ? '已寄' : '未寄'}</span>
+                    <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
+                    {r.accepted && !r.shipped && r.etaDate && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>預計 {r.etaDate}</div>}
+                    {r.editRequest && <div style={{ fontSize: 11, color: 'var(--t-danger)', marginTop: 2 }}>✎ 修改申請</div>}
                   </td>
                   <td style={{ textAlign: 'right' }}>{r.fee}</td>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
+                    {(isOwner || !r.accepted)
+                      ? <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setEdit(r)}>編輯</button>
+                      : <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setReq(r)}>申請修改</button>}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -163,7 +208,10 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       {isOwner && sel.size > 0 && (
         <div className="t-actionbar">
           <b>{sel.size} 筆已選</b>
-          <button className="t-btn t-btn--brand t-btn--sm" onClick={() => onGenerate(selCerts)}>
+          <button className="t-btn t-btn--brand t-btn--sm" disabled={!!busy} onClick={accept}>
+            <Icon name="check" size={16} /> {busy === 'accept' ? '接單中…' : '接單'}
+          </button>
+          <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => onGenerate(selCerts)}>
             <Icon name="download" size={16} /> 產生證照
           </button>
           <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('printed', true)}>
@@ -178,6 +226,8 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
 
       {modal === 'add' && <AddModal isOwner={isOwner} onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
       {modal === 'import' && <ImportModal isOwner={isOwner} onClose={() => setModal('')} onDone={() => { setModal(''); load(); }} />}
+      {edit && <EditModal cert={edit} isOwner={isOwner} onClose={() => setEdit(null)} onDone={() => { setEdit(null); load(); }} />}
+      {req && <RequestModal cert={req} onClose={() => setReq(null)} onDone={() => { setReq(null); load(); }} />}
     </div>
   );
 }
@@ -390,6 +440,101 @@ function ImportModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: 
             </div>
           </>
         )}
+      </form>
+    </div>
+  );
+}
+
+// ── 編輯一筆（owner 任何時候；講師只在接單前，欄位同新增、設定欄位 owner 才有）──
+function EditModal({ cert, isOwner, onClose, onDone }: { cert: Cert; isOwner: boolean; onClose: () => void; onDone: () => void }) {
+  const [f, setF] = useState({
+    studentName: cert.studentName || '', course: cert.course || 'n8n Quickstart', issueDate: cert.issueDate || '',
+    courseName: cert.courseName || '', recipientName: cert.recipientName || '',
+    email: cert.email || '', phone: cert.phone || '', address: cert.address || '', note: cert.note || '',
+    fee: String(cert.fee ?? 200),
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const [errs, setErrs] = useState<Record<string, string>>({});
+  const set = (k: string, v: string) => setF((o) => ({ ...o, [k]: v }));
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const v = validateRecord(f);
+    if (Object.keys(v).length) { setErrs(v); return; }
+    setErr(''); setErrs({}); setBusy(true);
+    try { await api.put(`/api/teacher/certs/${cert.id}`, { ...f, fee: Number(f.fee) || 200 }); onDone(); }
+    catch (e: any) { setErr(e.message); setBusy(false); }
+  }
+
+  const Field = (k: string, label: string, opts: { type?: string; required?: boolean } = {}) => (
+    <div className="t-f">
+      <label className="t-f__label">{label}{opts.required && <span style={{ color: 'var(--t-danger)' }}> *</span>}</label>
+      <input className={`t-input${errs[k] ? ' t-input--bad' : ''}`} type={opts.type || 'text'} value={(f as any)[k]}
+        onChange={(e) => { set(k, e.target.value); if (errs[k]) setErrs((o) => { const n = { ...o }; delete n[k]; return n; }); }} />
+      {errs[k] && <div className="t-f__err">{errs[k]}</div>}
+    </div>
+  );
+
+  return (
+    <div className="t-modal" onClick={onClose}>
+      <form className="t-modal__box" noValidate onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="t-modal__head"><h3>編輯證照資料</h3>
+          <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
+        {isOwner && cert.editRequest && <div className="t-msg t-msg--info">✎ 講師的修改申請：{cert.editRequest}（存檔後這個申請會自動清除）</div>}
+        {err && <div className="t-msg t-msg--err">{err}</div>}
+        {Field('studentName', '學員姓名（印在證照上的英文名）', { required: true })}
+        {Field('recipientName', '收件人（寄送用中文名）', { required: true })}
+        {Field('courseName', '上課梯次／班級', { required: true })}
+        {Field('email', 'Email', { type: 'email', required: true })}
+        {Field('phone', '電話', { type: 'tel', required: true })}
+        {Field('address', '寄送地址（含郵遞區號）', { required: true })}
+        {Field('note', '備註（選填）')}
+        {isOwner && (
+          <>
+            <div className="t-f__group">以下由虎智設定（講師看不到）</div>
+            {Field('course', '證照名稱')}
+            {Field('issueDate', '發證日期')}
+            {Field('fee', '費用（元，含運）', { type: 'number' })}
+          </>
+        )}
+        <div className="t-row" style={{ marginTop: 6 }}>
+          <button className="t-btn t-btn--brand" disabled={busy}>{busy ? '儲存中…' : '儲存'}</button>
+          <button type="button" className="t-btn t-btn--ghost" onClick={onClose}>取消</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// ── 申請修改（講師：接單後不能直接改，寫一句送給 owner）──
+function RequestModal({ cert, onClose, onDone }: { cert: Cert; onClose: () => void; onDone: () => void }) {
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault(); if (!msg.trim()) return;
+    setErr(''); setBusy(true);
+    try { await api.post(`/api/teacher/certs/${cert.id}/edit-request`, { message: msg }); onDone(); }
+    catch (e: any) { setErr(e.message); setBusy(false); }
+  }
+
+  return (
+    <div className="t-modal" onClick={onClose}>
+      <form className="t-modal__box" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="t-modal__head"><h3>申請修改</h3>
+          <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
+        <p className="t-f__help" style={{ marginBottom: 8 }}>
+          這筆（{cert.studentName}）虎智已經接單製作中，不能直接改。寫下要改什麼送過去，確認後由虎智更新。
+        </p>
+        {err && <div className="t-msg t-msg--err">{err}</div>}
+        <textarea className="t-textarea" value={msg} onChange={(e) => setMsg(e.target.value)}
+          placeholder="例：地址改成…／英文名拼錯，應該是…" />
+        <div className="t-row" style={{ marginTop: 10 }}>
+          <button className="t-btn t-btn--brand" disabled={busy || !msg.trim()}>{busy ? '送出中…' : '送出申請'}</button>
+          <button type="button" className="t-btn t-btn--ghost" onClick={onClose}>取消</button>
+        </div>
       </form>
     </div>
   );

@@ -4,6 +4,7 @@ import { readCookie, cookieHeader, clearCookie, rateLimit, clientKey } from '../
 import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
+  acceptCerts, requestEdit, clearEditRequest,
 } from './store';
 import { certificatesCollection } from './schema';
 import {
@@ -142,9 +143,45 @@ app.put('/certs/:id', async (ctx) => {
   const existing = await getRow(ctx.env.DB, certificatesCollection, id);
   if (!existing) return ctx.json({ error: '找不到這一筆' }, 404);
   if (!owner(ctx) && existing.instructorId !== t.id) return ctx.json({ error: '不能改別人的資料' }, 403);
+  // 接單後講師不能直接改（資料可能已在印），只能走「申請修改」。owner 不受限。
+  if (!owner(ctx) && existing.accepted) return ctx.json({ error: '已接單製作中，不能直接改，請按「申請修改」送給虎智。' }, 403);
   const input = await ctx.req.json<Record<string, unknown>>();
-  try { await updateCert(ctx.env.DB, id, input); return ctx.json({ id }); }
-  catch (e: any) { return ctx.json({ error: e.message || '更新失敗' }, 400); }
+  try {
+    await updateCert(ctx.env.DB, id, input);
+    if (owner(ctx)) await clearEditRequest(ctx.env.DB, id); // owner 改完就把待處理的申請清掉
+    return ctx.json({ id });
+  } catch (e: any) { return ctx.json({ error: e.message || '更新失敗' }, 400); }
+});
+
+// 接單（owner）：鎖定、算預計寄出日。回傳天數與預計日給前台顯示提示。
+app.post('/certs/accept', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能接單' }, 403);
+  const { ids } = await ctx.req.json<{ ids: string[] }>();
+  const s = await getSettings(ctx.env.DB);
+  const printDays = Number(s.printDays) || 0;
+  const shipDays = Number(s.shipDays) || 0;
+  const r = await acceptCerts(ctx.env.DB, Array.isArray(ids) ? ids : [], printDays + shipDays);
+  return ctx.json({ ...r, printDays, shipDays, days: printDays + shipDays });
+});
+
+// 申請修改（講師對自己的、或 owner）：寫一句要改什麼，owner 會看到待處理標記。
+app.post('/certs/:id/edit-request', async (ctx) => {
+  const t = ctx.get('teacher');
+  const id = ctx.req.param('id');
+  const existing = await getRow(ctx.env.DB, certificatesCollection, id);
+  if (!existing) return ctx.json({ error: '找不到這一筆' }, 404);
+  if (!owner(ctx) && existing.instructorId !== t.id) return ctx.json({ error: '不能動別人的資料' }, 403);
+  const { message } = await ctx.req.json<{ message: string }>();
+  if (!String(message || '').trim()) return ctx.json({ error: '請寫要改什麼' }, 400);
+  await requestEdit(ctx.env.DB, id, message);
+  return ctx.json({ ok: true });
+});
+
+// 忽略修改申請（owner）：不照改、直接清掉標記。
+app.post('/certs/:id/dismiss-edit', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能處理' }, 403);
+  await clearEditRequest(ctx.env.DB, ctx.req.param('id'));
+  return ctx.json({ ok: true });
 });
 
 // 批次標記已印／已寄：owner 專用

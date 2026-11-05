@@ -96,7 +96,7 @@ export const SETTINGS_DEFAULTS = {
   printDays: 2, shipDays: 2,
   serialNext: 1001, // 下一個流水號序號（從 1001 起，不從 0）
   // 自訂圖層：使用者上傳的 PNG（存 data URL）＋顯示/位置/大小
-  overlayImg: '', overlayShow: false, overlayX: 50, overlayY: 50, overlaySize: 25,
+  overlayImg: '', overlayShow: false, overlayX: 50, overlayY: 50, overlaySize: 25, overlayOpacity: 100,
   // 版面九塊各自的顯示/縮放/位移（x,y 是證照寬的 %，scale 是 %）
   blocks: {
     logo: { show: true, scale: 100, x: 0, y: 0 },

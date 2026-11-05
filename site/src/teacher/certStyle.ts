@@ -59,7 +59,12 @@ export const CERT_CSS = `
   transform:translate(-50%,-50%); z-index:4; pointer-events:none; }
 .tgc__stamp svg{ width:100%; height:auto; display:block; }
 .tgc__overlay{ position:absolute; left:var(--ovx,50%); top:var(--ovy,50%); width:var(--ovsz,25%);
-  transform:translate(-50%,-50%); z-index:6; pointer-events:none; }
+  transform:translate(-50%,-50%); opacity:var(--ovop,1); z-index:6; pointer-events:none; }
+/* 設定頁才有的編輯層：可直接拖曳＋右下角藍點縮放（匯出時不會有這個節點） */
+.tgc__overlay--edit{ pointer-events:auto; cursor:move; outline:calc(var(--u)*0.25) dashed #06b6d4; outline-offset:calc(var(--u)*0.3); touch-action:none; }
+.tgc__ovhandle{ position:absolute; right:calc(var(--u)*-0.9); bottom:calc(var(--u)*-0.9);
+  width:calc(var(--u)*1.9); height:calc(var(--u)*1.9); background:#06b6d4; border:calc(var(--u)*0.22) solid #fff;
+  border-radius:50%; cursor:nwse-resize; pointer-events:auto; z-index:7; box-shadow:0 1px 3px rgba(0,0,0,.4); touch-action:none; }
 .tgc__serial{ position:absolute; left:calc(var(--u)*2.6); bottom:calc(var(--u)*1.2); z-index:5;
   font-size:calc(var(--u)*0.95); letter-spacing:.03em; color:var(--sub); white-space:nowrap; }
 `.trim();

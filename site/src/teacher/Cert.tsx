@@ -33,7 +33,7 @@ export type CertTune = {
   endorseCaption?: string;
   style?: 'a' | 'b';
   blocks?: Record<string, BlockCfg>;
-  overlayImg?: string; overlayShow?: boolean; overlayX?: number; overlayY?: number; overlaySize?: number;
+  overlayImg?: string; overlayShow?: boolean; overlayX?: number; overlayY?: number; overlaySize?: number; overlayOpacity?: number;
 };
 
 /** 版面上可各自調整的九塊：key → 中文名。設定頁與這裡共用。 */
@@ -53,7 +53,7 @@ const DEF: Required<CertTune> = {
   endorseCaption: 'n8n Taiwan Ambassador',
   style: 'a',
   blocks: Object.fromEntries(BLOCKS.map(([k]) => [k, { ...BLOCK_DEFAULT }])),
-  overlayImg: '', overlayShow: false, overlayX: 50, overlayY: 50, overlaySize: 25,
+  overlayImg: '', overlayShow: false, overlayX: 50, overlayY: 50, overlaySize: 25, overlayOpacity: 100,
 };
 
 /** 一塊：讀 blocks[k] 套位移/縮放/顯示。 */
@@ -82,9 +82,39 @@ let styleInjected = false;
 /**
  * width 不給就自動量父層寬度（預覽）。給了就固定（匯出）。
  */
-export default function Cert({ data, tune, width }: { data: CertData; tune?: CertTune; width?: number }) {
+export default function Cert({ data, tune, width, editOverlay, onOverlayChange }: {
+  data: CertData; tune?: CertTune; width?: number;
+  editOverlay?: boolean; onOverlayChange?: (p: { x?: number; y?: number; size?: number }) => void;
+}) {
   const t = { ...DEF, ...tune };
   const ref = useRef<HTMLDivElement>(null);
+
+  // 直接在證照上拖曳自訂圖層（移動）／拉右下角藍點（縮放）。只有設定頁會傳 onOverlayChange。
+  const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+  function dragMove(e: React.PointerEvent) {
+    if (!onOverlayChange) return;
+    e.preventDefault();
+    const onMove = (ev: PointerEvent) => {
+      const r = ref.current?.getBoundingClientRect(); if (!r) return;
+      onOverlayChange({
+        x: Math.round(clamp((ev.clientX - r.left) / r.width * 100, 0, 100)),
+        y: Math.round(clamp((ev.clientY - r.top) / r.height * 100, 0, 100)),
+      });
+    };
+    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+    window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+  }
+  function dragResize(e: React.PointerEvent) {
+    if (!onOverlayChange) return;
+    e.preventDefault(); e.stopPropagation();
+    const onMove = (ev: PointerEvent) => {
+      const r = ref.current?.getBoundingClientRect(); if (!r) return;
+      const cx = r.left + (t.overlayX / 100) * r.width; // 以圖層中心為準，拉到哪半寬就多大
+      onOverlayChange({ size: Math.round(clamp(Math.abs(ev.clientX - cx) * 2 / r.width * 100, 3, 400)) });
+    };
+    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+    window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+  }
 
   // 樣式只注入一次（給預覽用；匯出時另外把同一份 CSS 塞進 SVG）
   useEffect(() => {
@@ -114,7 +144,7 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
     '--kx': t.sealX + '%', '--ky': t.sealY + '%', '--ksz': t.sealSize + '%',
     '--krot': t.sealRot + 'deg', '--kop': (t.sealOp / 100).toFixed(2),
     '--stx': t.stampX + '%', '--sty': t.stampY + '%', '--stsz': t.stampSize + '%',
-    '--ovx': t.overlayX + '%', '--ovy': t.overlayY + '%', '--ovsz': t.overlaySize + '%',
+    '--ovx': t.overlayX + '%', '--ovy': t.overlayY + '%', '--ovsz': t.overlaySize + '%', '--ovop': (t.overlayOpacity / 100).toFixed(2),
   };
   if (width) vars['--cw'] = width + 'px';
 
@@ -176,7 +206,14 @@ export default function Cert({ data, tune, width }: { data: CertData; tune?: Cer
             </svg>
           </div>
         )}
-        {t.overlayImg && t.overlayShow && <img className="tgc__overlay" src={t.overlayImg} alt="" />}
+        {t.overlayImg && t.overlayShow && (editOverlay && onOverlayChange ? (
+          <div className="tgc__overlay tgc__overlay--edit" onPointerDown={dragMove}>
+            <img src={t.overlayImg} alt="" draggable={false} style={{ width: '100%', display: 'block', pointerEvents: 'none' }} />
+            <span className="tgc__ovhandle" onPointerDown={dragResize} />
+          </div>
+        ) : (
+          <img className="tgc__overlay" src={t.overlayImg} alt="" />
+        ))}
         {data.serial && <div className="tgc__serial">Tiger AI　{data.serial}</div>}
       </div>
     </div>

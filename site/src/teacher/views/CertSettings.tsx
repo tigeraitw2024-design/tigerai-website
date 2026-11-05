@@ -93,8 +93,19 @@ export default function CertSettings() {
 
       <div className="t-gen">
         <div className="t-gen__stage">
-          <Cert data={sample} tune={s} />
-          <p className="t-f__help" style={{ textAlign: 'center', marginTop: 10 }}>預覽（範例姓名）。實際姓名、證照名稱、日期會換成每位學員的資料。</p>
+          <Cert data={sample} tune={s}
+            editOverlay={!!s.overlayImg && s.overlayShow}
+            onOverlayChange={(p) => setS((o) => o ? {
+              ...o,
+              ...(p.x != null ? { overlayX: p.x } : {}),
+              ...(p.y != null ? { overlayY: p.y } : {}),
+              ...(p.size != null ? { overlaySize: p.size } : {}),
+            } : o)} />
+          <p className="t-f__help" style={{ textAlign: 'center', marginTop: 10 }}>
+            {(!!s.overlayImg && s.overlayShow)
+              ? '自訂圖層已開：直接在證照上拖曳移動、拉右下角藍點縮放；也可用右邊滑桿微調數字。'
+              : '預覽（範例姓名）。實際姓名、證照名稱、日期會換成每位學員的資料。'}
+          </p>
         </div>
 
         <aside className="t-gen__side">
@@ -166,7 +177,7 @@ export default function CertSettings() {
 
           <div className="t-panel" style={{ margin: 0 }}>
             <div className="t-panel__h">自訂圖層（上傳 PNG）</div>
-            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>上傳一張圖（建議透明底 PNG、檔案小於 700KB）蓋在證照上，自己拉大小與位置。只放一張。</p>
+            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>上傳一張圖（建議透明底 PNG、檔案小於 700KB）蓋在證照上。上傳後可<b>直接在左邊證照上拖曳</b>移動、<b>拉右下角藍點</b>縮放，或用下面滑桿對數字。大小可拉到 300%（超出滿版）。只放一張。</p>
             <label className="t-drop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 64, border: '1px dashed var(--t-line)', borderRadius: 10, cursor: 'pointer', color: 'var(--t-fg-2)' }}>
               <input type="file" accept="image/png,image/*" onChange={onUpload} style={{ display: 'none' }} />
               <Icon name="upload" size={18} /><span>{s.overlayImg ? '換一張圖' : '選 PNG 圖片'}</span>
@@ -179,7 +190,8 @@ export default function CertSettings() {
                 <input type="checkbox" checked={s.overlayShow} onChange={(e) => set('overlayShow', e.target.checked)} /> 顯示自訂圖層
               </label>
               {s.overlayShow && <>
-                <Slider label="大小" value={s.overlaySize} min={3} max={90} suffix="%" onChange={(v) => set('overlaySize', v)} />
+                <Slider label="透明度" value={s.overlayOpacity} min={10} max={100} suffix="%" onChange={(v) => set('overlayOpacity', v)} />
+                <Slider label="大小" value={s.overlaySize} min={3} max={300} suffix="%" onChange={(v) => set('overlaySize', v)} />
                 <Slider label="水平位置" value={s.overlayX} min={0} max={100} suffix="%" onChange={(v) => set('overlayX', v)} />
                 <Slider label="垂直位置" value={s.overlayY} min={0} max={100} suffix="%" onChange={(v) => set('overlayY', v)} />
               </>}

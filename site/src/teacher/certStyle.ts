@@ -18,7 +18,7 @@ export const CERT_CSS = `
   --bodysz:1.34; --bodymw:60; --bodymt:3.4;
   --coursesz:3.15; --coursew:700; --coursecol:var(--ink); --coursemt:1.1;
   --footpad:7; --footmt:0; --footgap:0.65; --valsz:1.6; --valw:400; --fmark:2.2; --frulew:18; --fruleh:0.15; --flblsz:1.4;
-  --boltsz:3.9; --boltop:1;
+  --boltsz:3.9; --boltop:1; --flogocol:var(--ink);
   position:relative; width:var(--cw); aspect-ratio:1398/965; border-radius:calc(var(--u)*0.72); overflow:hidden;
   background:var(--bg); padding:calc(var(--u)*var(--framepad)); box-sizing:border-box;
   font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Segoe UI",sans-serif; font-weight:400; line-height:1.5; }
@@ -32,7 +32,7 @@ export const CERT_CSS = `
   --bodysz:1.5; --bodymw:52; --bodymt:4.6;
   --coursesz:3; --coursew:500; --coursecol:var(--ink2); --coursemt:1.6;
   --footpad:8.5; --footmt:5; --footgap:0.5; --valsz:1.4; --valw:700; --fmark:1.9; --frulew:18; --fruleh:0.2; --flblsz:1.35;
-  --boltsz:4.4; --boltop:0.4; }
+  --boltsz:4.4; --boltop:0.4; --flogocol:var(--pink); }
 .tgc *{ box-sizing:border-box; }
 .tgc__card{ position:relative; height:100%; width:100%; background:var(--card);
   border:calc(var(--u)*var(--cardbd)) solid var(--pink); box-shadow:var(--glow); border-radius:calc(var(--u)*var(--cardrad));
@@ -62,7 +62,7 @@ export const CERT_CSS = `
   padding:0 calc(var(--u)*var(--footpad)); margin-top:calc(var(--u)*var(--footmt)); }
 .tgc__foot{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*var(--footgap)); min-width:0; }
 .tgc__foot .tgc__val{ font-size:calc(var(--u)*var(--valsz)); font-weight:var(--valw); color:var(--ink); white-space:nowrap; }
-.tgc__foot .tgc__mark{ height:calc(var(--u)*var(--fmark)); color:var(--ink); display:block; }
+.tgc__foot .tgc__mark{ height:calc(var(--u)*var(--fmark)); color:var(--flogocol); display:block; }
 .tgc__foot .tgc__rule{ width:calc(var(--u)*var(--frulew)); height:calc(var(--u)*var(--fruleh)); background:var(--pink); border-radius:calc(var(--u)*1); }
 .tgc__foot .tgc__lbl{ font-size:calc(var(--u)*var(--flblsz)); color:var(--sub); }
 .tgc__bolt img{ height:calc(var(--u)*var(--boltsz)); width:auto; display:block; opacity:var(--boltop); }

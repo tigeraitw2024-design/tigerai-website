@@ -146,6 +146,22 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     downloadBlob(blob, `證照名單_${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
+  // 列印寄送地址標籤：開一個乾淨的列印視窗（一頁多張、每張收件人＋地址＋電話）。
+  function printLabels(list: Cert[]) {
+    const esc = (s: unknown) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] as string));
+    const labels = list.map((c) => `<div class="lbl"><div class="to">${esc(c.recipientName || c.studentName)} 收</div><div class="ad">${esc(c.address) || '（沒有地址）'}</div><div class="ph">${esc(c.phone)}</div></div>`).join('');
+    const html = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>寄送地址標籤</title>`
+      + `<style>body{font-family:"Microsoft JhengHei","微軟正黑體",sans-serif;margin:0;padding:10mm;color:#111}`
+      + `.grid{display:grid;grid-template-columns:1fr 1fr;gap:6mm}.lbl{border:1px solid #bbb;border-radius:3mm;padding:6mm;min-height:28mm;break-inside:avoid}`
+      + `.to{font-size:15pt;font-weight:700;margin-bottom:3mm}.ad{font-size:13pt;line-height:1.55}.ph{font-size:11pt;color:#555;margin-top:2mm}`
+      + `.bar{margin-bottom:8mm}@media print{.bar{display:none}}</style></head>`
+      + `<body><div class="bar"><button onclick="window.print()" style="padding:8px 16px;font-size:14px">列印 / 存成 PDF</button>　共 ${list.length} 張</div>`
+      + `<div class="grid">${labels}</div></body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) { setErr('瀏覽器擋了彈出視窗，請允許彈出視窗後再試一次。'); return; }
+    w.document.write(html); w.document.close();
+  }
+
   return (
     <div>
       <h1 className="t-h1">證照</h1>
@@ -279,6 +295,9 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
           </button>
           <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => onGenerate(selCerts)}>
             <Icon name="download" size={16} /> 產生證照
+          </button>
+          <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => printLabels(selCerts)}>
+            <Icon name="mail" size={16} /> 地址標籤
           </button>
           <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={() => mark('printed', true)}>
             <Icon name="printer" size={16} /> 標已列印

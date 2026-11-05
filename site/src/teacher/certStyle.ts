@@ -18,7 +18,7 @@ export const CERT_CSS = `
   position:relative; width:var(--cw); aspect-ratio:1398/965; border-radius:calc(var(--u)*0.72); overflow:hidden;
   background:radial-gradient(125% 95% at 50% 20%,#5c2841 0%,#3d1c30 40%,#26142b 74%,#160e1c 100%);
   padding:calc(var(--u)*2.3); box-sizing:border-box;
-  font-family:"Work Sans","Segoe UI",system-ui,sans-serif; line-height:1.5; }
+  font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Segoe UI",sans-serif; font-weight:400; line-height:1.5; }
 .tgc *{ box-sizing:border-box; }
 .tgc__card{ position:relative; height:100%; width:100%; background:var(--card); border:calc(var(--u)*0.26) solid var(--pink);
   border-radius:calc(var(--u)*1.9); display:flex; flex-direction:column; justify-content:space-between; align-items:center;
@@ -31,7 +31,7 @@ export const CERT_CSS = `
 .tgc__logo .tgc__mark{ height:calc(var(--u)*2.9); width:auto; display:block; }
 .tgc__logo .tgc__divider{ width:calc(var(--u)*0.14); height:calc(var(--u)*2.6); background:#b4b4bb; }
 .tgc__logo .tgc__academy{ font-size:calc(var(--u)*2.35); font-weight:400; color:var(--ink2); letter-spacing:.01em; }
-.tgc__title{ font-size:calc(var(--u)*3.75); color:var(--pink); font-weight:500; margin:calc(var(--u)*1.1) 0 0; line-height:1; }
+.tgc__title{ font-size:calc(var(--u)*3.75); color:var(--pink); font-weight:400; margin:calc(var(--u)*1.1) 0 0; line-height:1; }
 .tgc__presented{ font-size:calc(var(--u)*1.32); color:var(--sub); margin-top:calc(var(--u)*0.3); }
 .tgc__name{ font-size:calc(var(--u)*2.7); font-weight:700; color:var(--ink); line-height:1.1; max-width:72%;
   overflow-wrap:anywhere; margin-top:calc(var(--u)*0.5); }
@@ -43,7 +43,7 @@ export const CERT_CSS = `
   line-height:1.1; max-width:80%; overflow-wrap:anywhere; }
 .tgc__footer{ display:flex; justify-content:space-between; align-items:flex-end; width:100%; gap:calc(var(--u)*2); }
 .tgc__foot{ display:flex; flex-direction:column; align-items:center; gap:calc(var(--u)*0.55); min-width:0; }
-.tgc__foot .tgc__val{ font-size:calc(var(--u)*1.42); font-weight:700; color:var(--ink); white-space:nowrap; }
+.tgc__foot .tgc__val{ font-size:calc(var(--u)*1.42); font-weight:400; color:var(--ink); white-space:nowrap; }
 .tgc__foot .tgc__mark{ height:calc(var(--u)*1.9); color:var(--ink); display:block; }
 .tgc__foot .tgc__rule{ width:calc(var(--u)*15); height:calc(var(--u)*0.13); background:var(--pink); border-radius:calc(var(--u)*1); }
 .tgc__foot .tgc__lbl{ font-size:calc(var(--u)*1.22); color:var(--sub); }

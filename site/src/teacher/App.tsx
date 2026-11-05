@@ -91,7 +91,7 @@ export default function App() {
         {view === 'generate' && (isOwner ? <Generate certs={genCerts} onBack={() => go('certs')} /> : <Denied />)}
         {view === 'settings' && (isOwner ? <CertSettings /> : <Denied />)}
         {view === 'report' && (isOwner ? <Report /> : <Denied />)}
-        {view === 'roster' && (isOwner ? <Roster /> : <Denied />)}
+        {view === 'roster' && (isOwner ? <Roster meId={user.id} /> : <Denied />)}
       </main>
 
       <nav className="t-tabbar" style={{ gridTemplateColumns: `repeat(${NAV.length}, 1fr)` }}>

@@ -4,7 +4,7 @@ import { readCookie, cookieHeader, clearCookie, rateLimit, clientKey } from '../
 import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
-  acceptCerts, requestEdit, clearEditRequest, deleteCert,
+  acceptCerts, requestEdit, clearEditRequest, deleteCert, deleteInstructor,
 } from './store';
 import { certificatesCollection } from './schema';
 import {
@@ -236,6 +236,14 @@ app.post('/instructors', async (ctx) => {
   if (!b.email || !b.name) return ctx.json({ error: '請填 Gmail 和姓名' }, 400);
   const id = await upsertInstructor(ctx.env.DB, b);
   return ctx.json({ id });
+});
+app.delete('/instructors/:id', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能管名冊' }, 403);
+  const t = ctx.get('teacher');
+  const id = ctx.req.param('id');
+  if (id === t.id) return ctx.json({ error: '不能刪掉你自己正在登入的帳號。' }, 400);
+  await deleteInstructor(ctx.env.DB, id);
+  return ctx.json({ ok: true });
 });
 
 // ── CSV ───────────────────────────────────────────────────────────

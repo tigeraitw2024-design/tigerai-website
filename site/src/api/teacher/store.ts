@@ -115,6 +115,11 @@ export async function putSettings(db: D1Database, patch: Partial<CertSettings>):
   return next;
 }
 
+/** 刪除一位講師（名冊）。他名下已建的證照不動，owner 仍看得到。 */
+export async function deleteInstructor(db: D1Database, id: string) {
+  await db.prepare(`DELETE FROM cert_instructors WHERE id=?`).bind(id).run();
+}
+
 // ── 證照 ──────────────────────────────────────────────────────────
 
 export type CertFilter = { instructorId?: string; q?: string; printed?: boolean; shipped?: boolean };
@@ -218,14 +223,19 @@ export async function acceptCerts(db: D1Database, ids: string[], days: number) {
   let count = 0, assigned = 0;
   for (const id of ids) {
     const existing = await getRow(db, certificatesCollection, id);
-    if (!existing || existing.accepted) continue;
+    if (!existing) continue;
     const data = { ...existing };
     delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
-    data.accepted = true; data.acceptedAt = now; data.etaDate = eta;
-    if (!String(data.issueDate || '').trim()) data.issueDate = issue;
-    if (!String(data.serial || '').trim()) { data.serial = `${yy}-${serialNext}`; serialNext++; assigned++; }
-    await putRow(db, certificatesCollection, id, data);
-    count++;
+    let changed = false;
+    if (!existing.accepted) {                               // 還沒接單：接單＋帶日期＋算預計日
+      data.accepted = true; data.acceptedAt = now; data.etaDate = eta;
+      if (!String(data.issueDate || '').trim()) data.issueDate = issue;
+      changed = true;
+    }
+    if (!String(data.serial || '').trim()) {                // 沒號就補發（涵蓋早期接單但沒號的）
+      data.serial = `${yy}-${serialNext}`; serialNext++; assigned++; changed = true;
+    }
+    if (changed) { await putRow(db, certificatesCollection, id, data); count++; }
   }
   if (assigned) await putSettings(db, { serialNext });
   return { count, etaDate: eta };

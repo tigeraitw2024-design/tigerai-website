@@ -10,7 +10,7 @@ import Icon from '../Icon';
  * owner 白名單（環境變數 TEACHER_OWNER_EMAILS）裡的人第一次登入會自動入列，
  * 其他講師要 owner 在這裡先加好 Gmail。
  */
-export default function Roster() {
+export default function Roster({ meId }: { meId: string }) {
   const [rows, setRows] = useState<Instructor[] | null>(null);
   const [err, setErr] = useState('');
   const [f, setF] = useState({ email: '', name: '', role: 'instructor', active: true });
@@ -21,6 +21,13 @@ export default function Roster() {
     catch (e: any) { setErr(e.message); }
   }
   useEffect(() => { load(); }, []);
+
+  async function del(r: Instructor) {
+    if (!window.confirm(`把「${r.name}」從名冊刪掉？他之後就不能登入講師區了（已建的證照不會消失）。`)) return;
+    setErr('');
+    try { await api.del(`/api/teacher/instructors/${r.id}`); await load(); }
+    catch (e: any) { setErr(e.message); }
+  }
 
   async function add(e: React.FormEvent) {
     e.preventDefault(); setErr(''); setBusy(true);
@@ -66,6 +73,11 @@ export default function Roster() {
                 </div>
                 <div className="t-card__meta"><span className="t-mono">{r.email}</span></div>
                 {r.note && <div className="t-card__meta"><span>{r.note}</span></div>}
+                <div className="t-row" style={{ marginTop: 4 }}>
+                  {r.id === meId
+                    ? <span className="t-pill" data-tone="off">你自己（登入中）</span>
+                    : <button className="t-btn t-btn--ghost t-btn--sm" style={{ color: 'var(--t-danger)' }} onClick={() => del(r)}>刪除</button>}
+                </div>
               </div>
             ))}
           </div>

@@ -283,6 +283,10 @@ button.t-stat:hover { border-color: var(--t-brand); }
 .t-nm__en { font-size: .82em; color: var(--t-fg-3); font-weight: 400; }
 .t-nm__solo { font-weight: 700; }
 
+/* 單號「複製」小鈕 */
+.t-copybtn { display: inline-flex; align-items: center; font: inherit; font-size: 11px; line-height: 1.5; padding: 1px 7px; margin-left: 3px; border: 1px solid var(--t-line-2); border-radius: 999px; background: #fff; color: var(--t-brand); cursor: pointer; white-space: nowrap; vertical-align: middle; }
+.t-copybtn:hover { border-color: var(--t-brand); background: var(--t-brand-soft); }
+
 /* 未繳款大提示（講師儀表板） */
 .t-due { display: block; text-decoration: none; color: inherit; border: 2px solid var(--t-danger); background: #FDF2F1; border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
 .t-due__label { font-size: 13px; font-weight: 700; color: var(--t-danger); letter-spacing: 1px; }

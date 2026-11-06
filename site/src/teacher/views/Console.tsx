@@ -31,6 +31,20 @@ function statusOf(r: Cert): { label: string; tone: string } {
   return { label: '待確認', tone: 'off' };
 }
 
+/** 單號旁的「複製」小鈕：點一下把郵局單號複製到剪貼簿，方便去查件。 */
+function CopyNo({ no }: { no: string }) {
+  const [done, setDone] = useState(false);
+  async function copy(e: React.MouseEvent) {
+    e.stopPropagation(); e.preventDefault();
+    try { await navigator.clipboard.writeText(no); }
+    catch {
+      try { const ta = document.createElement('textarea'); ta.value = no; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch { /* 複製不了就算了 */ }
+    }
+    setDone(true); setTimeout(() => setDone(false), 1500);
+  }
+  return <button type="button" className="t-copybtn" onClick={copy} title={`複製單號 ${no}`}>{done ? '已複製 ✓' : '複製'}</button>;
+}
+
 /** 把 ISO 時間戳（UTC）顯示成台北時間「YYYY-MM-DD HH:mm」。空字串就回空。 */
 function fmtStamp(iso?: string): string {
   const s = (iso || '').trim();
@@ -255,7 +269,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   <span><b>費用</b> {r.fee} 元</span>
                   {r.accepted && !r.shipped && r.etaDate && <span><b>預計寄出</b> {r.etaDate}</span>}
                   {r.printed && <span><b>列印</b> {fmtStamp(r.printedAt) || '✓'}</span>}
-                  {r.shipped && <span><b>寄出</b> {fmtStamp(r.shippedAt) || '✓'}{r.tracking ? `　單號 ${r.tracking}` : ''}</span>}
+                  {r.shipped && <span><b>寄出</b> {fmtStamp(r.shippedAt) || '✓'}{r.tracking ? <>　單號 {r.tracking} <CopyNo no={r.tracking} /></> : ''}</span>}
                   {r.paid && <span style={{ color: '#2e7d57' }}><b>已匯款</b> {fmtStamp(r.paidAt) || '✓'}{r.payLast5 ? `　後五碼 ${r.payLast5}` : ''}</span>}
                   {r.settled && <span style={{ color: '#2e7d57', fontWeight: 700 }}><b>已結算</b> {fmtStamp(r.settledAt) || '✓'}</span>}
                 </div>
@@ -300,7 +314,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                     {r.paid && <div style={{ fontSize: 11, color: '#2e7d57', marginTop: 2 }}>已匯款{r.payLast5 ? ` · 後五碼 ${r.payLast5}` : ''}</div>}
                     {r.settled && <div style={{ fontSize: 11, color: '#2e7d57', marginTop: 2, fontWeight: 600 }}>結算 {fmtStamp(r.settledAt)}</div>}
                     {r.printed && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>印 {fmtStamp(r.printedAt)}</div>}
-                    {r.shipped && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>寄 {fmtStamp(r.shippedAt)}{r.tracking ? `　單號 ${r.tracking}` : ''}</div>}
+                    {r.shipped && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>寄 {fmtStamp(r.shippedAt)}{r.tracking ? <>　單號 {r.tracking} <CopyNo no={r.tracking} /></> : ''}</div>}
                     {r.accepted && !r.shipped && r.etaDate && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>預計 {r.etaDate}</div>}
                     {r.editRequest && <div style={{ fontSize: 11, color: 'var(--t-danger)', marginTop: 2 }}>✎ 修改申請</div>}
                     {r.returnReason && <div style={{ fontSize: 11, color: 'var(--t-danger)', marginTop: 2 }}>⤺ 已退件</div>}

@@ -55,6 +55,7 @@ export default function Checkout({ user }: { user: TeacherUser }) {
   const [needInvoice, setNeedInvoice] = useState(false);
   const [taxId, setTaxId] = useState('');
   const [buyerName, setBuyerName] = useState('');
+  const [last5, setLast5] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
@@ -99,9 +100,9 @@ export default function Checkout({ user }: { user: TeacherUser }) {
     if (needInvoice && !buyer.trim()) { setErr('要開發票就要填買受人。'); return; }
     setErr(''); setMsg(''); setBusy(true);
     try {
-      await api.post('/api/teacher/certs/pay', { ids: [...sel], value: true, needInvoice, taxId: taxId.trim(), buyer: buyer.trim() });
-      setMsg(`已送出！標記為已匯款 ${qty} 筆，總計 NT$ ${total.toLocaleString()}${needInvoice ? '（含稅，會開立發票）' : '（未稅）'}。`);
-      setSel(new Set()); setNeedInvoice(false); setTaxId('');
+      await api.post('/api/teacher/certs/pay', { ids: [...sel], value: true, needInvoice, taxId: taxId.trim(), buyer: buyer.trim(), payLast5: last5 });
+      setMsg(`已送出！標記為已匯款 ${qty} 筆，總計 NT$ ${total.toLocaleString()}${needInvoice ? '（含稅，會開立發票）' : '（未稅）'}${last5 ? `，後五碼 ${last5}` : ''}。`);
+      setSel(new Set()); setNeedInvoice(false); setTaxId(''); setLast5('');
       await load();
     } catch (e: any) { setErr(e.message); }
     finally { setBusy(false); }
@@ -157,7 +158,7 @@ export default function Checkout({ user }: { user: TeacherUser }) {
                 <div key={r.id} className="t-payrow" style={{ cursor: 'default' }}>
                   <Icon name="check" size={16} />
                   <span className="t-payrow__name">{r.studentName}</span>
-                  <span className="t-payrow__meta">{r.needInvoice ? `含稅·統編 ${r.taxId}` : '未稅'}{r.invoiced ? '·已開票' : ''}</span>
+                  <span className="t-payrow__meta">{r.needInvoice ? `含稅·統編 ${r.taxId}` : '未稅'}{r.payLast5 ? `·後五碼 ${r.payLast5}` : ''}{r.invoiced ? '·已開票' : ''}</span>
                   <span className="t-payrow__amt">NT$ {(r.paidAmount || 0).toLocaleString()}</span>
                 </div>
               ))}
@@ -209,6 +210,9 @@ export default function Checkout({ user }: { user: TeacherUser }) {
               <div className="t-mono" style={{ fontSize: 15, fontWeight: 700 }}>{bill.bankAccount}</div>
               <div>{bill.bankHolder}</div>
             </div>
+
+            <div className="t-f" style={{ marginTop: 10, marginBottom: 0 }}><label className="t-f__label">你的匯款帳號後五碼（給虎智核對，可留空）</label>
+              <input className="t-input" value={last5} onChange={(e) => setLast5(e.target.value.replace(/\D/g, '').slice(0, 5))} placeholder="例：12345" inputMode="numeric" /></div>
 
             <button className="t-btn t-btn--brand" style={{ width: '100%', marginTop: 10 }} disabled={busy || qty === 0} onClick={pay}>
               <Icon name="check" size={16} /> {busy ? '送出中…' : `我已匯款 ${qty ? `（${qty} 張 · NT$ ${total.toLocaleString()}）` : ''}`}

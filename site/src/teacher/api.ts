@@ -86,6 +86,7 @@ export type Cert = {
   paidNet: number;
   paidTax: number;
   paidAmount: number;
+  payLast5: string;
   needInvoice: boolean;
   taxId: string;
   invoiceBuyer: string;

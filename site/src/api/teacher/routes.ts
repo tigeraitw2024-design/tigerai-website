@@ -225,7 +225,7 @@ app.post('/certs/settle', async (ctx) => {
 // 要不要發票（含稅）＋統編整批帶進來，金額用當下設定快照。
 app.post('/certs/pay', async (ctx) => {
   const t = ctx.get('teacher');
-  const { ids, value, needInvoice, taxId, buyer } = await ctx.req.json<{ ids: string[]; value?: boolean; needInvoice?: boolean; taxId?: string; buyer?: string }>();
+  const { ids, value, needInvoice, taxId, buyer, payLast5 } = await ctx.req.json<{ ids: string[]; value?: boolean; needInvoice?: boolean; taxId?: string; buyer?: string; payLast5?: string }>();
   if (!Array.isArray(ids) || !ids.length) return ctx.json({ error: '沒有選到要結帳的項目' }, 400);
   if (!owner(ctx)) {
     for (const id of ids) {
@@ -236,7 +236,7 @@ app.post('/certs/pay', async (ctx) => {
   }
   const on = value !== false;
   if (on && needInvoice && !String(taxId || '').trim()) return ctx.json({ error: '要開發票就要填統一編號' }, 400);
-  const n = await markPaid(ctx.env.DB, ids, on, { needInvoice: !!needInvoice, taxId, buyer });
+  const n = await markPaid(ctx.env.DB, ids, on, { needInvoice: !!needInvoice, taxId, buyer, payLast5 });
   return ctx.json({ ok: true, count: n });
 });
 

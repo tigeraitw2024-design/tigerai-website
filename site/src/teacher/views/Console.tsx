@@ -153,7 +153,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       ['證照', (r) => r.course], ['發證日期', (r) => r.issueDate], ['梯次', (r) => r.courseName],
       ['Email', (r) => r.email], ['電話', (r) => r.phone], ['地址', (r) => r.address], ['證明連結', (r) => r.certUrl],
       ['費用', (r) => r.fee], ['狀態', (r) => statusOf(r).label], ['物流單號', (r) => r.tracking],
-      ['已結算', (r) => (r.settled ? '是' : '')], ['結算時間', (r) => (r.settled ? fmtStamp(r.settledAt) : '')],
+      ['已匯款', (r) => (r.paid ? '是' : '')], ['匯款後五碼', (r) => r.payLast5], ['已結算', (r) => (r.settled ? '是' : '')], ['結算時間', (r) => (r.settled ? fmtStamp(r.settledAt) : '')],
       ['講師', (r) => r.instructorName], ['建立', (r) => (r.createdAt || '').slice(0, 10)],
     ];
     const lines = [cols.map((c) => c[0]).join(',')];
@@ -256,6 +256,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   {r.accepted && !r.shipped && r.etaDate && <span><b>預計寄出</b> {r.etaDate}</span>}
                   {r.printed && <span><b>列印</b> {fmtStamp(r.printedAt) || '✓'}</span>}
                   {r.shipped && <span><b>寄出</b> {fmtStamp(r.shippedAt) || '✓'}{r.tracking ? `　單號 ${r.tracking}` : ''}</span>}
+                  {r.paid && <span style={{ color: '#2e7d57' }}><b>已匯款</b> {fmtStamp(r.paidAt) || '✓'}{r.payLast5 ? `　後五碼 ${r.payLast5}` : ''}</span>}
                   {r.settled && <span style={{ color: '#2e7d57', fontWeight: 700 }}><b>已結算</b> {fmtStamp(r.settledAt) || '✓'}</span>}
                 </div>
                 {r.address && <div className="t-card__addr">📮 {r.address}</div>}
@@ -296,6 +297,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   <td>
                     <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
                     {r.settled && <span className="t-pill" data-tone="ok" style={{ marginLeft: 4 }}>已結算</span>}
+                    {r.paid && <div style={{ fontSize: 11, color: '#2e7d57', marginTop: 2 }}>已匯款{r.payLast5 ? ` · 後五碼 ${r.payLast5}` : ''}</div>}
                     {r.settled && <div style={{ fontSize: 11, color: '#2e7d57', marginTop: 2, fontWeight: 600 }}>結算 {fmtStamp(r.settledAt)}</div>}
                     {r.printed && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>印 {fmtStamp(r.printedAt)}</div>}
                     {r.shipped && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>寄 {fmtStamp(r.shippedAt)}{r.tracking ? `　單號 ${r.tracking}` : ''}</div>}

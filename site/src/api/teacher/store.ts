@@ -199,7 +199,7 @@ export async function createCert(
     // 寄送成本（每張各自輸入，owner 填）
     costEnvelope: 0, costCard: 0, costPostage: 0,
     // 付款/發票（付款方自己標已匯款、要不要發票、統編）
-    paid: false, paidAt: '', paidNet: 0, paidTax: 0, paidAmount: 0,
+    paid: false, paidAt: '', paidNet: 0, paidTax: 0, paidAmount: 0, payLast5: '',
     needInvoice: false, taxId: '', invoiceBuyer: '',
     invoiced: false, invoiceNo: '',
   };
@@ -251,7 +251,8 @@ export async function markSettled(db: D1Database, ids: string[], value: boolean)
  * 每張＝一單位，各自快照 unitPrice；要不要發票是整批一起帶進來。
  */
 export async function markPaid(
-  db: D1Database, ids: string[], value: boolean, opts: { needInvoice?: boolean; taxId?: string; buyer?: string } = {},
+  db: D1Database, ids: string[], value: boolean,
+  opts: { needInvoice?: boolean; taxId?: string; buyer?: string; payLast5?: string } = {},
 ) {
   const s = await getSettings(db);
   const net = Number(s.unitPrice) || 0;
@@ -266,9 +267,11 @@ export async function markPaid(
       data.paid = true; data.paidAt = nowISO();
       data.needInvoice = needInvoice; data.taxId = needInvoice ? String(opts.taxId || '').trim() : '';
       data.invoiceBuyer = String(opts.buyer || '').trim();
+      data.payLast5 = String(opts.payLast5 || '').replace(/\D/g, '').slice(-5); // 匯款帳號後五碼，只留數字
       data.paidNet = net; data.paidTax = tax; data.paidAmount = net + tax;
     } else {
       data.paid = false; data.paidAt = '';
+      data.payLast5 = '';
       data.paidNet = 0; data.paidTax = 0; data.paidAmount = 0;
     }
     await putRow(db, certificatesCollection, id, data);

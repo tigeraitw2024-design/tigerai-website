@@ -137,6 +137,7 @@ function InvoiceCard({ cert, onDone }: { cert: Cert; onDone: () => void }) {
       </div>
       <div className="t-card__meta">
         <span><b>統編</b> {cert.taxId || '—'}</span>
+        {cert.payLast5 && <span><b>後五碼</b> {cert.payLast5}</span>}
         <span><b>品名</b> n8n 證照　{cert.recipientName ? `${cert.recipientName}／` : ''}{cert.studentName}</span>
         <span><b>銷售額</b> {money(cert.paidNet)}</span>
         <span><b>稅</b> {money(cert.paidTax)}</span>

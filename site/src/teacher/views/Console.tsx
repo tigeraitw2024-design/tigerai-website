@@ -13,13 +13,14 @@ import { downloadBlob } from '../certExport';
  * 列表的範圍後端已經依身分切好（instructor 只拿得到自己的），前端只管篩選呈現。
  */
 
-type StatusFilter = 'all' | 'pending' | 'making' | 'printed' | 'shipped' | 'editreq';
+type StatusFilter = 'all' | 'pending' | 'making' | 'printed' | 'shipped' | 'paid' | 'editreq';
 const matchFilter = (r: Cert, s: StatusFilter) =>
   s === 'all' ? true
     : s === 'pending' ? !r.accepted
     : s === 'making' ? r.accepted && !r.printed
     : s === 'printed' ? r.printed && !r.shipped
     : s === 'shipped' ? r.shipped
+    : s === 'paid' ? !!r.paid
     : s === 'editreq' ? !!r.editRequest
     : true;
 
@@ -97,7 +98,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   const counts = useMemo(() => {
     const r = rows || [];
     const c = (s: StatusFilter) => r.filter((x) => matchFilter(x, s)).length;
-    return { all: r.length, pending: c('pending'), making: c('making'), printed: c('printed'), shipped: c('shipped'), editreq: c('editreq') };
+    return { all: r.length, pending: c('pending'), making: c('making'), printed: c('printed'), shipped: c('shipped'), paid: c('paid'), editreq: c('editreq') };
   }, [rows]);
 
   const selCerts = useMemo(() => (rows || []).filter((r) => sel.has(r.id)), [rows, sel]);
@@ -241,7 +242,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       </div>
 
       <div className="t-row" style={{ marginBottom: 14, gap: 6, flexWrap: 'wrap' }}>
-        {([['all', '全部'], ['pending', '待確認'], ['making', '製作中'], ['printed', '已列印'], ['shipped', '已寄出'], ['editreq', '修改申請']] as [StatusFilter, string][])
+        {([['all', '全部'], ['pending', '待確認'], ['making', '製作中'], ['printed', '已列印'], ['shipped', '已寄出'], ['paid', '已付款'], ['editreq', '修改申請']] as [StatusFilter, string][])
           .map(([v, label]) => (
             <button key={v} className="t-pill" data-tone={status === v ? 'warn' : undefined}
               style={{ cursor: 'pointer', minHeight: 32, padding: '4px 12px' }}
@@ -270,6 +271,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                     checked={sel.has(r.id)} onChange={() => toggle(r.id)} />}
                   <span className="t-card__t"><Name zh={r.recipientName} en={r.studentName} /></span>
                   <span className="t-spacer" />
+                  {r.paid && <span className="t-pill" data-tone="ok">已付款</span>}
                   <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
                 </div>
                 <div className="t-card__meta">
@@ -321,6 +323,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   <td className="addr">{r.address || <span style={{ color: 'var(--t-fg-3)' }}>—</span>}</td>
                   <td>
                     <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
+                    {r.paid && <span className="t-pill" data-tone="ok" style={{ marginLeft: 4 }}>已付款</span>}
                     {r.settled && <span className="t-pill" data-tone="ok" style={{ marginLeft: 4 }}>已結算</span>}
                     {r.paid && <div style={{ fontSize: 11, color: '#2e7d57', marginTop: 2 }}>已匯款{r.payLast5 ? ` · 後五碼 ${r.payLast5}` : ''}</div>}
                     {r.settled && <div style={{ fontSize: 11, color: '#2e7d57', marginTop: 2, fontWeight: 600 }}>結算 {fmtStamp(r.settledAt)}</div>}

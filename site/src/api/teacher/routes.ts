@@ -243,9 +243,9 @@ app.post('/certs/pay', async (ctx) => {
 // 設定一筆的寄送成本＋郵局單號（owner）。
 app.post('/certs/cost', async (ctx) => {
   if (!owner(ctx)) return ctx.json({ error: '只有 owner 能填成本' }, 403);
-  const { id, costEnvelope, costCard, costPostage, tracking } = await ctx.req.json<any>();
+  const { id, costPrint, costEnvelope, costCard, costPostage, tracking } = await ctx.req.json<any>();
   if (!id) return ctx.json({ error: '少了 id' }, 400);
-  await setCost(ctx.env.DB, id, { costEnvelope, costCard, costPostage, tracking });
+  await setCost(ctx.env.DB, id, { costPrint, costEnvelope, costCard, costPostage, tracking });
   return ctx.json({ ok: true });
 });
 

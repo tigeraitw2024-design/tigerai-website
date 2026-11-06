@@ -76,7 +76,8 @@ export type Cert = {
   editRequest: string;
   editRequestAt: string;
   note: string;
-  // 寄送成本（每張，owner 填）
+  // 寄送／製作成本（每張，owner 填）
+  costPrint: number;
   costEnvelope: number;
   costCard: number;
   costPostage: number;

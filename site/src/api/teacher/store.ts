@@ -196,8 +196,8 @@ export async function createCert(
     settled: false, settledAt: '',
     returnReason: '', returnedAt: '',
     editRequest: '', editRequestAt: '',
-    // 寄送成本（每張各自輸入，owner 填）
-    costEnvelope: 0, costCard: 0, costPostage: 0,
+    // 寄送／製作成本（每張各自輸入，owner 填）：輸出＝印證書本身的費用
+    costPrint: 0, costEnvelope: 0, costCard: 0, costPostage: 0,
     // 付款/發票（付款方自己標已匯款、要不要發票、統編）
     paid: false, paidAt: '', paidNet: 0, paidTax: 0, paidAmount: 0, payLast5: '',
     payReject: '', // owner 對不到帳駁回的原因（講師重新確認後清掉）
@@ -299,13 +299,13 @@ export async function rejectPay(db: D1Database, id: string, reason: string) {
 /** 設定一筆的寄送成本（信封／卡紙／掛號）與郵局單號（owner）。只覆蓋有帶的欄位。 */
 export async function setCost(
   db: D1Database, id: string,
-  patch: { costEnvelope?: number; costCard?: number; costPostage?: number; tracking?: string },
+  patch: { costPrint?: number; costEnvelope?: number; costCard?: number; costPostage?: number; tracking?: string },
 ) {
   const existing = await getRow(db, certificatesCollection, id);
   if (!existing) return;
   const data = { ...existing };
   delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
-  for (const k of ['costEnvelope', 'costCard', 'costPostage'] as const) if (k in patch) data[k] = Number((patch as any)[k]) || 0;
+  for (const k of ['costPrint', 'costEnvelope', 'costCard', 'costPostage'] as const) if (k in patch) data[k] = Number((patch as any)[k]) || 0;
   if ('tracking' in patch) data.tracking = String(patch.tracking || '').trim();
   return putRow(db, certificatesCollection, id, data);
 }

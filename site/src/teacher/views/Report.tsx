@@ -154,10 +154,11 @@ function Reconcile({ certs, onChange }: { certs: Cert[]; onChange: () => void })
 /** 逐筆損益：填信封/卡紙/掛號成本與郵局單號，按該列「存」才寫入（不自動存、不亂跳）。
  * 上面「統一套用」可把信封/卡紙/掛號一次帶到全部，再逐張改掛號。單號存了講師也看得到。 */
 function Pnl({ certs, onPatch }: { certs: Cert[]; onPatch: (id: string, patch: Partial<Cert>) => void }) {
-  type E = { env?: string; card?: string; post?: string; trk?: string };
+  type E = { print?: string; env?: string; card?: string; post?: string; trk?: string };
   const [edits, setEdits] = useState<Record<string, E>>({});
   const [savedId, setSavedId] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [printAll, setPrintAll] = useState('');
   const [envAll, setEnvAll] = useState('');
   const [cardAll, setCardAll] = useState('');
   const [postAll, setPostAll] = useState('');
@@ -165,20 +166,22 @@ function Pnl({ certs, onPatch }: { certs: Cert[]; onPatch: (id: string, patch: P
 
   const g = (c: Cert, k: keyof E, fb: string) => { const e = edits[c.id]; return e && e[k] !== undefined ? (e[k] as string) : fb; };
   const setField = (id: string, k: keyof E, v: string) => { setEdits((m) => ({ ...m, [id]: { ...m[id], [k]: v } })); setSavedId(''); };
+  const nPrint = (c: Cert) => Number(g(c, 'print', c.costPrint ? String(c.costPrint) : '')) || 0;
   const nEnv = (c: Cert) => Number(g(c, 'env', c.costEnvelope ? String(c.costEnvelope) : '')) || 0;
   const nCard = (c: Cert) => Number(g(c, 'card', c.costCard ? String(c.costCard) : '')) || 0;
   const nPost = (c: Cert) => Number(g(c, 'post', c.costPostage ? String(c.costPostage) : '')) || 0;
-  const costEff = (c: Cert) => nEnv(c) + nCard(c) + nPost(c);
+  const costEff = (c: Cert) => nPrint(c) + nEnv(c) + nCard(c) + nPost(c);
   const dirty = (c: Cert) => {
     const e = edits[c.id]; if (!e) return false;
-    return (e.env !== undefined && (Number(e.env) || 0) !== (c.costEnvelope || 0))
+    return (e.print !== undefined && (Number(e.print) || 0) !== (c.costPrint || 0))
+      || (e.env !== undefined && (Number(e.env) || 0) !== (c.costEnvelope || 0))
       || (e.card !== undefined && (Number(e.card) || 0) !== (c.costCard || 0))
       || (e.post !== undefined && (Number(e.post) || 0) !== (c.costPostage || 0))
       || (e.trk !== undefined && e.trk.trim() !== (c.tracking || ''));
   };
   async function saveRow(c: Cert) {
     setBusyId(c.id);
-    const patch: Partial<Cert> = { costEnvelope: nEnv(c), costCard: nCard(c), costPostage: nPost(c), tracking: g(c, 'trk', c.tracking || '').trim() };
+    const patch: Partial<Cert> = { costPrint: nPrint(c), costEnvelope: nEnv(c), costCard: nCard(c), costPostage: nPost(c), tracking: g(c, 'trk', c.tracking || '').trim() };
     try {
       await api.post('/api/teacher/certs/cost', { id: c.id, ...patch });
       onPatch(c.id, patch);
@@ -186,19 +189,21 @@ function Pnl({ certs, onPatch }: { certs: Cert[]; onPatch: (id: string, patch: P
       setSavedId(c.id);
     } catch { /* 下次再存 */ } finally { setBusyId(''); }
   }
+  const applyEmpty = printAll === '' && envAll === '' && cardAll === '' && postAll === '';
   async function applyAll() {
-    if (envAll === '' && cardAll === '' && postAll === '') return;
+    if (applyEmpty) return;
     setApplying(true);
     try {
       for (const c of certs) {
         const patch: Partial<Cert> = {};
+        if (printAll !== '') patch.costPrint = Number(printAll) || 0;
         if (envAll !== '') patch.costEnvelope = Number(envAll) || 0;
         if (cardAll !== '') patch.costCard = Number(cardAll) || 0;
         if (postAll !== '') patch.costPostage = Number(postAll) || 0;
         await api.post('/api/teacher/certs/cost', { id: c.id, ...patch });
         onPatch(c.id, patch);
       }
-      setEdits({}); setEnvAll(''); setCardAll(''); setPostAll(''); setSavedId('*');
+      setEdits({}); setPrintAll(''); setEnvAll(''); setCardAll(''); setPostAll(''); setSavedId('*');
     } catch { /* ignore */ } finally { setApplying(false); }
   }
   const t = certs.reduce((a, c) => ({ rev: a.rev + revOf(c), cost: a.cost + costEff(c), profit: a.profit + (revOf(c) - costEff(c)) }), { rev: 0, cost: 0, profit: 0 });
@@ -207,14 +212,14 @@ function Pnl({ certs, onPatch }: { certs: Cert[]; onPatch: (id: string, patch: P
   function exportCsv() {
     const cols: [string, (c: Cert) => unknown][] = [
       ['編號', (c) => c.serial], ['收件中文名', (c) => c.recipientName], ['英文名', (c) => c.studentName], ['講師', (c) => c.instructorName],
-      ['實收', (c) => revOf(c)], ['信封', (c) => nEnv(c)], ['卡紙', (c) => nCard(c)], ['掛號', (c) => nPost(c)],
+      ['實收', (c) => revOf(c)], ['輸出', (c) => nPrint(c)], ['信封', (c) => nEnv(c)], ['卡紙', (c) => nCard(c)], ['掛號', (c) => nPost(c)],
       ['成本', (c) => costEff(c)], ['賺虧', (c) => revOf(c) - costEff(c)], ['郵局單號', (c) => c.tracking],
       ['已匯款', (c) => (c.paid ? '是' : '')], ['後五碼', (c) => c.payLast5], ['已結算', (c) => (c.settled ? '是' : '')],
     ];
     const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const lines = [cols.map((x) => x[0]).join(',')];
     for (const c of certs) lines.push(cols.map((x) => esc(x[1](c))).join(','));
-    lines.push(['合計', '', '', '', t.rev, '', '', '', t.cost, t.profit, '', '', '', ''].map(esc).join(','));
+    lines.push(['合計', '', '', '', t.rev, '', '', '', '', t.cost, t.profit, '', '', '', ''].map(esc).join(','));
     downloadBlob(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }), `證書費用損益_${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
@@ -225,20 +230,21 @@ function Pnl({ certs, onPatch }: { certs: Cert[]; onPatch: (id: string, patch: P
         <span className="t-spacer" />
         {certs.length > 0 && <button className="t-btn t-btn--ghost t-btn--sm" onClick={exportCsv}><Icon name="download" size={14} /> 匯出證書費用 CSV</button>}
       </div>
-      <p className="t-intro" style={{ marginBottom: 10 }}>填信封／卡紙／掛號成本和郵局單號，<b>按該列的「存」才會寫入</b>（不會自己亂跳）。信封／卡紙每張多半一樣，用下面「統一套用」一次帶到全部，再逐張改掛號。賺＝實收−成本。單號存了講師在自己的清單也看得到，能自己查件。</p>
+      <p className="t-intro" style={{ marginBottom: 10 }}>填<b>輸出</b>（印證書的費用）／信封／卡紙／掛號成本和郵局單號，<b>按該列的「存」才會寫入</b>（不會自己亂跳）。輸出／信封／卡紙每張多半一樣，用下面「統一套用」一次帶到全部，再逐張改掛號。賺＝實收−成本。單號存了講師在自己的清單也看得到，能自己查件。</p>
       <div className="t-applybar">
         <span style={{ fontWeight: 700, fontSize: 13 }}>統一套用</span>
+        <label>輸出 {numIn(printAll, setPrintAll)}</label>
         <label>信封 {numIn(envAll, setEnvAll)}</label>
         <label>卡紙 {numIn(cardAll, setCardAll)}</label>
         <label>掛號 {numIn(postAll, setPostAll)}</label>
-        <button className="t-btn t-btn--brand t-btn--sm" disabled={applying || (envAll === '' && cardAll === '' && postAll === '')} onClick={applyAll}>{applying ? '套用中…' : `套用到全部 ${certs.length} 筆`}</button>
+        <button className="t-btn t-btn--brand t-btn--sm" disabled={applying || applyEmpty} onClick={applyAll}>{applying ? '套用中…' : `套用到全部 ${certs.length} 筆`}</button>
         <span className="t-f__help" style={{ margin: 0 }}>只套有填的欄位，空白不動。</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table className="t-report t-pnl">
           <thead><tr>
             <th>學員／講師</th><th className="num">實收</th>
-            <th className="num">信封</th><th className="num">卡紙</th><th className="num">掛號</th>
+            <th className="num">輸出</th><th className="num">信封</th><th className="num">卡紙</th><th className="num">掛號</th>
             <th className="num">成本</th><th className="num">賺／虧</th><th>郵局單號</th><th></th>
           </tr></thead>
           <tbody>
@@ -249,6 +255,7 @@ function Pnl({ certs, onPatch }: { certs: Cert[]; onPatch: (id: string, patch: P
                 <tr key={c.id}>
                   <td><Name zh={c.recipientName} en={c.studentName} /><br /><span style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>{c.instructorName}{c.serial ? `　${c.serial}` : ''}</span></td>
                   <td className="num">{c.paid ? money(rev) : <span style={{ color: 'var(--t-fg-3)' }}>未付</span>}</td>
+                  <td className="num">{numIn(g(c, 'print', c.costPrint ? String(c.costPrint) : ''), (v) => setField(c.id, 'print', v))}</td>
                   <td className="num">{numIn(g(c, 'env', c.costEnvelope ? String(c.costEnvelope) : ''), (v) => setField(c.id, 'env', v))}</td>
                   <td className="num">{numIn(g(c, 'card', c.costCard ? String(c.costCard) : ''), (v) => setField(c.id, 'card', v))}</td>
                   <td className="num">{numIn(g(c, 'post', c.costPostage ? String(c.costPostage) : ''), (v) => setField(c.id, 'post', v))}</td>
@@ -263,7 +270,7 @@ function Pnl({ certs, onPatch }: { certs: Cert[]; onPatch: (id: string, patch: P
           </tbody>
           <tfoot><tr>
             <td>合計</td><td className="num">{money(t.rev)}</td>
-            <td className="num" colSpan={3}>成本合計 →</td>
+            <td className="num" colSpan={4}>成本合計 →</td>
             <td className="num">{money(t.cost)}</td>
             <td className="num" style={{ color: t.profit >= 0 ? 'var(--t-ok)' : 'var(--t-danger)' }}>{money(t.profit)}</td>
             <td></td><td></td>

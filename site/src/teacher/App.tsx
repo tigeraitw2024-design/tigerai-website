@@ -11,6 +11,10 @@ import Roster from './views/Roster';
 import CertSettings from './views/CertSettings';
 import './teacher.css';
 
+// 建置版本號（astro.config 在 build 時注入）：時間＋git SHA，給主帳號確認線上是哪一版。
+declare const __BUILD_ID__: string;
+const BUILD_ID = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev';
+
 /**
  * 講師區（證照系統）的前端殼。
  *
@@ -103,6 +107,8 @@ export default function App() {
           <a key={v} href={'#/' + v} data-on={view === v ? '1' : '0'}><Icon name={icon} size={20} /> {label}</a>
         ))}
       </nav>
+
+      <div className="t-ver">虎智講師區　版本 {BUILD_ID}</div>
     </div>
   );
 }

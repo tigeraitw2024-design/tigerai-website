@@ -5,7 +5,7 @@ import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
   acceptCerts, requestEdit, clearEditRequest, deleteCert, deleteInstructor,
-  markSettled, markPaid, returnCert, clearReturn, reassignCerts, setCost, setInvoiced, rejectPay,
+  markSettled, markPaid, returnCert, clearReturn, reassignCerts, setCost, setInvoiced, rejectPay, shipCerts,
 } from './store';
 import { certificatesCollection, instructorsCollection } from './schema';
 import {
@@ -88,6 +88,7 @@ app.use('/certs/*', requireTeacher);
 app.use('/certs', requireTeacher);
 app.use('/report', requireTeacher);
 app.use('/billing', requireTeacher);
+app.use('/export', requireTeacher);
 app.use('/instructors', requireTeacher);
 app.use('/instructors/*', requireTeacher);
 app.use('/settings', requireTeacher);
@@ -238,6 +239,24 @@ app.post('/certs/pay', async (ctx) => {
   if (on && needInvoice && !String(taxId || '').trim()) return ctx.json({ error: '要開發票就要填統一編號' }, 400);
   const n = await markPaid(ctx.env.DB, ids, on, { needInvoice: !!needInvoice, taxId, buyer, payLast5 });
   return ctx.json({ ok: true, count: n });
+});
+
+// 寄出（owner）：一次標記寄出＋填每筆郵局單號/掛號費＋套本批共同成本（輸出/信封/卡紙）。
+app.post('/certs/ship', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能標記寄出' }, 403);
+  const { items, batch } = await ctx.req.json<{ items: { id: string; tracking?: string; costPostage?: number }[]; batch?: any }>();
+  if (!Array.isArray(items) || !items.length) return ctx.json({ error: '沒有選到要寄出的' }, 400);
+  const n = await shipCerts(ctx.env.DB, items, batch || {});
+  return ctx.json({ ok: true, count: n });
+});
+
+// 完整備份（owner）：把名冊＋全部證照資料倒出來，前端存成 JSON 檔。
+app.get('/export', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能匯出備份' }, 403);
+  const [instructors, certs, settings] = await Promise.all([
+    listInstructors(ctx.env.DB), listCerts(ctx.env.DB, {}), getSettings(ctx.env.DB),
+  ]);
+  return ctx.json({ exportedAt: new Date().toISOString(), instructors, certs, settings });
 });
 
 // 設定一筆的寄送成本＋郵局單號（owner）。

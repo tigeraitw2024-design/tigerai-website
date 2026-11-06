@@ -1,5 +1,11 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import { execSync } from 'node:child_process';
+
+// 建置版本號：git 短 SHA ＋ 建置時間（台北）。注入前端讓主帳號一眼確認線上是哪一版。
+let sha = '';
+try { sha = execSync('git rev-parse --short HEAD').toString().trim(); } catch { /* 沒 git 就算了 */ }
+const BUILD_ID = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' ') + (sha ? ' · ' + sha : '');
 
 // 前台全部靜態產生（不吃 Cloudflare Workers 的運算額度）。
 // 每頁是一個 React 元件（原型 .dc.html 的 class 直接移植過來），
@@ -13,4 +19,5 @@ export default defineConfig({
   integrations: [react()],
   build: { format: 'directory', inlineStylesheets: 'never' },
   devToolbar: { enabled: false },
+  vite: { define: { __BUILD_ID__: JSON.stringify(BUILD_ID) } },
 });

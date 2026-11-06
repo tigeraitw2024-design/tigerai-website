@@ -233,6 +233,33 @@ export async function markCerts(db: D1Database, ids: string[], field: 'printed' 
   return ids.length;
 }
 
+/**
+ * 寄出（owner）：一次把選到的證照標記寄出，並帶入每一筆的郵局單號＋掛號費，
+ * 外加這一批共同的成本（輸出／信封／卡紙，每張一樣）。沒列印的順手補列印。
+ */
+export async function shipCerts(
+  db: D1Database,
+  items: { id: string; tracking?: string; costPostage?: number }[],
+  batch: { costPrint?: number; costEnvelope?: number; costCard?: number } = {},
+) {
+  const now = nowISO();
+  for (const it of items) {
+    const existing = await getRow(db, certificatesCollection, it.id);
+    if (!existing) continue;
+    const data = { ...existing };
+    delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+    if (!data.printed) { data.printed = true; data.printedAt = now; }   // 寄出代表已印
+    data.shipped = true; data.shippedAt = now;
+    if (it.tracking !== undefined) data.tracking = String(it.tracking || '').trim();
+    if (it.costPostage !== undefined) data.costPostage = Number(it.costPostage) || 0;
+    if (batch.costPrint !== undefined) data.costPrint = Number(batch.costPrint) || 0;
+    if (batch.costEnvelope !== undefined) data.costEnvelope = Number(batch.costEnvelope) || 0;
+    if (batch.costCard !== undefined) data.costCard = Number(batch.costCard) || 0;
+    await putRow(db, certificatesCollection, it.id, data);
+  }
+  return items.length;
+}
+
 /** 批次標記已結算／取消結算（owner 收款、對帳後封存用）。 */
 export async function markSettled(db: D1Database, ids: string[], value: boolean) {
   for (const id of ids) {

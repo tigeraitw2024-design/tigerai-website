@@ -72,6 +72,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   const [req, setReq] = useState<Cert | null>(null);      // 正在申請修改的那筆（講師）
   const [ret, setRet] = useState<Cert | null>(null);      // 正在退件的那筆（owner）
   const [reassign, setReassign] = useState(false);        // 改派講師對話框（owner）
+  const [ship, setShip] = useState<Cert[] | null>(null);  // 寄出對話框（填單號/掛號費＋批次成本）
   const [banner, setBanner] = useState('');               // 接單成功提示（含預計天數）
 
   const [billing, setBilling] = useState<BillingConfig | null>(null);
@@ -176,6 +177,15 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     downloadBlob(blob, `證照名單_${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
+  // 下載完整備份（owner）：名冊＋全部證照＋設定，存成 JSON 檔放自己電腦，隨時可查。
+  async function backup() {
+    setErr('');
+    try {
+      const data = await api.get<unknown>('/api/teacher/export');
+      downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), `虎智講師區備份_${new Date().toISOString().slice(0, 10)}.json`);
+    } catch (e: any) { setErr(e.message); }
+  }
+
   // 列印寄送地址標籤：開一個乾淨的列印視窗（一頁多張）。每張含寄件人（回郵）＋收件人＋證書編號。
   function printLabels(list: Cert[]) {
     const esc = (s: unknown) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] as string));
@@ -227,6 +237,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
         <button className="t-btn t-btn--brand t-btn--sm" onClick={() => setModal('add')}><Icon name="plus" size={16} /> 新增</button>
         <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setModal('import')}><Icon name="upload" size={16} /> 匯入 Excel</button>
         {isOwner && rows && rows.length > 0 && <button className="t-btn t-btn--ghost t-btn--sm" onClick={exportCsv}><Icon name="download" size={16} /> 匯出 CSV</button>}
+        {isOwner && <button className="t-btn t-btn--ghost t-btn--sm" onClick={backup}><Icon name="download" size={16} /> 備份</button>}
       </div>
 
       <div className="t-row" style={{ marginBottom: 14, gap: 6, flexWrap: 'wrap' }}>
@@ -350,7 +361,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
           </button>
           {([
             { key: 'printed', label: '列印', icon: 'printer', on: () => mark('printed', true), off: () => mark('printed', false) },
-            { key: 'shipped', label: '寄送', icon: 'truck', on: () => mark('shipped', true), off: () => mark('shipped', false) },
+            { key: 'shipped', label: '寄送', icon: 'truck', on: () => { if (selCerts.length) setShip(selCerts); }, off: () => mark('shipped', false) },
             { key: 'settled', label: '結算', icon: 'check', on: () => settle(true), off: () => settle(false) },
           ] as const).map((g) => (
             <span key={g.key} className="t-markgrp">
@@ -376,6 +387,72 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       {ret && <ReturnModal cert={ret} onClose={() => setRet(null)} onDone={() => { setRet(null); load(); }} />}
       {reassign && <ReassignModal certs={selCerts} onClose={() => setReassign(false)}
         onDone={() => { setReassign(false); setSel(new Set()); load(); }} />}
+      {ship && <ShipModal certs={ship} onClose={() => setShip(null)}
+        onDone={() => { setShip(null); setSel(new Set()); load(); }} />}
+    </div>
+  );
+}
+
+// 寄出（owner）：按「寄送 標記」跳出來。本批共同成本（輸出/信封/卡紙，每張一樣）填上面，
+// 每一張的郵局單號＋掛號費逐筆填（每張寄不同地方，單號、掛號費都不一樣）。已寄過的會帶出現值可改。
+function ShipModal({ certs, onClose, onDone }: { certs: Cert[]; onClose: () => void; onDone: () => void }) {
+  const [cp, setCp] = useState('');   // 輸出（每張）
+  const [ce, setCe] = useState('');   // 信封
+  const [cc, setCc] = useState('');   // 卡紙
+  const [rows, setRows] = useState(() => certs.map((c) => ({
+    id: c.id, zh: c.recipientName, en: c.studentName, serial: c.serial,
+    tracking: c.tracking || '', postage: c.costPostage ? String(c.costPostage) : '',
+  })));
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const setRow = (id: string, k: 'tracking' | 'postage', v: string) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, [k]: v } : r)));
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(''); setBusy(true);
+    const items = rows.map((r) => ({ id: r.id, tracking: r.tracking.trim(), costPostage: Number(r.postage) || 0 }));
+    const batch: Record<string, number> = {};
+    if (cp !== '') batch.costPrint = Number(cp) || 0;
+    if (ce !== '') batch.costEnvelope = Number(ce) || 0;
+    if (cc !== '') batch.costCard = Number(cc) || 0;
+    try { await api.post('/api/teacher/certs/ship', { items, batch }); onDone(); }
+    catch (e: any) { setErr(e.message); setBusy(false); }
+  }
+
+  return (
+    <div className="t-modal" onClick={onClose}>
+      <form className="t-modal__box" style={{ maxWidth: 680, width: '94vw' }} onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="t-modal__head"><h3>標記寄出（{certs.length} 張）</h3>
+          <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
+        <p className="t-f__help" style={{ marginBottom: 10 }}>去郵局寄完回來填。<b>本批共同成本</b>（每張一樣）填這排；<b>每一張的郵局單號和掛號費</b>逐筆填（各寄不同地方，不會一樣）。空白就不動。</p>
+        {err && <div className="t-msg t-msg--err">{err}</div>}
+        <div className="t-row" style={{ gap: 10, marginBottom: 12 }}>
+          <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">輸出（每張）</label>
+            <input className="t-input" type="number" min={0} value={cp} onChange={(e) => setCp(e.target.value)} placeholder="印證書費" /></div>
+          <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">信封（每張）</label>
+            <input className="t-input" type="number" min={0} value={ce} onChange={(e) => setCe(e.target.value)} /></div>
+          <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">卡紙（每張）</label>
+            <input className="t-input" type="number" min={0} value={cc} onChange={(e) => setCc(e.target.value)} /></div>
+        </div>
+        <div style={{ overflowY: 'auto', maxHeight: '48vh', border: '1px solid var(--t-line)', borderRadius: 6 }}>
+          <table className="t-report">
+            <thead><tr><th>學員</th><th>郵局單號</th><th className="num" style={{ width: 110 }}>掛號費</th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td><Name zh={r.zh} en={r.en} />{r.serial ? <><br /><span className="t-mono" style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>{r.serial}</span></> : null}</td>
+                  <td><input className="t-input" value={r.tracking} onChange={(e) => setRow(r.id, 'tracking', e.target.value)} placeholder="郵局單號" /></td>
+                  <td className="num"><input className="t-input" type="number" min={0} style={{ width: 96, textAlign: 'right' }} value={r.postage} onChange={(e) => setRow(r.id, 'postage', e.target.value)} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="t-row" style={{ marginTop: 12 }}>
+          <button className="t-btn t-btn--brand" disabled={busy}>{busy ? '處理中…' : `確定寄出 ${certs.length} 張`}</button>
+          <button type="button" className="t-btn t-btn--ghost" onClick={onClose}>取消</button>
+        </div>
+      </form>
     </div>
   );
 }

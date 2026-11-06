@@ -396,13 +396,16 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
 // 寄出（owner）：按「寄送 標記」跳出來。本批共同成本（輸出/信封/卡紙，每張一樣）填上面，
 // 每一張的郵局單號＋掛號費逐筆填（每張寄不同地方，單號、掛號費都不一樣）。已寄過的會帶出現值可改。
 function ShipModal({ certs, onClose, onDone }: { certs: Cert[]; onClose: () => void; onDone: () => void }) {
-  const [cp, setCp] = useState('');   // 輸出（每張）
-  const [ce, setCe] = useState('');   // 信封
-  const [cc, setCc] = useState('');   // 卡紙
+  const [cp, setCp] = useState('');     // 輸出（每張）
+  const [ce, setCe] = useState('');     // 信封
+  const [cc, setCc] = useState('');     // 卡紙
+  const [cpost, setCpost] = useState(''); // 寄件費（每張，掛號費；填了就套到全部，特例逐筆再改）
   const [rows, setRows] = useState(() => certs.map((c) => ({
     id: c.id, zh: c.recipientName, en: c.studentName, serial: c.serial,
     tracking: c.tracking || '', postage: c.costPostage ? String(c.costPostage) : '',
   })));
+  // 改批次寄件費＝把每一列都帶成這個值（之後要哪一列不一樣再單獨改）
+  const setPostAll = (v: string) => { setCpost(v); setRows((rs) => rs.map((r) => ({ ...r, postage: v }))); };
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const setRow = (id: string, k: 'tracking' | 'postage', v: string) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, [k]: v } : r)));
@@ -424,19 +427,21 @@ function ShipModal({ certs, onClose, onDone }: { certs: Cert[]; onClose: () => v
       <form className="t-modal__box" style={{ maxWidth: 680, width: '94vw' }} onClick={(e) => e.stopPropagation()} onSubmit={submit}>
         <div className="t-modal__head"><h3>標記寄出（{certs.length} 張）</h3>
           <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
-        <p className="t-f__help" style={{ marginBottom: 10 }}>去郵局寄完回來填。<b>本批共同成本</b>（每張一樣）填這排；<b>每一張的郵局單號和掛號費</b>逐筆填（各寄不同地方，不會一樣）。空白就不動。</p>
+        <p className="t-f__help" style={{ marginBottom: 10 }}>去郵局寄完回來填。<b>本批共同成本</b>（每張一樣，含寄件費）填這排，會自動帶到每一張；<b>每一張的郵局單號</b>逐筆填（各寄不同地方）。哪一張寄件費不一樣，下面那一列再單獨改。空白就不動。</p>
         {err && <div className="t-msg t-msg--err">{err}</div>}
-        <div className="t-row" style={{ gap: 10, marginBottom: 12 }}>
-          <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">輸出（每張）</label>
+        <div className="t-row" style={{ gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div className="t-f" style={{ flex: '1 1 130px', margin: 0 }}><label className="t-f__label">輸出（每張）</label>
             <input className="t-input" type="number" min={0} value={cp} onChange={(e) => setCp(e.target.value)} placeholder="印證書費" /></div>
-          <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">信封（每張）</label>
+          <div className="t-f" style={{ flex: '1 1 130px', margin: 0 }}><label className="t-f__label">信封（每張）</label>
             <input className="t-input" type="number" min={0} value={ce} onChange={(e) => setCe(e.target.value)} /></div>
-          <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">卡紙（每張）</label>
+          <div className="t-f" style={{ flex: '1 1 130px', margin: 0 }}><label className="t-f__label">卡紙（每張）</label>
             <input className="t-input" type="number" min={0} value={cc} onChange={(e) => setCc(e.target.value)} /></div>
+          <div className="t-f" style={{ flex: '1 1 130px', margin: 0 }}><label className="t-f__label">寄件費（每張）</label>
+            <input className="t-input" type="number" min={0} value={cpost} onChange={(e) => setPostAll(e.target.value)} placeholder="掛號費" /></div>
         </div>
-        <div style={{ overflowY: 'auto', maxHeight: '48vh', border: '1px solid var(--t-line)', borderRadius: 6 }}>
+        <div style={{ overflowY: 'auto', maxHeight: '44vh', border: '1px solid var(--t-line)', borderRadius: 6 }}>
           <table className="t-report">
-            <thead><tr><th>學員</th><th>郵局單號</th><th className="num" style={{ width: 110 }}>掛號費</th></tr></thead>
+            <thead><tr><th>學員</th><th>郵局單號</th><th className="num" style={{ width: 120 }}>寄件費（可改）</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>

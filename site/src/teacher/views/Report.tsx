@@ -165,7 +165,7 @@ function Summary({ certs }: { certs: Cert[] }) {
   function exportCsv() {
     const cols: [string, (c: Cert) => unknown][] = [
       ['編號', (c) => c.serial], ['收件中文名', (c) => c.recipientName], ['英文名', (c) => c.studentName], ['講師', (c) => c.instructorName],
-      ['實收', (c) => revOf(c)], ['輸出', (c) => Number(c.costPrint) || 0], ['信封', (c) => Number(c.costEnvelope) || 0], ['卡紙', (c) => Number(c.costCard) || 0], ['掛號', (c) => Number(c.costPostage) || 0],
+      ['實收', (c) => revOf(c)], ['輸出', (c) => Number(c.costPrint) || 0], ['信封', (c) => Number(c.costEnvelope) || 0], ['卡紙', (c) => Number(c.costCard) || 0], ['寄件費', (c) => Number(c.costPostage) || 0],
       ['成本', (c) => costOf(c)], ['賺虧', (c) => revOf(c) - costOf(c)], ['郵局單號', (c) => c.tracking],
       ['已匯款', (c) => (c.paid ? '是' : '')], ['後五碼', (c) => c.payLast5], ['已結算', (c) => (c.settled ? '是' : '')],
     ];
@@ -183,7 +183,7 @@ function Summary({ certs }: { certs: Cert[] }) {
         <span className="t-spacer" />
         {certs.length > 0 && <button className="t-btn t-btn--ghost t-btn--sm" onClick={exportCsv}><Icon name="download" size={14} /> 匯出逐筆明細 CSV</button>}
       </div>
-      <p className="t-intro" style={{ marginBottom: 10 }}>成本在「寄出」時填（輸出／信封／卡紙整批一價、掛號逐張），這裡只看總計、不用逐筆對。賺＝實收−成本。</p>
+      <p className="t-intro" style={{ marginBottom: 10 }}>成本在「寄出」時填（輸出／信封／卡紙／寄件費每張一價，特例逐筆改），這裡只看總計、不用逐筆對。賺＝實收−成本。</p>
       <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))' }}>
         <div className="t-money__cell"><div className="t-money__v">NT$ {money(s.rev)}</div><div className="t-money__l">總實收（已匯款 {s.paid} 張）</div></div>
         <div className="t-money__cell" data-warn="1"><div className="t-money__v">NT$ {money(cost)}</div><div className="t-money__l">總成本</div></div>
@@ -191,7 +191,7 @@ function Summary({ certs }: { certs: Cert[] }) {
       </div>
       <div style={{ overflowX: 'auto', marginTop: 12 }}>
         <table className="t-report" style={{ maxWidth: 560 }}>
-          <thead><tr><th>成本項目</th><th className="num">輸出</th><th className="num">信封</th><th className="num">卡紙</th><th className="num">掛號</th><th className="num">合計</th></tr></thead>
+          <thead><tr><th>成本項目</th><th className="num">輸出</th><th className="num">信封</th><th className="num">卡紙</th><th className="num">寄件費</th><th className="num">合計</th></tr></thead>
           <tbody><tr><td>全部加總</td><td className="num">{money(s.print)}</td><td className="num">{money(s.env)}</td><td className="num">{money(s.card)}</td><td className="num">{money(s.post)}</td><td className="num"><b>{money(cost)}</b></td></tr></tbody>
         </table>
       </div>

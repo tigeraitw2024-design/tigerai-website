@@ -200,6 +200,7 @@ export async function createCert(
     costEnvelope: 0, costCard: 0, costPostage: 0,
     // 付款/發票（付款方自己標已匯款、要不要發票、統編）
     paid: false, paidAt: '', paidNet: 0, paidTax: 0, paidAmount: 0, payLast5: '',
+    payReject: '', // owner 對不到帳駁回的原因（講師重新確認後清掉）
     needInvoice: false, taxId: '', invoiceBuyer: '',
     invoiced: false, invoiceNo: '',
   };
@@ -268,6 +269,7 @@ export async function markPaid(
       data.needInvoice = needInvoice; data.taxId = needInvoice ? String(opts.taxId || '').trim() : '';
       data.invoiceBuyer = String(opts.buyer || '').trim();
       data.payLast5 = String(opts.payLast5 || '').replace(/\D/g, '').slice(-5); // 匯款帳號後五碼，只留數字
+      data.payReject = ''; // 重新送出＝清掉上次的駁回
       data.paidNet = net; data.paidTax = tax; data.paidAmount = net + tax;
     } else {
       data.paid = false; data.paidAt = '';
@@ -277,6 +279,21 @@ export async function markPaid(
     await putRow(db, certificatesCollection, id, data);
   }
   return ids.length;
+}
+
+/**
+ * 駁回匯款（owner 對不到帳）：把這筆退回未匯款狀態、附原因，講師會看到要重新確認。
+ * 清掉匯款資訊（後五碼、金額、時間），但保留發票意願／統編／買受人，重送時不用再填。
+ */
+export async function rejectPay(db: D1Database, id: string, reason: string) {
+  const existing = await getRow(db, certificatesCollection, id);
+  if (!existing) return;
+  const data = { ...existing };
+  delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+  data.paid = false; data.paidAt = ''; data.payLast5 = '';
+  data.paidNet = 0; data.paidTax = 0; data.paidAmount = 0;
+  data.payReject = String(reason || '').trim() || '請重新確認匯款';
+  return putRow(db, certificatesCollection, id, data);
 }
 
 /** 設定一筆的寄送成本（信封／卡紙／掛號）與郵局單號（owner）。只覆蓋有帶的欄位。 */

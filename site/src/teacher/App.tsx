@@ -60,7 +60,8 @@ export default function App() {
   const NAV: [View, string, string][] = [
     ['dashboard', 'grid', '總覽'],
     ['certs', 'list', '證照'],
-    ['checkout', 'receipt', '結帳'],
+    // 同一頁依身分不同：講師＝「結帳」（付款），主帳號＝「開發票」（勾選→三聯單→標已開，不收款）。
+    ['checkout', 'receipt', isOwner ? '開發票' : '結帳'],
     ['report', 'chart', '對帳'],
     ...(isOwner ? [
       ['generate', 'award', '產生證照'],

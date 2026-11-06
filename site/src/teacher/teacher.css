@@ -241,6 +241,10 @@ button.t-stat:hover { border-color: var(--t-brand); }
 /* 隱藏 number 輸入的上下箭頭，欄位才不會被擠 */
 .t-pnl__in::-webkit-outer-spin-button, .t-pnl__in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .t-pnl__in { -moz-appearance: textfield; }
+/* 逐筆損益的「統一套用」列 */
+.t-applybar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--t-brand-soft); border: 1px solid var(--t-line); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+.t-applybar label { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; }
+.t-applybar .t-pnl__in { width: 72px; }
 
 /* 結帳：待結帳／已匯款列 */
 .t-payrow { display: flex; align-items: center; gap: 10px; padding: 10px 6px; border-top: 1px solid var(--t-line); cursor: pointer; }

@@ -169,7 +169,11 @@ body.tg-teacher {
 .t-f__err { margin-top: 5px; font-size: 12px; color: var(--t-danger); }
 
 /* 儀表板統計卡 */
-.t-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 12px; margin-top: 16px; }
+/* 儀表板分區標題（金額／證照狀態） */
+.t-dash-sec { margin-top: 18px; }
+.t-dash-sec__h { font-size: 13px; font-weight: 700; color: var(--t-fg-2); margin: 0 0 8px; letter-spacing: .04em; }
+.t-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 760px) { .t-stats { grid-template-columns: repeat(4, 1fr); } }
 .t-stat { text-align: left; background: var(--t-panel); border: 1px solid var(--t-line); border-left: 4px solid var(--t-line-2); padding: 16px; display: grid; gap: 5px; cursor: default; font: inherit; color: inherit; }
 button.t-stat { cursor: pointer; }
 button.t-stat:hover { border-color: var(--t-brand); }

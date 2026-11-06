@@ -67,14 +67,17 @@ export default function Dashboard({ user }: { user: TeacherUser }) {
         </a>
       )}
 
-      {/* 主帳號：已繳／未繳、已收／未收 大面板 */}
+      {/* 主帳號：金額一覽（已繳／未繳、已收／未收） */}
       {isOwner && (
-        <div className="t-money">
-          <div className="t-money__cell"><div className="t-money__v">{paidRows.length}</div><div className="t-money__l">已繳款（人／張）</div></div>
-          <div className="t-money__cell" data-warn={dueCount > 0 ? '1' : undefined}><div className="t-money__v">{dueCount}</div><div className="t-money__l">未繳款（已出貨待收）</div></div>
-          <div className="t-money__cell"><div className="t-money__v">NT$ {money(collected)}</div><div className="t-money__l">已收款（代收）</div></div>
-          <div className="t-money__cell" data-warn={dueAmount > 0 ? '1' : undefined}><div className="t-money__v">NT$ {money(dueAmount)}</div><div className="t-money__l">未收款（未代收）</div></div>
-        </div>
+        <section className="t-dash-sec">
+          <h2 className="t-dash-sec__h">金額一覽</h2>
+          <div className="t-money">
+            <div className="t-money__cell"><div className="t-money__v">{paidRows.length}</div><div className="t-money__l">已繳款（人／張）</div></div>
+            <div className="t-money__cell" data-warn={dueCount > 0 ? '1' : undefined}><div className="t-money__v">{dueCount}</div><div className="t-money__l">未繳款（已出貨待收）</div></div>
+            <div className="t-money__cell"><div className="t-money__v">NT$ {money(collected)}</div><div className="t-money__l">已收款（代收）</div></div>
+            <div className="t-money__cell" data-warn={dueAmount > 0 ? '1' : undefined}><div className="t-money__v">NT$ {money(dueAmount)}</div><div className="t-money__l">未收款（未代收）</div></div>
+          </div>
+        </section>
       )}
 
       {isOwner && (n.pending > 0 || n.editreq > 0 || n.printedWait > 0) && (
@@ -88,13 +91,16 @@ export default function Dashboard({ user }: { user: TeacherUser }) {
         </div>
       )}
 
-      <div className="t-stats">
-        <Card label="待確認" value={n.pending} filter="pending" tone="off" />
-        <Card label="製作中" value={n.making} filter="making" tone="warn" />
-        <Card label="已列印待寄" value={n.printedWait} filter="printed" tone="warn" />
-        <Card label="已寄出" value={n.shipped} filter="shipped" tone="ok" />
-        <Card label="全部" value={n.all} filter="all" />
-      </div>
+      {/* 證照狀態（四格對齊；全部張數放標題） */}
+      <section className="t-dash-sec">
+        <h2 className="t-dash-sec__h">證照狀態（全部 {n.all} 張）</h2>
+        <div className="t-stats">
+          <Card label="待確認" value={n.pending} filter="pending" tone="off" />
+          <Card label="製作中" value={n.making} filter="making" tone="warn" />
+          <Card label="已列印待寄" value={n.printedWait} filter="printed" tone="warn" />
+          <Card label="已寄出" value={n.shipped} filter="shipped" tone="ok" />
+        </div>
+      </section>
 
       {rows.length === 0 && (
         <div className="t-empty" style={{ marginTop: 16 }}>

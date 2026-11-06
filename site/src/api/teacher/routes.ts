@@ -5,7 +5,7 @@ import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
   acceptCerts, requestEdit, clearEditRequest, deleteCert, deleteInstructor,
-  markSettled, returnCert, clearReturn,
+  markSettled, markPaid, returnCert, clearReturn,
 } from './store';
 import { certificatesCollection } from './schema';
 import {
@@ -87,6 +87,7 @@ app.get('/auth/google/callback', async (ctx) => {
 app.use('/certs/*', requireTeacher);
 app.use('/certs', requireTeacher);
 app.use('/report', requireTeacher);
+app.use('/billing', requireTeacher);
 app.use('/instructors', requireTeacher);
 app.use('/instructors/*', requireTeacher);
 app.use('/settings', requireTeacher);
@@ -220,6 +221,25 @@ app.post('/certs/settle', async (ctx) => {
   return ctx.json({ ok: true, count: n });
 });
 
+// 標記已匯款／取消（付款方）：講師只能標自己的、owner 可標全部。
+// 要不要發票（含稅）＋統編整批帶進來，金額用當下設定快照。
+app.post('/certs/pay', async (ctx) => {
+  const t = ctx.get('teacher');
+  const { ids, value, needInvoice, taxId } = await ctx.req.json<{ ids: string[]; value?: boolean; needInvoice?: boolean; taxId?: string }>();
+  if (!Array.isArray(ids) || !ids.length) return ctx.json({ error: '沒有選到要結帳的項目' }, 400);
+  if (!owner(ctx)) {
+    for (const id of ids) {
+      const r = await getRow(ctx.env.DB, certificatesCollection, id);
+      if (!r) return ctx.json({ error: '找不到某一筆' }, 404);
+      if (r.instructorId !== t.id) return ctx.json({ error: '不能幫別人結帳' }, 403);
+    }
+  }
+  const on = value !== false;
+  if (on && needInvoice && !String(taxId || '').trim()) return ctx.json({ error: '要開發票就要填統一編號' }, 400);
+  const n = await markPaid(ctx.env.DB, ids, on, { needInvoice: !!needInvoice, taxId });
+  return ctx.json({ ok: true, count: n });
+});
+
 // 退件（owner）：退回講師並附原因
 app.post('/certs/:id/return', async (ctx) => {
   if (!owner(ctx)) return ctx.json({ error: '只有 owner 能退件' }, 403);
@@ -233,6 +253,18 @@ app.get('/report', async (ctx) => {
   const t = ctx.get('teacher');
   const scopeId = owner(ctx) ? undefined : t.id;   // 講師只對自己的帳；owner 看全部
   return ctx.json({ rows: await certReport(ctx.env.DB, scopeId) });
+});
+
+// 金流設定（單價、稅率、結帳日、匯款銀行）：任何登入者都讀得到，結帳頁要用。
+// 只回帳務相關欄位，不外洩其他設定。
+app.get('/billing', async (ctx) => {
+  const s = await getSettings(ctx.env.DB);
+  return ctx.json({
+    billing: {
+      unitPrice: s.unitPrice, taxRate: s.taxRate, settleDay: s.settleDay,
+      bankName: s.bankName, bankBranch: s.bankBranch, bankAccount: s.bankAccount, bankHolder: s.bankHolder,
+    },
+  });
 });
 
 // 獎狀設定（格式與內容）：只有 owner 能看與改。

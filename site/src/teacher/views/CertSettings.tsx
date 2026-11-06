@@ -200,6 +200,39 @@ export default function CertSettings() {
           </div>
 
           <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">金流／帳務</div>
+            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>單價、稅率、匯款帳戶改這裡，<b>所有講師結帳看到的都一樣</b>。量大想降價就改單價。</p>
+            <div className="t-row" style={{ gap: 10 }}>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}>
+                <label className="t-f__label">單價（未稅）</label>
+                <input className="t-input" type="number" min={0} value={s.unitPrice}
+                  onChange={(e) => set('unitPrice', Number(e.target.value) || 0)} />
+              </div>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}>
+                <label className="t-f__label">稅率 %</label>
+                <input className="t-input" type="number" min={0} max={100} value={s.taxRate}
+                  onChange={(e) => set('taxRate', Number(e.target.value) || 0)} />
+              </div>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}>
+                <label className="t-f__label">結帳日</label>
+                <input className="t-input" type="number" min={1} max={28} value={s.settleDay}
+                  onChange={(e) => set('settleDay', Number(e.target.value) || 1)} />
+              </div>
+            </div>
+            <p className="t-f__help" style={{ margin: '6px 0 10px' }}>含稅價＝{s.unitPrice} ×（1＋{s.taxRate}%）＝<b>{s.unitPrice + Math.round(s.unitPrice * s.taxRate / 100)}</b> 元（要發票時收這個）。每月 {s.settleDay} 號結帳。</p>
+            <div className="t-f" style={{ marginBottom: 8 }}><label className="t-f__label">匯款銀行</label>
+              <input className="t-input" value={s.bankName} onChange={(e) => set('bankName', e.target.value)} placeholder="永豐銀行（807）" /></div>
+            <div className="t-row" style={{ gap: 10, marginBottom: 8 }}>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">分行</label>
+                <input className="t-input" value={s.bankBranch} onChange={(e) => set('bankBranch', e.target.value)} placeholder="東湖分行" /></div>
+              <div className="t-f" style={{ flex: 1.3, margin: 0 }}><label className="t-f__label">帳號</label>
+                <input className="t-input" value={s.bankAccount} onChange={(e) => set('bankAccount', e.target.value)} placeholder="15401800121317" /></div>
+            </div>
+            <div className="t-f" style={{ marginBottom: 0 }}><label className="t-f__label">戶名</label>
+              <input className="t-input" value={s.bankHolder} onChange={(e) => set('bankHolder', e.target.value)} placeholder="虎智科技股份有限公司" /></div>
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
             <div className="t-panel__h">寄送設定</div>
             <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>按「接單」時用這個算預計寄出日＝接單日＋印刷＋寄送天數。</p>
             <div className="t-row" style={{ gap: 10 }}>

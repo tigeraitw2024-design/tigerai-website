@@ -234,4 +234,27 @@ button.t-stat:hover { border-color: var(--t-brand); }
 .t-report td.num, .t-report th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .t-report tfoot td { font-weight: 800; border-top: 2px solid var(--t-line-2); }
 
+/* 結帳：待結帳／已匯款列 */
+.t-payrow { display: flex; align-items: center; gap: 10px; padding: 10px 6px; border-top: 1px solid var(--t-line); cursor: pointer; }
+.t-payrow:first-of-type { border-top: none; }
+.t-payrow[data-sel='1'] { background: var(--t-brand-soft); }
+.t-payrow input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--t-brand); flex: none; }
+.t-payrow__name { font-weight: 600; white-space: nowrap; }
+.t-payrow__meta { color: var(--t-fg-3); font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-payrow__amt { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* 統一發票（三聯式）試算 */
+.t-inv { border: 1.5px solid var(--t-fg); border-radius: 8px; padding: 14px; background: #fff; }
+.t-inv__title { text-align: center; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
+.t-inv__sub { text-align: center; font-size: 12px; color: var(--t-fg-2); margin-top: 2px; }
+.t-inv__party { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin: 10px 0; flex-wrap: wrap; }
+.t-invtbl { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.t-invtbl th, .t-invtbl td { border: 1px solid var(--t-line-2); padding: 5px 7px; }
+.t-invtbl th { background: var(--t-bg); font-weight: 600; }
+.t-invtbl__lbl { text-align: right; font-weight: 600; }
+.t-invtbl__total td { font-weight: 800; font-size: 15px; background: var(--t-brand-soft); }
+.t-inv__cny { font-size: 13px; margin-top: 8px; }
+.t-inv__bank { margin-top: 10px; border: 1px dashed var(--t-brand); border-radius: 6px; padding: 8px 10px; background: var(--t-brand-soft); font-size: 13px; line-height: 1.6; }
+.t-inv__bank-h { font-weight: 700; margin-bottom: 2px; }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

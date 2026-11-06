@@ -76,8 +76,28 @@ export type Cert = {
   editRequest: string;
   editRequestAt: string;
   note: string;
+  // 寄送成本（每張，owner 填）
+  costEnvelope: number;
+  costCard: number;
+  costPostage: number;
+  // 付款／發票
+  paid: boolean;
+  paidAt: string;
+  paidNet: number;
+  paidTax: number;
+  paidAmount: number;
+  needInvoice: boolean;
+  taxId: string;
+  invoiced: boolean;
+  invoiceNo: string;
   createdAt: string;
   updatedAt: string;
+};
+
+/** 金流設定（結帳頁用，任何登入者都讀得到）。對應 /api/teacher/billing。 */
+export type BillingConfig = {
+  unitPrice: number; taxRate: number; settleDay: number;
+  bankName: string; bankBranch: string; bankAccount: string; bankHolder: string;
 };
 
 /** 獎狀設定（owner 在「獎狀設定」頁設好、全站套用）。對應 src/api/teacher/store.ts 的 SETTINGS_DEFAULTS。 */
@@ -89,6 +109,8 @@ export type CertSettings = {
   stampX: number; stampY: number; stampSize: number;
   endorseCaption: string; defaultCourse: string;
   printDays: number; shipDays: number; serialNext: number;
+  unitPrice: number; taxRate: number; settleDay: number;
+  bankName: string; bankBranch: string; bankAccount: string; bankHolder: string;
   blocks: Record<string, { show: boolean; scale: number; x: number; y: number }>;
   overlayImg: string; overlayShow: boolean; overlayX: number; overlayY: number; overlaySize: number; overlayOpacity: number;
 };

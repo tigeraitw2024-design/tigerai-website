@@ -5,6 +5,7 @@ import Login from './views/Login';
 import Dashboard from './views/Dashboard';
 import Console from './views/Console';
 import Generate from './views/Generate';
+import Checkout from './views/Checkout';
 import Report from './views/Report';
 import Roster from './views/Roster';
 import CertSettings from './views/CertSettings';
@@ -20,10 +21,10 @@ import './teacher.css';
  * 分頁：證照清單｜產生證照｜對帳｜名冊。後兩者只有 owner 看得到。
  */
 
-type View = 'dashboard' | 'certs' | 'generate' | 'settings' | 'report' | 'roster';
+type View = 'dashboard' | 'certs' | 'checkout' | 'generate' | 'settings' | 'report' | 'roster';
 const viewOf = (): View => {
   const h = location.hash.replace(/^#\/?/, '');
-  return (['dashboard', 'certs', 'generate', 'settings', 'report', 'roster'].includes(h) ? h : 'dashboard') as View;
+  return (['dashboard', 'certs', 'checkout', 'generate', 'settings', 'report', 'roster'].includes(h) ? h : 'dashboard') as View;
 };
 
 export default function App() {
@@ -59,6 +60,7 @@ export default function App() {
   const NAV: [View, string, string][] = [
     ['dashboard', 'grid', '總覽'],
     ['certs', 'list', '證照'],
+    ['checkout', 'receipt', '結帳'],
     ['report', 'chart', '對帳'],
     ...(isOwner ? [
       ['generate', 'award', '產生證照'],
@@ -88,6 +90,7 @@ export default function App() {
       <main className="t-body">
         {view === 'dashboard' && <Dashboard user={user} />}
         {view === 'certs' && <Console user={user} onGenerate={toGenerate} />}
+        {view === 'checkout' && <Checkout user={user} />}
         {view === 'generate' && (isOwner ? <Generate certs={genCerts} onBack={() => go('certs')} /> : <Denied />)}
         {view === 'settings' && (isOwner ? <CertSettings /> : <Denied />)}
         {view === 'report' && <Report isOwner={isOwner} />}

@@ -95,6 +95,14 @@ export const SETTINGS_DEFAULTS = {
   defaultCourse: 'n8n Quickstart',
   printDays: 2, shipDays: 2,
   serialNext: 1001, // 下一個流水號序號（從 1001 起，不從 0）
+  // 金流／帳務（主帳號可調，全站統一）
+  unitPrice: 200,      // 每張未稅單價，主帳號可隨量調降
+  taxRate: 5,          // 營業稅率 %
+  settleDay: 10,       // 每月結帳日（付款/收款都在這天）
+  bankName: '永豐銀行（807）',
+  bankBranch: '東湖分行',
+  bankAccount: '15401800121317',
+  bankHolder: '虎智科技股份有限公司',
   // 自訂圖層：使用者上傳的 PNG（存 data URL）＋顯示/位置/大小
   overlayImg: '', overlayShow: false, overlayX: 50, overlayY: 50, overlaySize: 25, overlayOpacity: 100,
   // 版面九塊各自的顯示/縮放/位移（x,y 是證照寬的 %，scale 是 %）
@@ -183,6 +191,12 @@ export async function createCert(
     settled: false, settledAt: '',
     returnReason: '', returnedAt: '',
     editRequest: '', editRequestAt: '',
+    // 寄送成本（每張各自輸入，owner 填）
+    costEnvelope: 0, costCard: 0, costPostage: 0,
+    // 付款/發票（付款方自己標已匯款、要不要發票、統編）
+    paid: false, paidAt: '', paidNet: 0, paidTax: 0, paidAmount: 0,
+    needInvoice: false, taxId: '',
+    invoiced: false, invoiceNo: '',
   };
   if (!data.studentName) throw new Error('學員姓名是必填的');
   return putRow(db, certificatesCollection, null, data);
@@ -221,6 +235,36 @@ export async function markSettled(db: D1Database, ids: string[], value: boolean)
     const data = { ...existing };
     delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
     data.settled = value; data.settledAt = value ? nowISO() : '';
+    await putRow(db, certificatesCollection, id, data);
+  }
+  return ids.length;
+}
+
+/**
+ * 付款方標記已匯款／取消（講師可標自己的、owner 可標全部）。
+ * 標記時用「當下設定」快照金額：單價、是否含稅（要發票才加稅）、統編。
+ * 每張＝一單位，各自快照 unitPrice；要不要發票是整批一起帶進來。
+ */
+export async function markPaid(
+  db: D1Database, ids: string[], value: boolean, opts: { needInvoice?: boolean; taxId?: string } = {},
+) {
+  const s = await getSettings(db);
+  const net = Number(s.unitPrice) || 0;
+  const needInvoice = !!opts.needInvoice;
+  const tax = needInvoice ? Math.round(net * (Number(s.taxRate) || 0) / 100) : 0;
+  for (const id of ids) {
+    const existing = await getRow(db, certificatesCollection, id);
+    if (!existing) continue;
+    const data = { ...existing };
+    delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+    if (value) {
+      data.paid = true; data.paidAt = nowISO();
+      data.needInvoice = needInvoice; data.taxId = needInvoice ? String(opts.taxId || '').trim() : '';
+      data.paidNet = net; data.paidTax = tax; data.paidAmount = net + tax;
+    } else {
+      data.paid = false; data.paidAt = '';
+      data.paidNet = 0; data.paidTax = 0; data.paidAmount = 0;
+    }
     await putRow(db, certificatesCollection, id, data);
   }
   return ids.length;

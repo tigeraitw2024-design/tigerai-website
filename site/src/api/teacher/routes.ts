@@ -5,9 +5,9 @@ import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
   acceptCerts, requestEdit, clearEditRequest, deleteCert, deleteInstructor,
-  markSettled, markPaid, returnCert, clearReturn,
+  markSettled, markPaid, returnCert, clearReturn, reassignCerts,
 } from './store';
-import { certificatesCollection } from './schema';
+import { certificatesCollection, instructorsCollection } from './schema';
 import {
   TEACHER_COOKIE, OAUTH_STATE_COOKIE, currentTeacher, createTeacherSession, destroyTeacherSession,
   teacherCookie, clearTeacherCookie, googleConfigured, googleAuthUrl, googleIdentity, resolveInstructor,
@@ -238,6 +238,17 @@ app.post('/certs/pay', async (ctx) => {
   if (on && needInvoice && !String(taxId || '').trim()) return ctx.json({ error: '要開發票就要填統一編號' }, 400);
   const n = await markPaid(ctx.env.DB, ids, on, { needInvoice: !!needInvoice, taxId });
   return ctx.json({ ok: true, count: n });
+});
+
+// 改派講師（owner）：把選到的證照換到另一位講師名下（搬錯帳號用）。
+app.post('/certs/reassign', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能改派' }, 403);
+  const { ids, instructorId } = await ctx.req.json<{ ids: string[]; instructorId: string }>();
+  if (!Array.isArray(ids) || !ids.length || !instructorId) return ctx.json({ error: '請選要搬的證照和目標講師' }, 400);
+  const inst = await getRow(ctx.env.DB, instructorsCollection, instructorId);
+  if (!inst) return ctx.json({ error: '找不到這位講師，請先把他加進名冊' }, 404);
+  const n = await reassignCerts(ctx.env.DB, ids, instructorId, String(inst.name || ''));
+  return ctx.json({ ok: true, count: n, name: inst.name });
 });
 
 // 退件（owner）：退回講師並附原因

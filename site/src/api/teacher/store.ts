@@ -352,6 +352,20 @@ export async function deleteCert(db: D1Database, id: string) {
   await db.prepare(`DELETE FROM cert_records WHERE id=?`).bind(id).run();
 }
 
+/** 改派：把這幾筆證照換到另一位講師名下（owner 用，搬錯帳號／代上傳時）。 */
+export async function reassignCerts(db: D1Database, ids: string[], instructorId: string, instructorName: string) {
+  for (const id of ids) {
+    const existing = await getRow(db, certificatesCollection, id);
+    if (!existing) continue;
+    const data = { ...existing };
+    delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+    data.instructorId = instructorId;
+    data.instructorName = instructorName;
+    await putRow(db, certificatesCollection, id, data);
+  }
+  return ids.length;
+}
+
 /** 清掉修改申請（owner 改完或忽略）。 */
 export async function clearEditRequest(db: D1Database, id: string) {
   const existing = await getRow(db, certificatesCollection, id);

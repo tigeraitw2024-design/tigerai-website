@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, type Cert, type TeacherUser } from '../api';
+import { api, type Cert, type TeacherUser, type Instructor } from '../api';
 import Icon from '../Icon';
 import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRecord, isEmail, isPhoneTW, isAddressTW, type Grid } from '../importParse';
 import { downloadBlob } from '../certExport';
@@ -56,6 +56,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   const [edit, setEdit] = useState<Cert | null>(null);   // 正在編輯的那筆
   const [req, setReq] = useState<Cert | null>(null);      // 正在申請修改的那筆（講師）
   const [ret, setRet] = useState<Cert | null>(null);      // 正在退件的那筆（owner）
+  const [reassign, setReassign] = useState(false);        // 改派講師對話框（owner）
   const [banner, setBanner] = useState('');               // 接單成功提示（含預計天數）
 
   async function load() {
@@ -325,6 +326,9 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
               <button className="t-btn t-btn--ghost t-btn--sm" disabled={!!busy} onClick={g.off} style={{ color: 'var(--t-fg-3)' }}>取消</button>
             </span>
           ))}
+          <button className="t-btn t-btn--ghost t-btn--sm" onClick={() => setReassign(true)}>
+            <Icon name="users" size={16} /> 改派講師
+          </button>
           <button className="t-btn t-btn--ghost t-btn--sm t-spacer" onClick={() => setSel(new Set())}>清除</button>
         </div>
       )}
@@ -336,6 +340,56 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       {edit && <EditModal cert={edit} isOwner={isOwner} onClose={() => setEdit(null)} onDone={() => { setEdit(null); load(); }} />}
       {req && <RequestModal cert={req} onClose={() => setReq(null)} onDone={() => { setReq(null); load(); }} />}
       {ret && <ReturnModal cert={ret} onClose={() => setRet(null)} onDone={() => { setRet(null); load(); }} />}
+      {reassign && <ReassignModal certs={selCerts} onClose={() => setReassign(false)}
+        onDone={() => { setReassign(false); setSel(new Set()); load(); }} />}
+    </div>
+  );
+}
+
+// 改派講師（owner）：把選到的證照整批換到名冊裡另一位講師名下。
+function ReassignModal({ certs, onClose, onDone }: { certs: Cert[]; onClose: () => void; onDone: () => void }) {
+  const [list, setList] = useState<Instructor[] | null>(null);
+  const [to, setTo] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    api.get<{ items: Instructor[] }>('/api/teacher/instructors')
+      .then((r) => setList(r.items)).catch((e) => setErr(e.message));
+  }, []);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!to) { setErr('請先選要改派給誰。'); return; }
+    setErr(''); setBusy(true);
+    try { await api.post('/api/teacher/certs/reassign', { ids: certs.map((c) => c.id), instructorId: to }); onDone(); }
+    catch (e: any) { setErr(e.message); setBusy(false); }
+  }
+
+  const fromNames = [...new Set(certs.map((c) => c.instructorName).filter(Boolean))].join('、') || '（未指定）';
+  return (
+    <div className="t-modal" onClick={onClose}>
+      <form className="t-modal__box" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="t-modal__head"><h3>改派講師</h3>
+          <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
+        <p className="t-f__help" style={{ marginBottom: 10 }}>
+          把選到的 <b>{certs.length}</b> 筆（目前掛在 {fromNames}）整批換到另一位講師名下。對方登入後就會在自己的清單看到這些。
+        </p>
+        {err && <div className="t-msg t-msg--err">{err}</div>}
+        <div className="t-f"><label className="t-f__label">改派給</label>
+          {list === null ? <div className="t-f__help">載入名冊中…</div> : (
+            <select className="t-input" value={to} onChange={(e) => setTo(e.target.value)}>
+              <option value="">— 選一位講師 —</option>
+              {list.map((i) => <option key={i.id} value={i.id}>{i.name}（{i.email}）{i.role === 'owner' ? '· owner' : ''}</option>)}
+            </select>
+          )}
+        </div>
+        <p className="t-f__help" style={{ marginTop: 6 }}>找不到人？先到「名冊」把他加進來（用他的 Gmail），再回來改派。</p>
+        <div className="t-row" style={{ marginTop: 12 }}>
+          <button className="t-btn t-btn--brand" disabled={busy || !to}>{busy ? '改派中…' : `改派這 ${certs.length} 筆`}</button>
+          <button type="button" className="t-btn t-btn--ghost" onClick={onClose}>取消</button>
+        </div>
+      </form>
     </div>
   );
 }

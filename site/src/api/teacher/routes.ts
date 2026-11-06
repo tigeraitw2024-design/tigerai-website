@@ -292,6 +292,7 @@ app.get('/billing', async (ctx) => {
     billing: {
       unitPrice: s.unitPrice, taxRate: s.taxRate, settleDay: s.settleDay,
       bankName: s.bankName, bankBranch: s.bankBranch, bankAccount: s.bankAccount, bankHolder: s.bankHolder,
+      senderCompany: s.senderCompany, senderAddr: s.senderAddr, senderPerson: s.senderPerson, senderPhone: s.senderPhone,
     },
   });
 });

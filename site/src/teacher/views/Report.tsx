@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, type ReportRow, type Cert } from '../api';
 import Icon from '../Icon';
+import Name from '../Name';
 import { downloadBlob } from '../certExport';
 
 /**
@@ -136,7 +137,7 @@ function InvoiceCard({ cert, onDone }: { cert: Cert; onDone: () => void }) {
       </div>
       <div className="t-card__meta">
         <span><b>統編</b> {cert.taxId || '—'}</span>
-        <span><b>品名</b> n8n 證照　{cert.studentName}</span>
+        <span><b>品名</b> n8n 證照　{cert.recipientName ? `${cert.recipientName}／` : ''}{cert.studentName}</span>
         <span><b>銷售額</b> {money(cert.paidNet)}</span>
         <span><b>稅</b> {money(cert.paidTax)}</span>
       </div>
@@ -198,7 +199,7 @@ function PnlRow({ c, onPatch }: { c: Cert; onPatch: (id: string, patch: Partial<
   );
   return (
     <tr>
-      <td><b>{c.studentName}</b><br /><span style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>{c.instructorName}{c.serial ? `　${c.serial}` : ''}</span></td>
+      <td><Name zh={c.recipientName} en={c.studentName} /><br /><span style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>{c.instructorName}{c.serial ? `　${c.serial}` : ''}</span></td>
       <td className="num">{c.paid ? money(rev) : <span style={{ color: 'var(--t-fg-3)' }}>未付</span>}</td>
       <td className="num">{numIn(env, setEnv, () => save({ costEnvelope: Number(env) || 0 }))}</td>
       <td className="num">{numIn(card, setCard, () => save({ costCard: Number(card) || 0 }))}</td>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, type Cert, type BillingConfig, type TeacherUser } from '../api';
 import Icon from '../Icon';
+import Name from '../Name';
 
 /**
  * 結帳頁（所有人登入都看自己的）。
@@ -142,7 +143,7 @@ export default function Checkout({ user }: { user: TeacherUser }) {
             ) : unpaid.map((r) => (
               <label key={r.id} className="t-payrow" data-sel={sel.has(r.id) ? '1' : '0'}>
                 <input type="checkbox" checked={sel.has(r.id)} onChange={() => toggle(r.id)} />
-                <span className="t-payrow__name">{r.studentName}{r.serial ? <span className="t-mono" style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>　{r.serial}</span> : null}</span>
+                <span className="t-payrow__name"><Name zh={r.recipientName} en={r.studentName} />{r.serial ? <span className="t-mono" style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>　{r.serial}</span> : null}</span>
                 <span className="t-payrow__meta">{r.course}{isOwner && !who ? `　·　${r.instructorName}` : ''}</span>
                 <span className="t-payrow__amt">NT$ {price}</span>
               </label>
@@ -180,7 +181,7 @@ export default function Checkout({ user }: { user: TeacherUser }) {
                   {qty === 0
                     ? <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--t-fg-3)', padding: 16 }}>左邊勾選要結帳的證照…</td></tr>
                     : selCerts.map((r) => (
-                      <tr key={r.id}><td>n8n 證照　{r.studentName}</td><td style={{ textAlign: 'center' }}>1</td><td style={{ textAlign: 'right' }}>{price}</td><td style={{ textAlign: 'right' }}>{price}</td></tr>
+                      <tr key={r.id}><td><div style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>n8n 證照</div><Name zh={r.recipientName} en={r.studentName} /></td><td style={{ textAlign: 'center' }}>1</td><td style={{ textAlign: 'right' }}>{price}</td><td style={{ textAlign: 'right' }}>{price}</td></tr>
                     ))}
                 </tbody>
               </table>

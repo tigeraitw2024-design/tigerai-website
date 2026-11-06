@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, type Cert, type TeacherUser, type Instructor } from '../api';
+import { api, type Cert, type TeacherUser, type Instructor, type BillingConfig } from '../api';
 import Icon from '../Icon';
+import Name from '../Name';
 import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRecord, isEmail, isPhoneTW, isAddressTW, type Grid } from '../importParse';
 import { downloadBlob } from '../certExport';
 
@@ -59,12 +60,15 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
   const [reassign, setReassign] = useState(false);        // 改派講師對話框（owner）
   const [banner, setBanner] = useState('');               // 接單成功提示（含預計天數）
 
+  const [billing, setBilling] = useState<BillingConfig | null>(null);
   async function load() {
     setErr('');
     try { setRows((await api.get<{ items: Cert[] }>('/api/teacher/certs')).items); }
     catch (e: any) { setErr(e.message); }
   }
   useEffect(() => { load(); }, []);
+  // 寄件人資訊（印地址標籤用）；讀不到就先不印寄件人，不擋功能。
+  useEffect(() => { api.get<{ billing: BillingConfig }>('/api/teacher/billing').then((r) => setBilling(r.billing)).catch(() => {}); }, []);
 
   const filtered = useMemo(() => {
     let r = (rows || []).filter((x) => matchFilter(x, status));
@@ -158,14 +162,28 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     downloadBlob(blob, `證照名單_${new Date().toISOString().slice(0, 10)}.csv`);
   }
 
-  // 列印寄送地址標籤：開一個乾淨的列印視窗（一頁多張、每張收件人＋地址＋電話）。
+  // 列印寄送地址標籤：開一個乾淨的列印視窗（一頁多張）。每張含寄件人（回郵）＋收件人＋證書編號。
   function printLabels(list: Cert[]) {
     const esc = (s: unknown) => String(s ?? '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m] as string));
-    const labels = list.map((c) => `<div class="lbl"><div class="to">${esc(c.recipientName || c.studentName)} 收</div><div class="ad">${esc(c.address) || '（沒有地址）'}</div><div class="ph">${esc(c.phone)}</div></div>`).join('');
+    const nl = (s: unknown) => esc(s).replace(/\n/g, '<br>');
+    const b = billing;
+    const senderLines = b ? [b.senderCompany, b.senderAddr, [b.senderPerson, b.senderPhone].filter(Boolean).join('　')].filter(Boolean).map(nl).join('<br>') : '';
+    const sender = senderLines ? `<div class="from"><span class="tag">寄件人</span>${senderLines}</div>` : '';
+    const labels = list.map((c) => {
+      const serial = c.serial ? `<div class="sn">證書編號　${esc(c.serial)}</div>` : '';
+      const zh = (c.recipientName || c.studentName || '').trim();
+      const en = (c.recipientName && c.studentName && c.recipientName !== c.studentName) ? `<div class="toen">${esc(c.studentName)}</div>` : '';
+      return `<div class="lbl">${sender}<div class="toblk"><div class="to">${esc(zh)} 收</div>${en}`
+        + `<div class="ad">${esc(c.address) || '（沒有地址）'}</div><div class="ph">${esc(c.phone)}</div>${serial}</div></div>`;
+    }).join('');
     const html = `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>寄送地址標籤</title>`
       + `<style>body{font-family:"Microsoft JhengHei","微軟正黑體",sans-serif;margin:0;padding:10mm;color:#111}`
-      + `.grid{display:grid;grid-template-columns:1fr 1fr;gap:6mm}.lbl{border:1px solid #bbb;border-radius:3mm;padding:6mm;min-height:28mm;break-inside:avoid}`
-      + `.to{font-size:15pt;font-weight:700;margin-bottom:3mm}.ad{font-size:13pt;line-height:1.55}.ph{font-size:11pt;color:#555;margin-top:2mm}`
+      + `.grid{display:grid;grid-template-columns:1fr 1fr;gap:6mm}.lbl{border:1px solid #bbb;border-radius:3mm;padding:6mm;min-height:40mm;break-inside:avoid;display:flex;flex-direction:column}`
+      + `.from{font-size:9.5pt;color:#555;line-height:1.5;padding-bottom:3mm;margin-bottom:3mm;border-bottom:1px dashed #ccc}`
+      + `.from .tag{display:inline-block;background:#eee;color:#333;border-radius:2mm;padding:0 2mm;margin-right:2mm;font-size:8.5pt}`
+      + `.toblk{flex:1;display:flex;flex-direction:column;justify-content:center}`
+      + `.to{font-size:16pt;font-weight:700}.toen{font-size:11pt;color:#555;margin:1mm 0 3mm}.ad{font-size:13pt;line-height:1.55}.ph{font-size:11pt;color:#555;margin-top:2mm}`
+      + `.sn{font-size:10pt;color:#777;margin-top:3mm;font-variant-numeric:tabular-nums}`
       + `.bar{margin-bottom:8mm}@media print{.bar{display:none}}</style></head>`
       + `<body><div class="bar"><button onclick="window.print()" style="padding:8px 16px;font-size:14px">列印 / 存成 PDF</button>　共 ${list.length} 張</div>`
       + `<div class="grid">${labels}</div></body></html>`;
@@ -225,7 +243,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                 <div className="t-card__top">
                   {isOwner && <input type="checkbox" style={{ width: 20, height: 20, accentColor: 'var(--t-brand)' }}
                     checked={sel.has(r.id)} onChange={() => toggle(r.id)} />}
-                  <span className="t-card__t">{r.studentName}</span>
+                  <span className="t-card__t"><Name zh={r.recipientName} en={r.studentName} /></span>
                   <span className="t-spacer" />
                   <span className="t-pill" data-tone={statusOf(r).tone}>{statusOf(r).label}</span>
                 </div>
@@ -271,7 +289,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   onClick={isOwner ? (e) => { if ((e.target as HTMLElement).tagName !== 'INPUT') toggle(r.id); } : undefined}
                   style={{ cursor: isOwner ? 'pointer' : 'default' }}>
                   {isOwner && <td><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggle(r.id)} /></td>}
-                  <td><b>{r.studentName}</b>{r.serial && <><br /><span className="t-mono" style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>編號 {r.serial}</span></>}</td>
+                  <td><Name zh={r.recipientName} en={r.studentName} />{r.serial && <><br /><span className="t-mono" style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>編號 {r.serial}</span></>}</td>
                   <td>{r.course}{r.courseName ? <><br /><span style={{ color: 'var(--t-fg-3)', fontSize: 12 }}>{r.courseName}</span></> : null}</td>
                   {isOwner && <td>{r.instructorName}</td>}
                   <td className="addr">{r.address || <span style={{ color: 'var(--t-fg-3)' }}>—</span>}</td>

@@ -103,6 +103,11 @@ export const SETTINGS_DEFAULTS = {
   bankBranch: '東湖分行',
   bankAccount: '15401800121317',
   bankHolder: '虎智科技股份有限公司',
+  // 寄件人（印在地址標籤上的回郵資訊）
+  senderCompany: '虎智科技股份有限公司',
+  senderAddr: '106335 國立台灣科技大學國際大樓\n台北市大安區基隆路4段43號1107室',
+  senderPerson: 'Robin zhang 張凱榮',
+  senderPhone: '886-911436467',
   // 自訂圖層：使用者上傳的 PNG（存 data URL）＋顯示/位置/大小
   overlayImg: '', overlayShow: false, overlayX: 50, overlayY: 50, overlaySize: 25, overlayOpacity: 100,
   // 版面九塊各自的顯示/縮放/位移（x,y 是證照寬的 %，scale 是 %）

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, type Cert, type TeacherUser } from '../api';
+import { api, type Cert, type TeacherUser, type BillingConfig } from '../api';
 
 /**
  * 儀表板（登入後的第一頁）。
@@ -11,10 +11,12 @@ import { api, type Cert, type TeacherUser } from '../api';
 export default function Dashboard({ user }: { user: TeacherUser }) {
   const isOwner = user.role === 'owner';
   const [rows, setRows] = useState<Cert[] | null>(null);
+  const [bill, setBill] = useState<BillingConfig | null>(null);
   const [err, setErr] = useState('');
 
   useEffect(() => {
     api.get<{ items: Cert[] }>('/api/teacher/certs').then((r) => setRows(r.items)).catch((e) => setErr(e.message));
+    api.get<{ billing: BillingConfig }>('/api/teacher/billing').then((r) => setBill(r.billing)).catch(() => {});
   }, []);
 
   const go = (filter: string) => {
@@ -33,7 +35,14 @@ export default function Dashboard({ user }: { user: TeacherUser }) {
     shipped: rows.filter((r) => r.shipped).length,
     editreq: rows.filter((r) => r.editRequest).length,
   };
-  const amount = rows.filter((r) => r.accepted).reduce((s, r) => s + (Number(r.fee) || 0), 0);
+  const unit = Number(bill?.unitPrice) || 0;
+  const settleDay = Number(bill?.settleDay) || 10;
+  const due = rows.filter((r) => r.shipped && !r.paid);          // 已寄出、對方還沒繳款＝未繳
+  const paidRows = rows.filter((r) => r.paid);
+  const dueCount = due.length;
+  const dueAmount = dueCount * unit;                             // 未收款（未稅估）
+  const collected = paidRows.reduce((s, r) => s + (Number(r.paidAmount) || 0), 0); // 已收款（實收，含稅如有）
+  const money = (x: number) => x.toLocaleString('zh-TW');
 
   const Card = ({ label, value, filter, tone }: { label: string; value: number; filter: string; tone?: string }) => (
     <button className="t-stat" data-tone={tone} onClick={() => go(filter)}>
@@ -48,6 +57,25 @@ export default function Dashboard({ user }: { user: TeacherUser }) {
       <p className="t-intro">
         {isOwner ? '全部證照的即時總覽，點任一格進清單看明細。' : '你上傳的證照即時總覽，點任一格看明細。'}
       </p>
+
+      {/* 講師：已寄出但還沒繳款的大提示（寄出後才跳） */}
+      {!isOwner && dueCount > 0 && (
+        <a className="t-due" href="#/checkout">
+          <div className="t-due__label">尚未繳款</div>
+          <div className="t-due__amt">NT$ {money(dueAmount)}</div>
+          <div className="t-due__sub">{dueCount} 張已寄出、還沒收到你的款項。請於每月 {settleDay} 號前匯款（要發票則含稅）。點這裡去結帳、看匯款帳戶 →</div>
+        </a>
+      )}
+
+      {/* 主帳號：已繳／未繳、已收／未收 大面板 */}
+      {isOwner && (
+        <div className="t-money">
+          <div className="t-money__cell"><div className="t-money__v">{paidRows.length}</div><div className="t-money__l">已繳款（人／張）</div></div>
+          <div className="t-money__cell" data-warn={dueCount > 0 ? '1' : undefined}><div className="t-money__v">{dueCount}</div><div className="t-money__l">未繳款（已出貨待收）</div></div>
+          <div className="t-money__cell"><div className="t-money__v">NT$ {money(collected)}</div><div className="t-money__l">已收款（代收）</div></div>
+          <div className="t-money__cell" data-warn={dueAmount > 0 ? '1' : undefined}><div className="t-money__v">NT$ {money(dueAmount)}</div><div className="t-money__l">未收款（未代收）</div></div>
+        </div>
+      )}
 
       {isOwner && (n.pending > 0 || n.editreq > 0 || n.printedWait > 0) && (
         <div className="t-panel" style={{ borderColor: 'var(--t-brand)' }}>
@@ -66,12 +94,6 @@ export default function Dashboard({ user }: { user: TeacherUser }) {
         <Card label="已列印待寄" value={n.printedWait} filter="printed" tone="warn" />
         <Card label="已寄出" value={n.shipped} filter="shipped" tone="ok" />
         <Card label="全部" value={n.all} filter="all" />
-        {isOwner && (
-          <div className="t-stat" aria-hidden>
-            <div className="t-stat__v">{amount.toLocaleString()}</div>
-            <div className="t-stat__l">已出單金額（元）</div>
-          </div>
-        )}
       </div>
 
       {rows.length === 0 && (

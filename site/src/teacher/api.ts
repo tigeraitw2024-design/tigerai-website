@@ -99,6 +99,7 @@ export type Cert = {
 export type BillingConfig = {
   unitPrice: number; taxRate: number; settleDay: number;
   bankName: string; bankBranch: string; bankAccount: string; bankHolder: string;
+  senderCompany: string; senderAddr: string; senderPerson: string; senderPhone: string;
 };
 
 /** 獎狀設定（owner 在「獎狀設定」頁設好、全站套用）。對應 src/api/teacher/store.ts 的 SETTINGS_DEFAULTS。 */
@@ -112,6 +113,7 @@ export type CertSettings = {
   printDays: number; shipDays: number; serialNext: number;
   unitPrice: number; taxRate: number; settleDay: number;
   bankName: string; bankBranch: string; bankAccount: string; bankHolder: string;
+  senderCompany: string; senderAddr: string; senderPerson: string; senderPhone: string;
   blocks: Record<string, { show: boolean; scale: number; x: number; y: number }>;
   overlayImg: string; overlayShow: boolean; overlayX: number; overlayY: number; overlaySize: number; overlayOpacity: number;
 };

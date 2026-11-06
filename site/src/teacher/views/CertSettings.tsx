@@ -233,6 +233,21 @@ export default function CertSettings() {
           </div>
 
           <div className="t-panel" style={{ margin: 0 }}>
+            <div className="t-panel__h">寄件人（印在地址標籤上）</div>
+            <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>列印地址標籤時，這組會印在每張標籤的「寄件人／回郵」區。</p>
+            <div className="t-f" style={{ marginBottom: 8 }}><label className="t-f__label">公司／單位</label>
+              <input className="t-input" value={s.senderCompany} onChange={(e) => set('senderCompany', e.target.value)} placeholder="虎智科技股份有限公司" /></div>
+            <div className="t-f" style={{ marginBottom: 8 }}><label className="t-f__label">地址（可多行）</label>
+              <textarea className="t-textarea" rows={2} value={s.senderAddr} onChange={(e) => set('senderAddr', e.target.value)} placeholder="106335 …&#10;台北市…" /></div>
+            <div className="t-row" style={{ gap: 10, marginBottom: 0 }}>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">聯絡人</label>
+                <input className="t-input" value={s.senderPerson} onChange={(e) => set('senderPerson', e.target.value)} placeholder="Robin zhang 張凱榮" /></div>
+              <div className="t-f" style={{ flex: 1, margin: 0 }}><label className="t-f__label">電話</label>
+                <input className="t-input" value={s.senderPhone} onChange={(e) => set('senderPhone', e.target.value)} placeholder="886-911436467" /></div>
+            </div>
+          </div>
+
+          <div className="t-panel" style={{ margin: 0 }}>
             <div className="t-panel__h">寄送設定</div>
             <p className="t-f__help" style={{ marginTop: 0, marginBottom: 10 }}>按「接單」時用這個算預計寄出日＝接單日＋印刷＋寄送天數。</p>
             <div className="t-row" style={{ gap: 10 }}>

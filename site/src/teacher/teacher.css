@@ -58,6 +58,7 @@ body.tg-teacher {
 
 /* ── 一般 ───────────────────────────────────────────────────── */
 .t-h1 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 4px; }
+.t-h2 { font-size: 16px; font-weight: 800; margin: 0 0 6px; }
 .t-intro { color: var(--t-fg-2); font-size: 13px; margin: 0 0 18px; max-width: 64ch; }
 .t-panel { background: var(--t-panel); border: 1px solid var(--t-line); padding: 16px; margin-bottom: 16px; }
 .t-panel__h { font-size: 13px; font-weight: 700; margin: 0 0 12px; color: var(--t-fg-2); }
@@ -233,6 +234,13 @@ button.t-stat:hover { border-color: var(--t-brand); }
 .t-report th { background: #FBFAF8; font-size: 12px; color: var(--t-fg-2); }
 .t-report td.num, .t-report th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .t-report tfoot td { font-weight: 800; border-top: 2px solid var(--t-line-2); }
+/* 逐筆損益表的小輸入框 */
+.t-pnl td { vertical-align: middle; }
+.t-pnl__in { width: 64px; min-height: 34px; padding: 4px 6px; font-size: 14px; text-align: right; display: inline-block; }
+.t-pnl__trk { width: 130px; min-height: 34px; padding: 4px 8px; font-size: 14px; }
+/* 隱藏 number 輸入的上下箭頭，欄位才不會被擠 */
+.t-pnl__in::-webkit-outer-spin-button, .t-pnl__in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.t-pnl__in { -moz-appearance: textfield; }
 
 /* 結帳：待結帳／已匯款列 */
 .t-payrow { display: flex; align-items: center; gap: 10px; padding: 10px 6px; border-top: 1px solid var(--t-line); cursor: pointer; }
@@ -248,11 +256,15 @@ button.t-stat:hover { border-color: var(--t-brand); }
 .t-inv__title { text-align: center; font-size: 17px; font-weight: 800; letter-spacing: 2px; }
 .t-inv__sub { text-align: center; font-size: 12px; color: var(--t-fg-2); margin-top: 2px; }
 .t-inv__party { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin: 10px 0; flex-wrap: wrap; }
+.t-invtbl-scroll { max-height: 170px; overflow-y: auto; } /* 最多約 3 列，其餘滾動 */
 .t-invtbl { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .t-invtbl th, .t-invtbl td { border: 1px solid var(--t-line-2); padding: 5px 7px; }
-.t-invtbl th { background: var(--t-bg); font-weight: 600; }
-.t-invtbl__lbl { text-align: right; font-weight: 600; }
-.t-invtbl__total td { font-weight: 800; font-size: 15px; background: var(--t-brand-soft); }
+.t-invtbl thead th { position: sticky; top: 0; z-index: 1; background: var(--t-bg); font-weight: 600; } /* 捲動時表頭留著 */
+.t-invtot { border: 1px solid var(--t-line-2); border-top: none; }
+.t-invtot__row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 9px; font-size: 13px; }
+.t-invtot__row + .t-invtot__row { border-top: 1px solid var(--t-line-2); }
+.t-invtot__row b { font-variant-numeric: tabular-nums; }
+.t-invtot__row--total { background: var(--t-brand-soft); font-weight: 800; font-size: 15px; }
 .t-inv__cny { font-size: 13px; margin-top: 8px; }
 .t-inv__bank { margin-top: 10px; border: 1px dashed var(--t-brand); border-radius: 6px; padding: 8px 10px; background: var(--t-brand-soft); font-size: 13px; line-height: 1.6; }
 .t-inv__bank-h { font-weight: 700; margin-bottom: 2px; }

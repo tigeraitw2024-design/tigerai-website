@@ -195,7 +195,7 @@ export async function createCert(
     costEnvelope: 0, costCard: 0, costPostage: 0,
     // 付款/發票（付款方自己標已匯款、要不要發票、統編）
     paid: false, paidAt: '', paidNet: 0, paidTax: 0, paidAmount: 0,
-    needInvoice: false, taxId: '',
+    needInvoice: false, taxId: '', invoiceBuyer: '',
     invoiced: false, invoiceNo: '',
   };
   if (!data.studentName) throw new Error('學員姓名是必填的');
@@ -246,7 +246,7 @@ export async function markSettled(db: D1Database, ids: string[], value: boolean)
  * 每張＝一單位，各自快照 unitPrice；要不要發票是整批一起帶進來。
  */
 export async function markPaid(
-  db: D1Database, ids: string[], value: boolean, opts: { needInvoice?: boolean; taxId?: string } = {},
+  db: D1Database, ids: string[], value: boolean, opts: { needInvoice?: boolean; taxId?: string; buyer?: string } = {},
 ) {
   const s = await getSettings(db);
   const net = Number(s.unitPrice) || 0;
@@ -260,11 +260,40 @@ export async function markPaid(
     if (value) {
       data.paid = true; data.paidAt = nowISO();
       data.needInvoice = needInvoice; data.taxId = needInvoice ? String(opts.taxId || '').trim() : '';
+      data.invoiceBuyer = String(opts.buyer || '').trim();
       data.paidNet = net; data.paidTax = tax; data.paidAmount = net + tax;
     } else {
       data.paid = false; data.paidAt = '';
       data.paidNet = 0; data.paidTax = 0; data.paidAmount = 0;
     }
+    await putRow(db, certificatesCollection, id, data);
+  }
+  return ids.length;
+}
+
+/** 設定一筆的寄送成本（信封／卡紙／掛號）與郵局單號（owner）。只覆蓋有帶的欄位。 */
+export async function setCost(
+  db: D1Database, id: string,
+  patch: { costEnvelope?: number; costCard?: number; costPostage?: number; tracking?: string },
+) {
+  const existing = await getRow(db, certificatesCollection, id);
+  if (!existing) return;
+  const data = { ...existing };
+  delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+  for (const k of ['costEnvelope', 'costCard', 'costPostage'] as const) if (k in patch) data[k] = Number((patch as any)[k]) || 0;
+  if ('tracking' in patch) data.tracking = String(patch.tracking || '').trim();
+  return putRow(db, certificatesCollection, id, data);
+}
+
+/** 標記已開發票／取消（owner）。value=true 時可帶同一張發票號給整批。 */
+export async function setInvoiced(db: D1Database, ids: string[], value: boolean, invoiceNo?: string) {
+  for (const id of ids) {
+    const existing = await getRow(db, certificatesCollection, id);
+    if (!existing) continue;
+    const data = { ...existing };
+    delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+    data.invoiced = !!value;
+    data.invoiceNo = value ? String(invoiceNo || '').trim() : '';
     await putRow(db, certificatesCollection, id, data);
   }
   return ids.length;

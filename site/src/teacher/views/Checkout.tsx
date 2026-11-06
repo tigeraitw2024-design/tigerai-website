@@ -53,6 +53,7 @@ export default function Checkout({ user }: { user: TeacherUser }) {
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [needInvoice, setNeedInvoice] = useState(false);
   const [taxId, setTaxId] = useState('');
+  const [buyerName, setBuyerName] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
@@ -88,14 +89,16 @@ export default function Checkout({ user }: { user: TeacherUser }) {
   const tax = needInvoice ? Math.round(net * (Number(bill.taxRate) || 0) / 100) : 0;
   const total = net + tax;
   const now = new Date();
-  const buyer = who || (isOwner ? '（請先在上面選講師）' : user.name);
+  const defaultBuyer = who || (isOwner ? '' : user.name);
+  const buyer = buyerName.trim() || defaultBuyer;
 
   async function pay() {
     if (!qty) return;
     if (needInvoice && !taxId.trim()) { setErr('要開發票就要填統一編號。'); return; }
+    if (needInvoice && !buyer.trim()) { setErr('要開發票就要填買受人。'); return; }
     setErr(''); setMsg(''); setBusy(true);
     try {
-      await api.post('/api/teacher/certs/pay', { ids: [...sel], value: true, needInvoice, taxId: taxId.trim() });
+      await api.post('/api/teacher/certs/pay', { ids: [...sel], value: true, needInvoice, taxId: taxId.trim(), buyer: buyer.trim() });
       setMsg(`已送出！標記為已匯款 ${qty} 筆，總計 NT$ ${total.toLocaleString()}${needInvoice ? '（含稅，會開立發票）' : '（未稅）'}。`);
       setSel(new Set()); setNeedInvoice(false); setTaxId('');
       await load();
@@ -167,27 +170,31 @@ export default function Checkout({ user }: { user: TeacherUser }) {
             <div className="t-inv__title">統一發票（三聯式）試算</div>
             <div className="t-inv__sub">中華民國 {rocYear(now)} 年　{MON3[now.getMonth()]} {now.getDate()}日</div>
             <div className="t-inv__party">
-              <div>買受人：<b>{buyer}</b></div>
+              <div>買受人：<b>{buyer || <span style={{ color: 'var(--t-fg-3)', fontWeight: 400 }}>（請填買受人）</span>}</b></div>
               <div>統一編號：{needInvoice ? (taxId || <span style={{ color: 'var(--t-danger)' }}>（要填）</span>) : '—（未稅免開）'}</div>
             </div>
-            <table className="t-invtbl">
-              <thead><tr><th>品名</th><th style={{ width: 44 }}>數量</th><th style={{ width: 64 }}>單價</th><th style={{ width: 78 }}>金額</th></tr></thead>
-              <tbody>
-                {qty === 0
-                  ? <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--t-fg-3)', padding: 16 }}>左邊勾選要結帳的證照…</td></tr>
-                  : selCerts.map((r) => (
-                    <tr key={r.id}><td>n8n 證照　{r.studentName}</td><td style={{ textAlign: 'center' }}>1</td><td style={{ textAlign: 'right' }}>{price}</td><td style={{ textAlign: 'right' }}>{price}</td></tr>
-                  ))}
-              </tbody>
-              <tfoot>
-                <tr><td colSpan={3} className="t-invtbl__lbl">銷售額合計</td><td style={{ textAlign: 'right' }}>{net.toLocaleString()}</td></tr>
-                <tr><td colSpan={3} className="t-invtbl__lbl">營業稅{needInvoice ? `（${bill.taxRate}%）` : '（未稅免）'}</td><td style={{ textAlign: 'right' }}>{tax.toLocaleString()}</td></tr>
-                <tr className="t-invtbl__total"><td colSpan={3} className="t-invtbl__lbl">總計</td><td style={{ textAlign: 'right' }}>{total.toLocaleString()}</td></tr>
-              </tfoot>
-            </table>
+            <div className="t-invtbl-scroll">
+              <table className="t-invtbl">
+                <thead><tr><th>品名</th><th style={{ width: 44 }}>數量</th><th style={{ width: 64 }}>單價</th><th style={{ width: 78 }}>金額</th></tr></thead>
+                <tbody>
+                  {qty === 0
+                    ? <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--t-fg-3)', padding: 16 }}>左邊勾選要結帳的證照…</td></tr>
+                    : selCerts.map((r) => (
+                      <tr key={r.id}><td>n8n 證照　{r.studentName}</td><td style={{ textAlign: 'center' }}>1</td><td style={{ textAlign: 'right' }}>{price}</td><td style={{ textAlign: 'right' }}>{price}</td></tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="t-invtot">
+              <div className="t-invtot__row"><span>銷售額合計</span><b>{net.toLocaleString()}</b></div>
+              <div className="t-invtot__row"><span>營業稅{needInvoice ? `（${bill.taxRate}%）` : '（未稅免開）'}</span><b>{tax.toLocaleString()}</b></div>
+              <div className="t-invtot__row t-invtot__row--total"><span>總計</span><b>{total.toLocaleString()}</b></div>
+            </div>
             <div className="t-inv__cny">總計新臺幣（中文大寫）：<b>{toCNY(total)}</b></div>
 
-            <label className="t-check" style={{ margin: '10px 0 6px' }}>
+            <div className="t-f" style={{ margin: '10px 0 6px' }}><label className="t-f__label">買受人</label>
+              <input className="t-input" value={buyerName} onChange={(e) => { setBuyerName(e.target.value); setMsg(''); }} placeholder={defaultBuyer || '買受人名稱／公司抬頭'} /></div>
+            <label className="t-check" style={{ margin: '6px 0' }}>
               <input type="checkbox" checked={needInvoice} onChange={(e) => { setNeedInvoice(e.target.checked); setMsg(''); }} /> 我要開統一發票（含稅）
             </label>
             {needInvoice && (

@@ -5,7 +5,7 @@ import {
   ensureTables, listCerts, createCert, updateCert, markCerts, certReport,
   listInstructors, upsertInstructor, getRow, getSettings, putSettings,
   acceptCerts, requestEdit, clearEditRequest, deleteCert, deleteInstructor,
-  markSettled, markPaid, returnCert, clearReturn, reassignCerts,
+  markSettled, markPaid, returnCert, clearReturn, reassignCerts, setCost, setInvoiced,
 } from './store';
 import { certificatesCollection, instructorsCollection } from './schema';
 import {
@@ -225,7 +225,7 @@ app.post('/certs/settle', async (ctx) => {
 // 要不要發票（含稅）＋統編整批帶進來，金額用當下設定快照。
 app.post('/certs/pay', async (ctx) => {
   const t = ctx.get('teacher');
-  const { ids, value, needInvoice, taxId } = await ctx.req.json<{ ids: string[]; value?: boolean; needInvoice?: boolean; taxId?: string }>();
+  const { ids, value, needInvoice, taxId, buyer } = await ctx.req.json<{ ids: string[]; value?: boolean; needInvoice?: boolean; taxId?: string; buyer?: string }>();
   if (!Array.isArray(ids) || !ids.length) return ctx.json({ error: '沒有選到要結帳的項目' }, 400);
   if (!owner(ctx)) {
     for (const id of ids) {
@@ -236,7 +236,25 @@ app.post('/certs/pay', async (ctx) => {
   }
   const on = value !== false;
   if (on && needInvoice && !String(taxId || '').trim()) return ctx.json({ error: '要開發票就要填統一編號' }, 400);
-  const n = await markPaid(ctx.env.DB, ids, on, { needInvoice: !!needInvoice, taxId });
+  const n = await markPaid(ctx.env.DB, ids, on, { needInvoice: !!needInvoice, taxId, buyer });
+  return ctx.json({ ok: true, count: n });
+});
+
+// 設定一筆的寄送成本＋郵局單號（owner）。
+app.post('/certs/cost', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能填成本' }, 403);
+  const { id, costEnvelope, costCard, costPostage, tracking } = await ctx.req.json<any>();
+  if (!id) return ctx.json({ error: '少了 id' }, 400);
+  await setCost(ctx.env.DB, id, { costEnvelope, costCard, costPostage, tracking });
+  return ctx.json({ ok: true });
+});
+
+// 標記已開發票／取消＋填發票號（owner）。
+app.post('/certs/invoice', async (ctx) => {
+  if (!owner(ctx)) return ctx.json({ error: '只有 owner 能開發票' }, 403);
+  const { ids, value, invoiceNo } = await ctx.req.json<{ ids: string[]; value?: boolean; invoiceNo?: string }>();
+  if (!Array.isArray(ids) || !ids.length) return ctx.json({ error: '沒有選到項目' }, 400);
+  const n = await setInvoiced(ctx.env.DB, ids, value !== false, invoiceNo);
   return ctx.json({ ok: true, count: n });
 });
 

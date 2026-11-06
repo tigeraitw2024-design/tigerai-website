@@ -200,6 +200,7 @@ export async function createCert(
     costPrint: 0, costEnvelope: 0, costCard: 0, costPostage: 0,
     // 付款/發票（付款方自己標已匯款、要不要發票、統編）
     paid: false, paidAt: '', paidNet: 0, paidTax: 0, paidAmount: 0, payLast5: '',
+    payBatch: '', // 同一次勾選匯款的共用一個批次編號＝同一單（整單一起核對/駁回）
     payReject: '', // owner 對不到帳駁回的原因（講師重新確認後清掉）
     needInvoice: false, taxId: '', invoiceBuyer: '',
     invoiced: false, invoiceNo: '',
@@ -286,20 +287,22 @@ export async function markPaid(
   const net = Number(s.unitPrice) || 0;
   const needInvoice = !!opts.needInvoice;
   const tax = needInvoice ? Math.round(net * (Number(s.taxRate) || 0) / 100) : 0;
+  const now = nowISO();
+  const batchId = newId();   // 這一次勾選匯款的＝同一單，整單一起核對／駁回
   for (const id of ids) {
     const existing = await getRow(db, certificatesCollection, id);
     if (!existing) continue;
     const data = { ...existing };
     delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
     if (value) {
-      data.paid = true; data.paidAt = nowISO();
+      data.paid = true; data.paidAt = now; data.payBatch = batchId;
       data.needInvoice = needInvoice; data.taxId = needInvoice ? String(opts.taxId || '').trim() : '';
       data.invoiceBuyer = String(opts.buyer || '').trim();
       data.payLast5 = String(opts.payLast5 || '').replace(/\D/g, '').slice(-5); // 匯款帳號後五碼，只留數字
       data.payReject = ''; // 重新送出＝清掉上次的駁回
       data.paidNet = net; data.paidTax = tax; data.paidAmount = net + tax;
     } else {
-      data.paid = false; data.paidAt = '';
+      data.paid = false; data.paidAt = ''; data.payBatch = '';
       data.payLast5 = '';
       data.paidNet = 0; data.paidTax = 0; data.paidAmount = 0;
     }
@@ -312,15 +315,19 @@ export async function markPaid(
  * 駁回匯款（owner 對不到帳）：把這筆退回未匯款狀態、附原因，講師會看到要重新確認。
  * 清掉匯款資訊（後五碼、金額、時間），但保留發票意願／統編／買受人，重送時不用再填。
  */
-export async function rejectPay(db: D1Database, id: string, reason: string) {
-  const existing = await getRow(db, certificatesCollection, id);
-  if (!existing) return;
-  const data = { ...existing };
-  delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
-  data.paid = false; data.paidAt = ''; data.payLast5 = '';
-  data.paidNet = 0; data.paidTax = 0; data.paidAmount = 0;
-  data.payReject = String(reason || '').trim() || '請重新確認匯款';
-  return putRow(db, certificatesCollection, id, data);
+export async function rejectPay(db: D1Database, ids: string[], reason: string) {
+  const msg = String(reason || '').trim() || '請重新確認匯款';
+  for (const id of ids) {
+    const existing = await getRow(db, certificatesCollection, id);
+    if (!existing) continue;
+    const data = { ...existing };
+    delete (data as any).createdAt; delete (data as any).updatedAt; delete (data as any).sort;
+    data.paid = false; data.paidAt = ''; data.payBatch = ''; data.payLast5 = '';
+    data.paidNet = 0; data.paidTax = 0; data.paidAmount = 0;
+    data.payReject = msg;
+    await putRow(db, certificatesCollection, id, data);
+  }
+  return ids.length;
 }
 
 /** 設定一筆的寄送成本（信封／卡紙／掛號）與郵局單號（owner）。只覆蓋有帶的欄位。 */

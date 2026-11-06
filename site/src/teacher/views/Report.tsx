@@ -105,45 +105,61 @@ export default function Report({ isOwner }: { isOwner: boolean }) {
   );
 }
 
-/** 收款核對（owner）：講師已標已匯款、還沒結算的。對後五碼→確認收款（結算）或駁回退回。 */
+/** 收款核對（owner）：以「單」為單位（同一次勾選匯款＝一單）。對後五碼→「確認收款」整單結算，或「駁回」整單退回。 */
 function Reconcile({ certs, onChange }: { certs: Cert[]; onChange: () => void }) {
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
-  const queue = certs.filter((c) => c.paid && !c.settled);
-  if (!queue.length) return null;
-  async function confirm(id: string) {
-    setBusy(id); setErr('');
-    try { await api.post('/api/teacher/certs/settle', { ids: [id], value: true }); onChange(); }
+  const pending = certs.filter((c) => c.paid && !c.settled);
+  const groups: { key: string; certs: Cert[] }[] = [];
+  const byKey = new Map<string, { key: string; certs: Cert[] }>();
+  for (const c of pending) {                       // payBatch 相同算一單；舊資料沒 payBatch 就各自一單
+    const key = c.payBatch || c.id;
+    let g = byKey.get(key);
+    if (!g) { g = { key, certs: [] }; byKey.set(key, g); groups.push(g); }
+    g.certs.push(c);
+  }
+  if (!groups.length) return null;
+  type G = { key: string; certs: Cert[] };
+  async function confirm(g: G) {
+    setBusy(g.key); setErr('');
+    try { await api.post('/api/teacher/certs/settle', { ids: g.certs.map((c) => c.id), value: true }); onChange(); }
     catch (e: any) { setErr(e.message); } finally { setBusy(''); }
   }
-  async function reject(c: Cert) {
-    const reason = window.prompt(`駁回「${c.recipientName || c.studentName}」的匯款，請講師重新確認。原因：`, '對不到這筆款，請確認金額／後五碼或重新匯款');
+  async function reject(g: G) {
+    const names = g.certs.map((c) => c.recipientName || c.studentName).join('、');
+    const reason = window.prompt(`駁回這一單（${g.certs.length} 張：${names}）的匯款，整單一起退回請講師重新確認。原因：`, '對不到這筆款，請確認金額／後五碼或重新匯款');
     if (reason === null) return;
-    setBusy(c.id); setErr('');
-    try { await api.post('/api/teacher/certs/reject-pay', { id: c.id, reason }); onChange(); }
+    setBusy(g.key); setErr('');
+    try { await api.post('/api/teacher/certs/reject-pay', { ids: g.certs.map((c) => c.id), reason }); onChange(); }
     catch (e: any) { setErr(e.message); } finally { setBusy(''); }
   }
   return (
     <div style={{ marginTop: 28 }}>
-      <h2 className="t-h2">收款核對（{queue.length}）</h2>
-      <p className="t-intro" style={{ marginBottom: 10 }}>講師已標「已匯款」、還沒結算的。對一下金額和<b>後五碼</b>跟銀行帳單：對到按「確認收款」封存；對不到按「駁回」退回請他重新確認。</p>
+      <h2 className="t-h2">收款核對（{groups.length} 單）</h2>
+      <p className="t-intro" style={{ marginBottom: 10 }}>講師一次勾選匯款的算<b>一單</b>。對總金額和<b>後五碼</b>跟銀行帳單：對到按「確認收款」整單封存；對不到按「駁回」整單退回請他重新確認。</p>
       {err && <div className="t-msg t-msg--err">{err}</div>}
       <div style={{ overflowX: 'auto' }}>
         <table className="t-report">
-          <thead><tr><th>學員</th><th>買受人</th><th className="num">金額</th><th>後五碼</th><th></th></tr></thead>
+          <thead><tr><th>單（講師／學員）</th><th className="num">張數</th><th>買受人</th><th className="num">總金額</th><th>後五碼</th><th></th></tr></thead>
           <tbody>
-            {queue.map((c) => (
-              <tr key={c.id}>
-                <td><Name zh={c.recipientName} en={c.studentName} />{c.serial ? <><br /><span style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>{c.serial}</span></> : null}</td>
-                <td>{c.needInvoice ? `${c.invoiceBuyer || '—'}（統編 ${c.taxId || '—'}）` : <span style={{ color: 'var(--t-fg-3)' }}>未稅</span>}</td>
-                <td className="num">{money(c.paidAmount)}</td>
-                <td style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{c.payLast5 || <span style={{ color: 'var(--t-danger)', fontWeight: 400 }}>未填</span>}</td>
-                <td style={{ whiteSpace: 'nowrap' }}>
-                  <button className="t-btn t-btn--brand t-btn--sm" disabled={busy === c.id} onClick={() => confirm(c.id)}>確認收款</button>
-                  <button className="t-btn t-btn--ghost t-btn--sm" style={{ marginLeft: 6, color: 'var(--t-danger)' }} disabled={busy === c.id} onClick={() => reject(c)}>駁回</button>
-                </td>
-              </tr>
-            ))}
+            {groups.map((g) => {
+              const first = g.certs[0];
+              const amount = g.certs.reduce((s, c) => s + (Number(c.paidAmount) || 0), 0);
+              const names = g.certs.map((c) => c.recipientName || c.studentName).join('、');
+              return (
+                <tr key={g.key}>
+                  <td><b>{first.instructorName}</b><br /><span style={{ fontSize: 11, color: 'var(--t-fg-3)' }}>{names}</span></td>
+                  <td className="num">{g.certs.length}</td>
+                  <td>{first.needInvoice ? `${first.invoiceBuyer || '—'}（統編 ${first.taxId || '—'}）` : <span style={{ color: 'var(--t-fg-3)' }}>未稅</span>}</td>
+                  <td className="num">{money(amount)}</td>
+                  <td style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{first.payLast5 || <span style={{ color: 'var(--t-danger)', fontWeight: 400 }}>未填</span>}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <button className="t-btn t-btn--brand t-btn--sm" disabled={busy === g.key} onClick={() => confirm(g)}>確認收款</button>
+                    <button className="t-btn t-btn--ghost t-btn--sm" style={{ marginLeft: 6, color: 'var(--t-danger)' }} disabled={busy === g.key} onClick={() => reject(g)}>駁回</button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

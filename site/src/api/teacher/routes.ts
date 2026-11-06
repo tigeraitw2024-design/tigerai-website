@@ -271,9 +271,10 @@ app.post('/certs/cost', async (ctx) => {
 // 駁回匯款（owner 對不到帳）：退回未匯款＋附原因，講師重新確認。
 app.post('/certs/reject-pay', async (ctx) => {
   if (!owner(ctx)) return ctx.json({ error: '只有 owner 能駁回' }, 403);
-  const { id, reason } = await ctx.req.json<{ id: string; reason?: string }>();
-  if (!id) return ctx.json({ error: '少了 id' }, 400);
-  await rejectPay(ctx.env.DB, id, String(reason || ''));
+  const body = await ctx.req.json<{ ids?: string[]; id?: string; reason?: string }>();
+  const ids = Array.isArray(body.ids) ? body.ids : (body.id ? [body.id] : []);
+  if (!ids.length) return ctx.json({ error: '少了要駁回的單' }, 400);
+  await rejectPay(ctx.env.DB, ids, String(body.reason || ''));
   return ctx.json({ ok: true });
 });
 

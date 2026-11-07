@@ -96,6 +96,20 @@ body.tg-teacher {
 .t-sort select { height: 32px; padding: 2px 8px; border: 1px solid var(--t-line-2); border-radius: 8px; background: #fff; color: var(--t-fg); font: inherit; font-size: 13px; cursor: pointer; }
 .t-sort button { height: 32px; padding: 0 10px; border: 1px solid var(--t-line-2); border-radius: 8px; background: #fff; color: var(--t-fg); font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .t-sort button:hover { border-color: var(--t-brand); }
+/* 匯入必填對齊檢查：每個必填欄一個 chip，對到＝綠、沒對＝紅 */
+.t-reqbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.t-reqchip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 10px; border-radius: 8px; border: 1px solid var(--t-line-2); background: #fff; }
+.t-reqchip[data-ok='1'] { border-color: var(--t-ok); color: var(--t-ok); background: #F0F8F3; }
+.t-reqchip[data-ok='0'] { border-color: var(--t-danger); color: var(--t-danger); background: #FDF2F1; }
+.t-reqchip__col { color: var(--t-fg-3); font-size: 11px; }
+/* 匯入「檢查並補齊」可編輯格表：缺的／格式錯的標紅 */
+.t-rev { width: 100%; border-collapse: collapse; }
+.t-rev th, .t-rev td { border: 1px solid var(--t-line); padding: 2px; }
+.t-rev th { background: var(--t-panel); white-space: nowrap; position: sticky; top: 0; font-size: 12px; text-align: left; padding: 6px 6px; z-index: 1; }
+.t-rev input { width: 100%; min-width: 130px; border: 1px solid var(--t-line-2); background: #fff; color: var(--t-fg); font: inherit; font-size: 12px; padding: 5px 6px; border-radius: 4px; }
+.t-rev input:focus { border-color: var(--t-brand); outline: none; }
+.t-rev td[data-bad='1'] { background: #FDF2F1; }
+.t-rev td[data-bad='1'] input { border-color: var(--t-danger); }
 .t-empty { text-align: center; padding: 48px 16px; color: var(--t-fg-3); }
 
 /* ── 工具列／搜尋 ──────────────────────────────────────────── */

@@ -103,9 +103,15 @@ export function validateRecord(r: Record<string, unknown>): Record<string, strin
   return e;
 }
 
-/** 把資料列 + 對應表，整理成要送出去的證照紀錄。studentName 是必要的，空的那列會跳過。 */
+/**
+ * 把資料列 + 對應表，整理成要送出去的證照紀錄。
+ * 預設：沒有證照姓名（studentName）的那列會跳過。
+ * keepIncomplete=true：改成「只要這列有任何對應到的值就保留」（空證照姓名也留著），
+ *   給匯入前的「檢查並補齊」用——缺的欄位讓使用者就地補，而不是整列靜默消失。
+ */
 export function buildRecords(
   rows: string[][], map: string[], defaults: { course?: string; fee?: number },
+  opts: { keepIncomplete?: boolean } = {},
 ): Record<string, string | number>[] {
   const out: Record<string, string | number>[] = [];
   for (const r of rows) {
@@ -119,7 +125,8 @@ export function buildRecords(
       o[key] = v;
     });
     if (zip) o.address = (zip + ' ' + (o.address || '')).trim();
-    if (!(o.studentName || '').trim()) continue;
+    if (opts.keepIncomplete) { if (!Object.keys(o).length) continue; }   // 整列全空才跳過
+    else if (!(o.studentName || '').trim()) continue;                    // 舊行為：沒姓名就跳過
     if (defaults.course && !o.course) o.course = defaults.course;
     const rec: Record<string, string | number> = { ...o, fee: defaults.fee ?? 200 };
     out.push(rec);

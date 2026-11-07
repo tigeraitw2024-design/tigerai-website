@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, type Cert, type TeacherUser, type Instructor, type BillingConfig } from '../api';
 import Icon from '../Icon';
 import Name from '../Name';
-import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRecord, isEmail, isPhoneTW, isAddressTW, type Grid } from '../importParse';
+import { parseFile, parseCsvText, guessMapping, buildRecords, FIELDS, validateRecord, isEmail, isPhoneTW, isAddressTW, checkCertName, type Grid } from '../importParse';
 import { downloadBlob } from '../certExport';
 
 /**
@@ -650,13 +650,34 @@ function AddModal({ isOwner, onClose, onDone }: { isOwner: boolean; onClose: () 
 }
 
 // ── 匯入 Excel／CSV ───────────────────────────────────────────────
-// 流程：上傳 .xlsx／.csv（或貼 CSV）→ 自動認抬頭、攤出對應表讓人改 → 預覽 → 匯入。
+// 流程：上傳 .xlsx／.csv（或貼 CSV）→ ①對應欄位（必填要對齊）→ ②檢查並補齊（缺的就地補）→ 匯入。
+// 每個人的表格長不一樣，所以必填欄位要標清楚、沒對到不給過；缺資料的列標紅讓他補，不靜默塞空值。
+const REQUIRED = ['studentName', 'recipientName', 'email', 'phone', 'address']; // 硬必填（沒補齊不給匯入）
+const REQ_LABEL: Record<string, string> = { studentName: '證照英文名', recipientName: '收件中文名', email: 'Email', phone: '電話', address: '地址（含郵遞區號）' };
+const REV_COLS: [string, string, string][] = [ // [key, 欄名, placeholder]
+  ['studentName', '證照英文名 *', 'LIN,YUNG-CHING'], ['recipientName', '收件中文名 *', '林永青'],
+  ['email', 'Email *', 'a@example.com'], ['phone', '電話 *', '0912345678'],
+  ['address', '地址（含郵遞區號）*', '116 臺北市文山區…1號9樓之5'], ['certUrl', 'n8n 證明連結（建議）', 'https://…'],
+];
+/** 匯入檢查用的硬必填驗證（只管 REQUIRED 那幾欄；證明連結另算「建議」不硬擋）。 */
+function reviewErr(r: Record<string, string>): Record<string, string> {
+  const e: Record<string, string> = {};
+  const g = (k: string) => String(r[k] ?? '').trim();
+  const n = checkCertName(g('studentName')); if (n) e.studentName = n;
+  if (!g('recipientName')) e.recipientName = '必填';
+  if (!g('email')) e.email = '必填'; else if (!isEmail(g('email'))) e.email = 'Email 格式不對（a@example.com）';
+  if (!g('phone')) e.phone = '必填'; else if (!isPhoneTW(g('phone'))) e.phone = '電話格式不對（手機 09xxxxxxxx 或市話含區碼）';
+  if (!g('address')) e.address = '必填'; else if (!isAddressTW(g('address'))) e.address = '地址不完整：要有路/街＋門牌號';
+  return e;
+}
+
 function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean; existing: Set<string>; onClose: () => void; onDone: () => void }) {
   const [grid, setGrid] = useState<Grid | null>(null);
   const [map, setMap] = useState<string[]>([]);
   const [course, setCourse] = useState('n8n Quickstart');
   const [fee, setFee] = useState('200');
   const [paste, setPaste] = useState('');
+  const [review, setReview] = useState<Record<string, string>[] | null>(null); // 進到「檢查並補齊」就有值，可逐格編輯
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: number; errors: string[] } | null>(null);
   const [err, setErr] = useState('');
@@ -668,7 +689,7 @@ function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean;
   function take(g: Grid) {
     if (!g.headers.length) { setErr('讀不到任何欄位，檔案可能是空的。'); return; }
     const m = guessMapping(g.headers).map((k) => (!isOwner && OWNER_ONLY.includes(k) ? '' : k));
-    setErr(''); setGrid(g); setMap(m);
+    setErr(''); setGrid(g); setMap(m); setReview(null);
   }
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return;
@@ -677,28 +698,35 @@ function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean;
     catch (e: any) { setErr(e.message || '讀檔失敗'); }
   }
 
-  const records = useMemo(
-    () => (grid ? buildRecords(grid.rows, map, isOwner ? { course, fee: Number(fee) || 200 } : { course: '', fee: 200 }) : []),
+  // ── 對應步驟：必填對齊檢查 ──
+  const mappedKeys = useMemo(() => new Set(map.filter(Boolean)), [map]);
+  const missingReq = REQUIRED.filter((k) => !mappedKeys.has(k));
+  const previewCount = useMemo(
+    () => (grid ? buildRecords(grid.rows, map, isOwner ? { course, fee: Number(fee) || 200 } : { course: '', fee: 200 }, { keepIncomplete: true }).length : 0),
     [grid, map, course, fee, isOwner],
   );
-  const hasName = map.includes('studentName');
-  // 匯入是大量資料，格式不對的只警告、不硬擋，匯入後可到清單修正。
-  const problems = useMemo(() => records.map((r) => {
-    const bad: string[] = [];
-    if (!isEmail(String(r.email || ''))) bad.push('Email');
-    if (!isPhoneTW(String(r.phone || ''))) bad.push('電話');
-    if (!isAddressTW(String(r.address || ''))) bad.push('地址');
-    if (!String(r.certUrl || '').trim()) bad.push('證明連結');
-    return bad.length ? `${r.studentName}（${bad.join('、')}）` : '';
-  }).filter(Boolean), [records]);
-  // 去重提醒：同姓名＋Email 已經在清單裡的，標出來（仍可匯入）。
-  const dups = useMemo(() => records
+  function toReview() {
+    if (!grid) return;
+    const recs = buildRecords(grid.rows, map, isOwner ? { course, fee: Number(fee) || 200 } : { course: '', fee: 200 }, { keepIncomplete: true })
+      .map((r) => { const o: Record<string, string> = {}; for (const k in r) o[k] = String(r[k] ?? ''); return o; });
+    setReview(recs); setErr('');
+  }
+
+  // ── 檢查步驟：逐列驗證 + 就地編輯 ──
+  const setCell = (i: number, k: string, v: string) => setReview((rs) => (rs || []).map((x, j) => (j === i ? { ...x, [k]: v } : x)));
+  const delRow = (i: number) => setReview((rs) => (rs || []).filter((_, j) => j !== i));
+  const errsByRow = useMemo(() => (review || []).map(reviewErr), [review]);
+  const badCount = errsByRow.filter((e) => Object.keys(e).length).length;
+  const noUrl = useMemo(() => (review || []).filter((r) => !String(r.certUrl || '').trim()).length, [review]);
+  const dups = useMemo(() => (review || [])
     .filter((r) => existing.has(`${String(r.studentName || '').toLowerCase().trim()}|${String(r.email || '').toLowerCase().trim()}`))
-    .map((r) => String(r.studentName)), [records, existing]);
+    .map((r) => String(r.studentName)).filter(Boolean), [review, existing]);
 
   async function submit(e: React.FormEvent) {
-    e.preventDefault(); setErr(''); setBusy(true); setResult(null);
-    try { setResult(await api.post<{ ok: number; errors: string[] }>('/api/teacher/certs/import', { rows: records })); }
+    e.preventDefault();
+    if (!review || badCount > 0 || !review.length) return;
+    setErr(''); setBusy(true); setResult(null);
+    try { setResult(await api.post<{ ok: number; errors: string[] }>('/api/teacher/certs/import', { rows: review })); }
     catch (e: any) { setErr(e.message); }
     finally { setBusy(false); }
   }
@@ -706,7 +734,7 @@ function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean;
   return (
     <div className="t-modal" onClick={onClose}>
       <form className="t-modal__box t-modal__box--wide" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <div className="t-modal__head"><h3>匯入學員（Excel／CSV）</h3>
+        <div className="t-modal__head"><h3>匯入學員（Excel／CSV）{grid && !result && <span style={{ fontSize: 13, color: 'var(--t-fg-3)', fontWeight: 400 }}>　{review ? '步驟 2／2 檢查並補齊' : '步驟 1／2 對應欄位'}</span>}</h3>
           <button type="button" className="t-iconbtn t-spacer" style={{ color: 'var(--t-fg)' }} onClick={onClose}><Icon name="x" /></button></div>
 
         {err && <div className="t-msg t-msg--err">{err}</div>}
@@ -723,7 +751,7 @@ function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean;
         ) : !grid ? (
           <>
             <p className="t-f__help" style={{ marginBottom: 10 }}>
-              選一個 Google 表單匯出的 <b>.xlsx</b>（或 CSV）。抬頭我會自動對應，下一步你可以逐欄確認、修改。
+              選一個 Google 表單匯出的 <b>.xlsx</b>（或 CSV）。抬頭我會自動對應，下一步你可以逐欄確認、修改，再檢查每一筆資料齊不齊。
             </p>
             <label className="t-drop">
               <input type="file" accept=".xlsx,.csv,text/csv" onChange={onFile} style={{ display: 'none' }} />
@@ -737,11 +765,25 @@ function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean;
                 disabled={!paste.trim()} onClick={() => take(parseCsvText(paste))}>解析這段文字</button>
             </details>
           </>
-        ) : (
+        ) : !review ? (
+          /* ── 步驟 1：對應欄位 ── */
           <>
             <p className="t-f__help" style={{ marginBottom: 8 }}>
-              左邊是你檔案的欄位，右邊選它要對到哪個證照欄位。<b>證照姓名</b>一定要指定一欄。
+              左邊是你檔案的欄位，右邊選它要對到哪個證照欄位。<b>標「必填」的六樣（證照英文名、收件中文名、Email、電話、地址、郵遞區號）要對齊</b>，用不到的欄位選「略過」。
             </p>
+            {/* 必填對齊檢查：每個必填欄顯示對到哪一欄，或紅色未對應 */}
+            <div className="t-reqbar">
+              {REQUIRED.map((k) => {
+                const idx = map.indexOf(k);
+                const ok = idx >= 0;
+                return (
+                  <span key={k} className="t-reqchip" data-ok={ok ? '1' : '0'}>
+                    {ok ? '✓' : '✗'} {REQ_LABEL[k]}
+                    {ok && <span className="t-reqchip__col">← {grid.headers[idx] || `第 ${idx + 1} 欄`}</span>}
+                  </span>
+                );
+              })}
+            </div>
             <div className="t-maptable">
               {grid.headers.map((h, i) => (
                 <div className="t-maprow" key={i}>
@@ -754,7 +796,7 @@ function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean;
                     setMap((m) => m.map((x, j) => (j === i ? v : (v && x === v ? '' : x)))); // 同一目標只留一欄
                   }}>
                     <option value="">略過</option>
-                    {options.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+                    {options.map((f) => <option key={f.key} value={f.key}>{f.label}{REQUIRED.includes(f.key) ? '（必填）' : f.key === 'zip' ? '（必填·併進地址）' : ''}</option>)}
                   </select>
                 </div>
               ))}
@@ -773,35 +815,62 @@ function ImportModal({ isOwner, existing, onClose, onDone }: { isOwner: boolean;
               </div>
             )}
 
-            {!hasName
-              ? <div className="t-msg t-msg--err" style={{ marginTop: 10 }}>請先把其中一欄設成「證照姓名」。</div>
-              : <div className="t-msg t-msg--info" style={{ marginTop: 10 }}>
-                  將匯入 <b>{records.length}</b> 筆{grid.rows.length > records.length && <>（{grid.rows.length - records.length} 筆因為沒有姓名略過）</>}。
-                  {records[0] && <div style={{ fontSize: 12, marginTop: 4, color: 'var(--t-fg-2)' }}>
-                    例：{records[0].studentName as string}
-                    {records[0].recipientName ? ` → 寄給 ${records[0].recipientName}` : ''}
-                    {records[0].address ? `，${records[0].address}` : ''}
-                  </div>}
-                </div>}
-            {hasName && problems.length > 0 && (
-              <div className="t-msg t-msg--info" style={{ marginTop: 8, borderColor: 'var(--t-warn, #C08423)' }}>
-                ⚠ 有 {problems.length} 筆 Email／電話／地址格式要確認（仍可匯入，之後到清單修正）：
-                <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: 12 }}>
-                  {problems.slice(0, 6).map((x, i) => <li key={i}>{x}</li>)}
-                </ul>
-              </div>
-            )}
-            {hasName && dups.length > 0 && (
-              <div className="t-msg t-msg--info" style={{ marginTop: 8, borderColor: 'var(--t-warn, #C08423)' }}>
-                ⚠ 有 {dups.length} 筆可能重複（同姓名＋Email 已在清單）：{dups.slice(0, 6).join('、')}{dups.length > 6 ? '…' : ''}。確認不是重送再匯入。
-              </div>
-            )}
+            {missingReq.length > 0
+              ? <div className="t-msg t-msg--err" style={{ marginTop: 10 }}>還要對應：<b>{missingReq.map((k) => REQ_LABEL[k]).join('、')}</b>。把上面對應的欄位選到這些，或檔案真的沒有，就下一步手動補。</div>
+              : <div className="t-msg t-msg--ok" style={{ marginTop: 10 }}>必填欄位都對齊了，共 <b>{previewCount}</b> 筆，下一步檢查每一筆資料齊不齊。</div>}
 
             <div className="t-row" style={{ marginTop: 12 }}>
-              <button className="t-btn t-btn--brand" disabled={busy || !hasName || !records.length}>
-                {busy ? '匯入中…' : `匯入 ${records.length} 筆`}
+              <button type="button" className="t-btn t-btn--brand" disabled={!previewCount} onClick={toReview}>
+                下一步：檢查資料（{previewCount}）
               </button>
               <button type="button" className="t-btn t-btn--ghost" onClick={() => { setGrid(null); setErr(''); }}>重選檔案</button>
+              <button type="button" className="t-btn t-btn--ghost t-spacer" onClick={onClose}>取消</button>
+            </div>
+            {missingReq.length > 0 && <p className="t-f__help" style={{ marginTop: 6 }}>就算檔案缺某幾欄，也可以直接下一步，在檢查畫面手動把每一筆補齊。</p>}
+          </>
+        ) : (
+          /* ── 步驟 2：檢查並補齊（可逐格編輯）── */
+          <>
+            <p className="t-f__help" style={{ marginBottom: 8 }}>
+              每一筆都要資料齊全才寄得出去。<b style={{ color: 'var(--t-danger)' }}>標紅的格子</b>是缺的或格式不對，點進去直接補。全部補好才可以匯入。證明連結是<b>建議</b>補（之後也能到清單補）。
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+              <span className="t-reqchip" data-ok={badCount === 0 ? '1' : '0'}>{badCount === 0 ? '✓ 必填都齊了' : `✗ 還有 ${badCount} 筆要補`}</span>
+              {noUrl > 0 && <span className="t-reqchip" data-ok="0" style={{ borderColor: 'var(--t-brand)', color: 'var(--t-brand)', background: 'var(--t-brand-soft)' }}>⚠ {noUrl} 筆缺證明連結（建議補）</span>}
+              {dups.length > 0 && <span className="t-reqchip" data-ok="0" style={{ borderColor: 'var(--t-brand)', color: 'var(--t-brand)', background: 'var(--t-brand-soft)' }}>⚠ {dups.length} 筆疑似重複</span>}
+            </div>
+            <div style={{ overflow: 'auto', maxHeight: '48vh', border: '1px solid var(--t-line)', borderRadius: 6 }}>
+              <table className="t-rev">
+                <thead><tr>
+                  <th style={{ width: 28 }}>#</th>
+                  {REV_COLS.map(([k, label]) => <th key={k}>{label}</th>)}
+                  <th style={{ width: 32 }}></th>
+                </tr></thead>
+                <tbody>
+                  {(review || []).map((r, i) => {
+                    const e = errsByRow[i];
+                    return (
+                      <tr key={i}>
+                        <td style={{ textAlign: 'center', color: 'var(--t-fg-3)' }}>{i + 1}</td>
+                        {REV_COLS.map(([k, , ph]) => (
+                          <td key={k} data-bad={e[k] ? '1' : '0'}>
+                            <input value={r[k] || ''} placeholder={ph} title={e[k] || ''}
+                              onChange={(ev) => setCell(i, k, ev.target.value)} />
+                          </td>
+                        ))}
+                        <td><button type="button" className="t-iconbtn" title="刪掉這一列" style={{ color: 'var(--t-danger)' }} onClick={() => delRow(i)}><Icon name="x" size={15} /></button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="t-row" style={{ marginTop: 12 }}>
+              <button className="t-btn t-btn--brand" disabled={busy || badCount > 0 || !(review || []).length}>
+                {busy ? '匯入中…' : badCount > 0 ? `還有 ${badCount} 筆要補` : `匯入 ${(review || []).length} 筆`}
+              </button>
+              <button type="button" className="t-btn t-btn--ghost" onClick={() => setReview(null)}>← 上一步（改對應）</button>
               <button type="button" className="t-btn t-btn--ghost t-spacer" onClick={onClose}>取消</button>
             </div>
           </>

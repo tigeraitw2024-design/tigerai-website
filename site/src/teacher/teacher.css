@@ -84,6 +84,18 @@ body.tg-teacher {
 .t-pill[data-tone='ok'] { border-color: var(--t-ok); color: var(--t-ok); }
 .t-pill[data-tone='warn'] { border-color: var(--t-brand); color: var(--t-brand); background: var(--t-brand-soft); }
 .t-pill[data-tone='off'] { color: var(--t-fg-3); }
+/* 快選篩選鈕：方塊（跟卡片／統計 tile 一致），不用橢圓藥丸 */
+.t-qp { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px;
+  border: 1px solid var(--t-line-2); background: #fff; color: var(--t-fg);
+  border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.t-qp:hover { border-color: var(--t-brand); }
+.t-qp[data-tone='warn'] { border-color: var(--t-brand); color: var(--t-brand); background: var(--t-brand-soft); }
+.t-qp .t-mono { font-weight: 400; }
+/* 排序控制：下拉＋方向，跟快選同一排 */
+.t-sort { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--t-fg-3); }
+.t-sort select { height: 32px; padding: 2px 8px; border: 1px solid var(--t-line-2); border-radius: 8px; background: #fff; color: var(--t-fg); font: inherit; font-size: 13px; cursor: pointer; }
+.t-sort button { height: 32px; padding: 0 10px; border: 1px solid var(--t-line-2); border-radius: 8px; background: #fff; color: var(--t-fg); font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.t-sort button:hover { border-color: var(--t-brand); }
 .t-empty { text-align: center; padding: 48px 16px; color: var(--t-fg-3); }
 
 /* ── 工具列／搜尋 ──────────────────────────────────────────── */

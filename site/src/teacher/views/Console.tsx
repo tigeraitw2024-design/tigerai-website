@@ -32,6 +32,19 @@ function statusOf(r: Cert): { label: string; tone: string } {
   return { label: '待確認', tone: 'off' };
 }
 
+/** 可排序的時間欄位：拿來回追「什麼時候送出／接單／列印／寄出／匯款／結算」。 */
+type SortKey = 'created' | 'accepted' | 'printed' | 'shipped' | 'paid' | 'settled';
+const TS: Record<SortKey, (r: Cert) => string> = {
+  created: (r) => r.createdAt || '', accepted: (r) => r.acceptedAt || '',
+  printed: (r) => r.printedAt || '', shipped: (r) => r.shippedAt || '',
+  paid: (r) => r.paidAt || '', settled: (r) => r.settledAt || '',
+};
+const SORT_OPTS: [SortKey, string][] = [
+  ['created', '送出時間'], ['accepted', '接單時間'], ['printed', '列印時間'],
+  ['shipped', '寄出時間'], ['paid', '匯款時間'], ['settled', '結算時間'],
+];
+const SORT_LABEL: Record<SortKey, string> = { created: '送出', accepted: '接單', printed: '列印', shipped: '寄出', paid: '匯款', settled: '結算' };
+
 /** 單號旁的「複製」小鈕：點一下把郵局單號複製到剪貼簿，方便去查件。 */
 function CopyNo({ no }: { no: string }) {
   const [done, setDone] = useState(false);
@@ -66,6 +79,8 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     try { const f = sessionStorage.getItem('tg_cert_filter'); if (f) { sessionStorage.removeItem('tg_cert_filter'); return f as StatusFilter; } } catch { /* 無痕視窗 */ }
     return 'all';
   });
+  const [sortBy, setSortBy] = useState<SortKey>('created');   // 回追用：照哪個階段的時間排
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState('');
   const [modal, setModal] = useState<'' | 'add' | 'import'>('');
@@ -92,8 +107,15 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     if (kw) r = r.filter((x) =>
       [x.studentName, x.serial, x.courseName, x.instructorName, x.address, x.email, x.course]
         .some((v) => (v || '').toLowerCase().includes(kw)));
+    const get = TS[sortBy]; const dir = sortDir === 'asc' ? 1 : -1;
+    r = [...r].sort((a, b) => {
+      const ta = get(a), tb = get(b);
+      if (!ta && !tb) return 0;
+      if (!ta) return 1; if (!tb) return -1;        // 還沒走到這階段的（沒時間）一律排最後
+      return ta < tb ? -dir : ta > tb ? dir : 0;
+    });
     return r;
-  }, [rows, status, q]);
+  }, [rows, status, q, sortBy, sortDir]);
 
   const counts = useMemo(() => {
     const r = rows || [];
@@ -244,11 +266,18 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
       <div className="t-row" style={{ marginBottom: 14, gap: 6, flexWrap: 'wrap' }}>
         {([['all', '全部'], ['pending', '待確認'], ['making', '製作中'], ['printed', '已列印'], ['shipped', '已寄出'], ['paid', '已付款'], ['editreq', '修改申請']] as [StatusFilter, string][])
           .map(([v, label]) => (
-            <button key={v} className="t-pill" data-tone={status === v ? 'warn' : undefined}
-              style={{ cursor: 'pointer', minHeight: 32, padding: '4px 12px' }}
+            <button key={v} className="t-qp" data-tone={status === v ? 'warn' : undefined}
               onClick={() => setStatus(v)}>{label} <span className="t-mono" style={{ opacity: .7 }}>{counts[v]}</span></button>
           ))}
-        <span className="t-spacer t-mono" style={{ fontSize: 12, color: 'var(--t-fg-3)' }}>{filtered.length} 筆</span>
+        <span className="t-spacer" />
+        <label className="t-sort" title="照哪個階段的時間排，拿來回追">
+          排序
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortKey)}>
+            {SORT_OPTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <button type="button" onClick={() => setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))}>{sortDir === 'desc' ? '新→舊' : '舊→新'}</button>
+        </label>
+        <span className="t-mono" style={{ fontSize: 12, color: 'var(--t-fg-3)', marginLeft: 8 }}>{filtered.length} 筆</span>
       </div>
 
       {rows === null ? (
@@ -285,6 +314,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                   {r.shipped && <span><b>寄出</b> {fmtStamp(r.shippedAt) || '✓'}{r.tracking ? <>　單號 {r.tracking} <CopyNo no={r.tracking} /></> : ''}</span>}
                   {r.paid && <span style={{ color: '#2e7d57' }}><b>已匯款</b> {fmtStamp(r.paidAt) || '✓'}{r.payLast5 ? `　後五碼 ${r.payLast5}` : ''}</span>}
                   {r.settled && <span style={{ color: '#2e7d57', fontWeight: 700 }}><b>已結算</b> {fmtStamp(r.settledAt) || '✓'}</span>}
+                  {(sortBy === 'created' || sortBy === 'accepted') && TS[sortBy](r) && <span style={{ color: 'var(--t-fg-3)' }}><b>{SORT_LABEL[sortBy]}</b> {fmtStamp(TS[sortBy](r))}</span>}
                 </div>
                 {r.address && <div className="t-card__addr">📮 {r.address}</div>}
                 {r.certUrl && <div className="t-card__meta"><a href={r.certUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--t-brand)', fontWeight: 600 }}>🔗 開啟證照證明</a></div>}
@@ -330,6 +360,7 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
                     {r.printed && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>印 {fmtStamp(r.printedAt)}</div>}
                     {r.shipped && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>寄 {fmtStamp(r.shippedAt)}{r.tracking ? <>　單號 {r.tracking} <CopyNo no={r.tracking} /></> : ''}</div>}
                     {r.accepted && !r.shipped && r.etaDate && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>預計 {r.etaDate}</div>}
+                    {(sortBy === 'created' || sortBy === 'accepted') && TS[sortBy](r) && <div style={{ fontSize: 11, color: 'var(--t-fg-3)', marginTop: 2 }}>{SORT_LABEL[sortBy]} {fmtStamp(TS[sortBy](r))}</div>}
                     {r.editRequest && <div style={{ fontSize: 11, color: 'var(--t-danger)', marginTop: 2 }}>✎ 修改申請</div>}
                     {r.returnReason && <div style={{ fontSize: 11, color: 'var(--t-danger)', marginTop: 2 }}>⤺ 已退件</div>}
                   </td>

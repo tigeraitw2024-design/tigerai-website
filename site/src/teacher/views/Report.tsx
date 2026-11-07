@@ -16,6 +16,12 @@ import { downloadBlob } from '../certExport';
 const money = (n: number) => (n || 0).toLocaleString('zh-TW');
 const costOf = (c: Cert) => (Number(c.costPrint) || 0) + (Number(c.costEnvelope) || 0) + (Number(c.costCard) || 0) + (Number(c.costPostage) || 0);
 const revOf = (c: Cert) => (c.paid ? (Number(c.paidNet) || 0) : 0);          // 實收（未稅，稅是代收代付不算收入）
+const TPE = 8 * 3600 * 1000; // 台北 UTC+8
+function tpeDate(iso: string) {                                              // ISO→台北 YYYY-MM-DD（總帳收款日）
+  if (!iso) return '—';
+  const d = new Date(new Date(iso).getTime() + TPE);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
 
 export default function Report({ isOwner }: { isOwner: boolean }) {
   const [rows, setRows] = useState<ReportRow[] | null>(null);
@@ -55,7 +61,7 @@ export default function Report({ isOwner }: { isOwner: boolean }) {
         {rows && rows.length > 0 && <button className="t-btn t-btn--ghost t-btn--sm" onClick={exportCsv}><Icon name="download" size={14} /> 匯出 CSV</button>}
       </div>
       <p className="t-intro">{isOwner
-        ? '上面是講師×月的加總；成本在「寄出」時填，下面只看收款核對與損益總計。發票到「開發票」頁開。'
+        ? '上面是講師×月的加總；下面有收款核對、收款明細（總帳＝已入帳）、損益總計。成本在「寄出」時填、發票到「開發票」頁開。'
         : '你的證照對帳：張數、該付多少、已結多少、還欠多少。虎智收款後標「已結算」，這裡就更新。'}</p>
 
       {err && <div className="t-msg t-msg--err">{err}</div>}
@@ -100,6 +106,7 @@ export default function Report({ isOwner }: { isOwner: boolean }) {
           )}
 
       {isOwner && certs && <Reconcile certs={certs} onChange={load} />}
+      {isOwner && certs && <Ledger certs={certs} onChange={load} />}
       {isOwner && certs && <Summary certs={certs} />}
     </div>
   );
@@ -163,6 +170,108 @@ function Reconcile({ certs, onChange }: { certs: Cert[]; onChange: () => void })
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 收款明細（總帳，owner）：已按「確認收款」＝已入帳的每一單，依收款日新到舊排，拿去對永豐帳單。
+ * 每一單可整單「取消收款」退回「收款核對」（改錯了、或要重新駁回）。整單一起，跟駁回同規則。
+ */
+function Ledger({ certs, onChange }: { certs: Cert[]; onChange: () => void }) {
+  const [busy, setBusy] = useState('');
+  const [err, setErr] = useState('');
+  const settled = certs.filter((c) => c.settled);
+  const byKey = new Map<string, Cert[]>();                 // payBatch 相同＝同一次匯款＝一單；舊資料沒 payBatch 就各自一單
+  const order: string[] = [];
+  for (const c of settled) {
+    const key = c.payBatch || c.id;
+    if (!byKey.has(key)) { byKey.set(key, []); order.push(key); }
+    byKey.get(key)!.push(c);
+  }
+  const groups = order.map((k) => byKey.get(k)!)
+    .sort((a, b) => String(b[0].settledAt || '').localeCompare(String(a[0].settledAt || '')));
+  const tot = groups.reduce((t, g) => {
+    t.n += g.length;
+    for (const c of g) { t.net += Number(c.paidNet) || 0; t.tax += Number(c.paidTax) || 0; t.amt += Number(c.paidAmount) || 0; }
+    return t;
+  }, { n: 0, net: 0, tax: 0, amt: 0 });
+
+  async function unsettle(g: Cert[]) {
+    const names = g.map((c) => c.recipientName || c.studentName).join('、');
+    if (!window.confirm(`取消這一單（${g.length} 張：${names}）的收款？\n會退回「收款核對」，可重新確認或駁回，入帳總額同步扣掉。`)) return;
+    const key = g[0].payBatch || g[0].id;
+    setBusy(key); setErr('');
+    try { await api.post('/api/teacher/certs/settle', { ids: g.map((c) => c.id), value: false }); onChange(); }
+    catch (e: any) { setErr(e.message); } finally { setBusy(''); }
+  }
+
+  function exportCsv() {
+    const head = ['收款日', '講師', '學員', '張數', '後五碼', '未稅', '稅', '總額', '統編', '買受人', '發票號'];
+    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [head.join(',')];
+    for (const g of groups) {
+      const f = g[0];
+      const names = g.map((c) => [c.recipientName, c.studentName].filter(Boolean).join(' ')).join('、');
+      const net = g.reduce((s, c) => s + (Number(c.paidNet) || 0), 0);
+      const tax = g.reduce((s, c) => s + (Number(c.paidTax) || 0), 0);
+      const amt = g.reduce((s, c) => s + (Number(c.paidAmount) || 0), 0);
+      lines.push([tpeDate(f.settledAt), f.instructorName, names, g.length, f.payLast5, net, tax, amt, f.needInvoice ? f.taxId : '', f.needInvoice ? f.invoiceBuyer : '', f.invoiceNo].map(esc).join(','));
+    }
+    lines.push(['合計', '', '', tot.n, '', tot.net, tot.tax, tot.amt, '', '', ''].map(esc).join(','));
+    downloadBlob(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }), `收款總帳_${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+
+  return (
+    <div style={{ marginTop: 28 }}>
+      <div className="t-row" style={{ alignItems: 'center', marginBottom: 2 }}>
+        <h2 className="t-h2" style={{ margin: 0 }}>收款明細（總帳）{settled.length > 0 && <span style={{ fontSize: 13, color: 'var(--t-fg-3)', fontWeight: 400 }}>　{groups.length} 單 / {tot.n} 張 · 已入帳 NT$ {money(tot.amt)}</span>}</h2>
+        <span className="t-spacer" />
+        {settled.length > 0 && <button className="t-btn t-btn--ghost t-btn--sm" onClick={exportCsv}><Icon name="download" size={14} /> 匯出總帳 CSV</button>}
+      </div>
+      <p className="t-intro" style={{ marginBottom: 10 }}>已按「確認收款」＝已入帳的單，新到舊排。拿去對永豐帳單（金額＋後五碼）。改錯了按「取消收款」整單退回核對，可重新確認或駁回。</p>
+      {err && <div className="t-msg t-msg--err">{err}</div>}
+      {settled.length === 0 ? <div className="t-empty">還沒有已確認收款的單。核對後按「確認收款」，就會進這本總帳。</div> : (
+        <div style={{ overflowX: 'auto' }}>
+          <table className="t-report">
+            <thead><tr>
+              <th>收款日</th><th>講師</th><th>學員</th><th className="num">張數</th><th>後五碼</th>
+              <th className="num">未稅</th><th className="num">稅</th><th className="num">總額</th><th>發票</th><th></th>
+            </tr></thead>
+            <tbody>
+              {groups.map((g) => {
+                const f = g[0];
+                const key = f.payBatch || f.id;
+                const net = g.reduce((s, c) => s + (Number(c.paidNet) || 0), 0);
+                const tax = g.reduce((s, c) => s + (Number(c.paidTax) || 0), 0);
+                const amt = g.reduce((s, c) => s + (Number(c.paidAmount) || 0), 0);
+                return (
+                  <tr key={key}>
+                    <td className="t-mono">{tpeDate(f.settledAt)}</td>
+                    <td><b>{f.instructorName}</b></td>
+                    <td><div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>{g.map((c) => <Name key={c.id} zh={c.recipientName} en={c.studentName} />)}</div></td>
+                    <td className="num">{g.length}</td>
+                    <td style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{f.payLast5 || <span style={{ color: 'var(--t-fg-3)', fontWeight: 400 }}>—</span>}</td>
+                    <td className="num">{money(net)}</td>
+                    <td className="num">{tax ? money(tax) : <span style={{ color: 'var(--t-fg-3)' }}>—</span>}</td>
+                    <td className="num"><b>{money(amt)}</b></td>
+                    <td style={{ fontSize: 11 }}>{f.needInvoice
+                      ? (f.invoiced ? <span style={{ color: 'var(--t-ok)' }}>{f.invoiceNo || '已開'}</span> : <span style={{ color: 'var(--t-danger)' }}>待開 {f.taxId}</span>)
+                      : <span style={{ color: 'var(--t-fg-3)' }}>未稅</span>}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <button className="t-btn t-btn--ghost t-btn--sm" style={{ color: 'var(--t-danger)' }} disabled={busy === key} onClick={() => unsettle(g)}>取消收款</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot><tr>
+              <td colSpan={3}>合計</td><td className="num">{tot.n}</td><td></td>
+              <td className="num">{money(tot.net)}</td><td className="num">{money(tot.tax)}</td><td className="num"><b>{money(tot.amt)}</b></td><td colSpan={2}></td>
+            </tr></tfoot>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

@@ -165,8 +165,9 @@ export default function Console({ user, onGenerate }: { user: TeacherUser; onGen
     catch (e: any) { setErr(e.message); }
   }
 
-  // 刪除一筆：owner 任何時候；講師只有自己的、且還沒接單（已接單在製作中不給刪）。
-  const canDelete = (r: Cert) => isOwner || !r.accepted;
+  // 刪除一筆：owner 任何時候；講師只有自己的、且完全沒動過的（沒接單／列印／寄出／付款／結算）。
+  // 一旦進流程（尤其付款、寄送），講師不能自己刪，免得「已結帳卻被刪掉」對不到帳；要改走「申請修改」。
+  const canDelete = (r: Cert) => isOwner || (!r.accepted && !r.printed && !r.shipped && !r.paid && !r.settled);
   async function del(c: Cert) {
     if (!canDelete(c)) return;
     if (!window.confirm(`確定刪除「${c.studentName}」這一筆？刪掉就救不回來了。`)) return;

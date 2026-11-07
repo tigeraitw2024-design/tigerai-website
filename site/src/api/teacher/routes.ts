@@ -157,7 +157,8 @@ app.put('/certs/:id', async (ctx) => {
   } catch (e: any) { return ctx.json({ error: e.message || '更新失敗' }, 400); }
 });
 
-// 刪除：owner 刪任何一筆；講師只能刪自己的、且還沒接單（已接單在製作中，要走申請修改）。
+// 刪除：owner 刪任何一筆；講師只能刪自己的、且完全沒動過的（沒接單／列印／寄出／付款／結算）。
+// 一旦進了流程（尤其付款、寄送），講師不能自己刪掉——避免「已結帳卻被對方刪掉」這種對不到帳的狀況。
 app.delete('/certs/:id', async (ctx) => {
   const t = ctx.get('teacher');
   const id = ctx.req.param('id');
@@ -165,7 +166,9 @@ app.delete('/certs/:id', async (ctx) => {
   if (!existing) return ctx.json({ error: '找不到這一筆' }, 404);
   if (!owner(ctx)) {
     if (existing.instructorId !== t.id) return ctx.json({ error: '不能刪別人的資料' }, 403);
-    if (existing.accepted) return ctx.json({ error: '已接單製作中，不能刪，請按「申請修改」聯絡虎智。' }, 403);
+    if (existing.accepted || existing.printed || existing.shipped || existing.paid || existing.settled) {
+      return ctx.json({ error: '這筆已經在處理了（已接單／製作／寄送／付款／結算），不能自己刪，請按「申請修改」聯絡虎智。' }, 403);
+    }
   }
   await deleteCert(ctx.env.DB, id);
   return ctx.json({ ok: true });

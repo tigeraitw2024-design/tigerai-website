@@ -103,7 +103,7 @@ export default function Login({ onDone }: { onDone: () => void }) {
           </>
         )}
 
-        <div className="a-form" style={{ display: 'grid', gap: 14 }}>
+        <div className="a-form" style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr' }}>
           {mode === 'install' && (
             <>
               <div className="a-f">

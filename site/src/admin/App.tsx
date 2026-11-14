@@ -94,8 +94,8 @@ export default function App() {
           <Icon name={drawer ? 'x' : 'menu'} size={20} />
         </button>
         <a href="#/" className="a-top__brand" style={{ color: '#fff', textDecoration: 'none' }}>
-          <img src="/assets/logo/white-square-mark.svg" alt="" />
-          <span>虎智後台</span>
+          <img src="/assets/logo/tigerai-horizontal-white.svg" alt="TigerAI" />
+          <span className="a-top__name">官網後台<span className="a-top__sub">Website Admin</span></span>
         </a>
         <div className="a-top__spacer" />
         <span className="a-top__who a-mono">{schema.role}</span>

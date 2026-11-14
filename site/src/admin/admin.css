@@ -20,7 +20,7 @@
   --a-brand-soft: #FCF6EA;
   --a-danger: #B3261E;
   --a-ok: #1E7A43;
-  --a-radius: 4px;
+  --a-radius: 0px;
   --a-nav-h: 56px;
   --a-tabbar-h: 64px;
 }
@@ -50,8 +50,10 @@ body.tg-admin {
   padding: 0 14px;
   background: var(--a-fg); color: #fff;
 }
-.a-top__brand { font-weight: 800; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
-.a-top__brand img { width: 26px; height: 26px; display: block; }
+.a-top__brand { display: flex; align-items: center; gap: 10px; }
+.a-top__brand img { height: 24px; width: auto; display: block; }
+.a-top__name { font-weight: 800; font-size: 15px; letter-spacing: -.01em; line-height: 1; }
+.a-top__sub { display: block; font-size: 11px; color: #B9B5AC; margin-top: 2px; font-weight: 400; letter-spacing: 0; }
 .a-top__spacer { margin-left: auto; }
 .a-top__who { font-size: 12px; color: #B9B5AC; }
 
@@ -133,6 +135,15 @@ body.tg-admin {
 .a-btn--brand { background: var(--a-brand); border-color: var(--a-brand); color: #fff; }
 .a-btn--danger { background: transparent; color: var(--a-danger); border-color: var(--a-danger); }
 .a-btn--sm { min-height: 36px; padding: 0 12px; font-size: 13px; font-weight: 400; }
+
+/* Google 登入按鈕(與講師區 .t-google 同一顆:白底、四色 G、全寬) */
+.a-google {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+  min-height: 48px; border: 1px solid var(--a-line-strong); background: #fff; color: #1f1f1f;
+  font: inherit; font-weight: 600; cursor: pointer; border-radius: var(--a-radius); text-decoration: none;
+}
+.a-google:hover { background: #f7f7f7; }
+.a-google svg { width: 18px; height: 18px; }
 
 .a-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .a-spacer { margin-left: auto; }

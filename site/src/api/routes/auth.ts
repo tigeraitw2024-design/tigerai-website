@@ -2,10 +2,11 @@ import { Hono } from 'hono';
 import type { Ctx } from '../types';
 import {
   ADMIN_COOKIE, audit, clearCookie, clientKey, cookieHeader, createSession,
-  currentAdmin, destroySession, hashPassword, rateLimit, readSession, verifyPassword,
+  currentAdmin, destroySession, hashPassword, rateLimit, readCookie, readSession, verifyPassword,
 } from '../auth';
 import { fullSchemaSQL, newId, nowISO } from '../db';
 import { COLLECTION_LIST } from '../schema/registry';
+import { googleConfigured, googleAuthUrl, googleIdentity } from '../teacher/auth';
 
 /**
  * 後台登入與第一次安裝。
@@ -154,6 +155,72 @@ app.get('/installed', async (ctx) => {
   } catch {
     // 連表都還沒有，那就是還沒安裝
     return ctx.json({ installed: false });
+  }
+});
+
+/** 登入頁用：有沒有設 Google 登入（決定要不要顯示「用 Google 登入」按鈕）。 */
+app.get('/config', (ctx) => ctx.json({ googleConfigured: googleConfigured(ctx.env) }));
+
+// ── Google 登入（後台）────────────────────────────────────────────
+// 沿用講師區那套 Google OAuth（同一組 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET）。
+// 只有 ADMIN_OWNER_EMAILS 清單裡的 Gmail 能登入後台並成為 owner；不在清單的一律擋掉。
+const ADMIN_OAUTH_STATE = 'tg_admin_oauth_state';
+const ADMIN_REDIRECT_PATH = '/api/auth/google/callback';
+const siteBase = (ctx: any) =>
+  ctx.env.SITE_URL ? String(ctx.env.SITE_URL).replace(/\/$/, '') : new URL(ctx.req.url).origin;
+const adminGmails = (env: any) =>
+  String(env.ADMIN_OWNER_EMAILS || '').split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+
+app.get('/google/start', async (ctx) => {
+  if (!googleConfigured(ctx.env)) {
+    return ctx.json({ error: '還沒設定 Google 登入（GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET）。' }, 503);
+  }
+  if (!(await rateLimit(ctx.env.DB, clientKey(ctx.req.raw, 'alogin'), 20, 900))) {
+    return ctx.json({ error: '嘗試太多次了，請 15 分鐘後再試。' }, 429);
+  }
+  const state = crypto.randomUUID().replace(/-/g, '');
+  ctx.header('set-cookie', cookieHeader(ADMIN_OAUTH_STATE, state, 600));
+  return ctx.redirect(googleAuthUrl(ctx.env, siteBase(ctx) + ADMIN_REDIRECT_PATH, state));
+});
+
+app.get('/google/callback', async (ctx) => {
+  const url = new URL(ctx.req.url);
+  const code = url.searchParams.get('code') || '';
+  const state = url.searchParams.get('state') || '';
+  const saved = readCookie(ctx.req.raw, ADMIN_OAUTH_STATE);
+  ctx.header('set-cookie', clearCookie(ADMIN_OAUTH_STATE));
+  if (!code || !state || state !== saved) return ctx.redirect('/admin?error=state');
+
+  try {
+    const gid = await googleIdentity(ctx.env, code, siteBase(ctx) + ADMIN_REDIRECT_PATH);
+    if (!gid.verified) return ctx.redirect('/admin?error=unverified');
+    if (!adminGmails(ctx.env).includes(gid.email)) return ctx.redirect('/admin?error=notlisted');
+
+    const db = ctx.env.DB;
+    const at = nowISO();
+    const row = await db.prepare('SELECT id,data FROM users WHERE f_email=?').bind(gid.email).first<any>();
+    let userId: string;
+    if (row) {
+      userId = row.id;
+      const d = JSON.parse(row.data || '{}');
+      d.name = d.name || gid.name;
+      d.active = d.active !== false;
+      d.role = 'owner';
+      d.lastLoginAt = at;
+      await db.prepare('UPDATE users SET data=?, updated_at=? WHERE id=?').bind(JSON.stringify(d), at, userId).run();
+    } else {
+      userId = newId();
+      const data = { email: gid.email, name: gid.name, role: 'owner', active: true, note: 'Google 白名單自動建立', lastLoginAt: at };
+      await db.prepare('INSERT INTO users (id,sort,data,created_at,updated_at,f_email) VALUES (?,0,?,?,?,?)')
+        .bind(userId, JSON.stringify(data), at, at, gid.email).run();
+    }
+    const s = await createSession(db, 'admin', userId, ctx.req.raw);
+    ctx.header('set-cookie', cookieHeader(ADMIN_COOKIE, s.id, s.days * 86400), { append: true });
+    await audit(db, gid.email, 'Google 登入', '後台', null, ctx.req.raw);
+    return ctx.redirect('/admin');
+  } catch (e) {
+    console.error('[admin oauth]', e);
+    return ctx.redirect('/admin?error=oauth');
   }
 });
 

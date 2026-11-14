@@ -63,6 +63,8 @@ export type Env = {
   GOOGLE_CLIENT_SECRET?: string;
   /** 講師區 owner 白名單（逗號分隔的 Gmail）。列在這裡的人第一次 Google 登入即自動成為 owner。 */
   TEACHER_OWNER_EMAILS?: string;
+  /** 後台管理員 Google 登入白名單（逗號分隔的 Gmail）。只有列在這裡的 Gmail 能用 Google 登入後台並成為 owner,不在清單的一律擋掉。 */
+  ADMIN_OWNER_EMAILS?: string;
 
   /**
    * 第一次建立 owner 帳號用的一次性密語。

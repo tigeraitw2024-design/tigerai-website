@@ -19,12 +19,27 @@ export default function Login({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
+  const [googleOn, setGoogleOn] = useState(false);
 
   useEffect(() => {
     api
       .get<{ installed: boolean }>('/api/auth/installed')
       .then((r) => setMode(r.installed ? 'login' : 'install'))
       .catch(() => setMode('login'));
+    api
+      .get<{ googleConfigured: boolean }>('/api/auth/config')
+      .then((r) => setGoogleOn(!!r.googleConfigured))
+      .catch(() => {});
+    const e = new URLSearchParams(location.search).get('error');
+    if (e) {
+      const map: Record<string, string> = {
+        state: '登入階段過期，請再按一次「使用 Google 登入」。',
+        unverified: '這個 Google 帳號的 email 尚未驗證。',
+        notlisted: '這個 Google 帳號不在管理員名單內，請用被授權的 Gmail。',
+        oauth: 'Google 登入失敗，請再試一次。',
+      };
+      setErr(map[e] || '登入失敗，請再試一次。');
+    }
   }, []);
 
   async function submit(e: React.FormEvent) {
@@ -72,6 +87,19 @@ export default function Login({ onDone }: { onDone: () => void }) {
 
         {err && <div className="a-msg a-msg--err">{err}</div>}
         {note && <div className="a-msg a-msg--ok">{note}</div>}
+
+        {googleOn && (
+          <>
+            <a
+              className="a-btn a-btn--brand"
+              href="/api/auth/google/start"
+              style={{ display: 'block', width: '100%', textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box' }}
+            >
+              使用 Google 登入
+            </a>
+            <div style={{ textAlign: 'center', color: '#8B867C', fontSize: 12, margin: '12px 0 2px' }}>或用 Email 密碼</div>
+          </>
+        )}
 
         <div className="a-form" style={{ display: 'grid', gap: 14 }}>
           {mode === 'install' && (

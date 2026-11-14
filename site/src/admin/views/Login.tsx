@@ -134,7 +134,7 @@ export default function Login({ onDone }: { onDone: () => void }) {
             {mode === 'install' && <div className="a-f__help">至少 12 個字。這是整個站的鑰匙，請用密碼管理器產生一組沒在別處用過的。</div>}
           </div>
 
-          <button className="a-btn a-btn--brand" disabled={busy} style={{ width: '100%' }}>
+          <button className="a-btn a-btn--brand" disabled={busy} style={{ width: '100%', display: 'flex' }}>
             {busy ? '計算中，請稍候…' : mode === 'install' ? '安裝並登入' : '登入'}
           </button>
           {busy && <div className="a-f__help">密碼正在你的裝置上做加密運算，手機上大約要一兩秒。</div>}
